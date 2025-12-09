@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minesweeper</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <a href="../../index.html" class="back-btn" aria-label="Back to Game Hub">← Hub</a>
+                <h1>💣 Minesweeper</h1>
+            </div>
+            <div class="score-container">
+                <div class="score-box">
+                    <div class="score-label">MINES</div>
+                    <div id="mines-left">10</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-label">TIME</div>
+                    <div id="timer">0</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-info">
+            <p>지뢰를 피해 모든 칸을 열어보세요!</p>
+            <div class="game-buttons">
+                <button id="new-game-btn">New Game</button>
+                <select id="difficulty-select">
+                    <option value="easy">Easy (9x9, 10)</option>
+                    <option value="medium">Medium (16x16, 40)</option>
+                    <option value="hard">Hard (16x30, 99)</option>
+                </select>
+                <button id="sound-toggle-btn" aria-label="Toggle sound">
+                    <span class="sound-on-icon">🔊</span>
+                    <span class="sound-off-icon">🔇</span>
+                </button>
+                <button id="theme-toggle-btn" aria-label="Toggle dark mode">
+                    <span class="theme-icon light-icon">🌙</span>
+                    <span class="theme-icon dark-icon">☀️</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="game-container">
+            <div id="board"></div>
+            <div id="game-message" class="hidden">
+                <p></p>
+                <button id="retry-btn">Try again</button>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <p><strong>조작 방법:</strong> 클릭으로 칸 열기, 우클릭/길게 누르기로 깃발 표시</p>
+            <p>숫자는 주변 8칸에 있는 지뢰 개수를 나타냅니다.</p>
+        </div>
+
+        <div class="stats">
+            <p>Best Time: <span id="best-time">-</span></p>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
