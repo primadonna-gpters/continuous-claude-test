@@ -1828,7 +1828,7 @@ function performUnion(weapon) {
         player.weapons.splice(partnerIndex, 1);
     }
 
-    playSound('levelup');
+    playSound('union');
     return true;
 }
 
@@ -1836,7 +1836,7 @@ function evolveWeapon(weapon) {
     const weaponType = WEAPON_TYPES[weapon.id];
     weapon.evolved = true;
     weapon.evolvedId = weaponType.evolvesTo;
-    playSound('levelup');
+    playSound('evolution');
 }
 
 function update(currentTime) {
@@ -3142,7 +3142,7 @@ function createExplosion(x, y, radius, damage) {
 }
 
 function openChest(chest) {
-    playSound('levelup');
+    playSound('chest');
 
     // First check for Union (two weapons combine into one)
     for (const weapon of player.weapons) {
@@ -3421,7 +3421,7 @@ function victory() {
     localStorage.setItem('survivor-best-time', bestTime);
     updateBestTimeDisplay();
 
-    playSound('levelup');
+    playSound('victory');
 
     const stage = STAGES[selectedStage];
     const messageDiv = document.getElementById('game-message');
@@ -4333,29 +4333,67 @@ function drawProjectiles() {
             ctx.fillRect(2, -1, 4, 1);
             ctx.restore();
         } else if (proj.type === 'cross') {
-            // Holy glow
-            const crossGlow = ctx.createRadialGradient(x, y, 0, x, y, size);
-            crossGlow.addColorStop(0, 'rgba(255, 255, 200, 0.4)');
-            crossGlow.addColorStop(1, 'rgba(255, 255, 100, 0)');
+            const rotation = Date.now() / 100;
+            const pulse = 1 + Math.sin(Date.now() / 150) * 0.15;
+
+            // Outer holy aura
+            ctx.shadowColor = '#ffff88';
+            ctx.shadowBlur = 20;
+
+            // Holy glow (larger, pulsing)
+            const crossGlow = ctx.createRadialGradient(x, y, 0, x, y, size * 1.5 * pulse);
+            crossGlow.addColorStop(0, 'rgba(255, 255, 200, 0.5)');
+            crossGlow.addColorStop(0.5, 'rgba(255, 255, 100, 0.2)');
+            crossGlow.addColorStop(1, 'rgba(255, 255, 50, 0)');
             ctx.fillStyle = crossGlow;
             ctx.beginPath();
-            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.arc(x, y, size * 1.5 * pulse, 0, Math.PI * 2);
             ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Light trail particles
+            ctx.fillStyle = '#ffffcc';
+            ctx.globalAlpha = 0.6;
+            for (let i = 0; i < 4; i++) {
+                const trailAngle = rotation - i * 0.5;
+                const trailDist = size * 0.6;
+                const tx = x + Math.cos(trailAngle) * trailDist;
+                const ty = y + Math.sin(trailAngle) * trailDist;
+                ctx.fillRect(tx - 1, ty - 1, 3, 3);
+            }
+            ctx.globalAlpha = 1;
+
             // Cross
             ctx.save();
             ctx.translate(x, y);
-            ctx.rotate(Date.now() / 100);
-            // Outline
+            ctx.rotate(rotation);
+
+            // Black outline
             ctx.fillStyle = '#000000';
-            ctx.fillRect(-size / 6 - 1, -size / 2 - 1, size / 3 + 2, size + 2);
-            ctx.fillRect(-size / 2 - 1, -size / 6 - 1, size + 2, size / 3 + 2);
-            // Cross body
+            ctx.fillRect(-size / 6 - 2, -size / 2 - 2, size / 3 + 4, size + 4);
+            ctx.fillRect(-size / 2 - 2, -size / 6 - 2, size + 4, size / 3 + 4);
+
+            // Cross body (golden)
             ctx.fillStyle = '#ffdd44';
             ctx.fillRect(-size / 6, -size / 2, size / 3, size);
             ctx.fillRect(-size / 2, -size / 6, size, size / 3);
-            // Bright center
-            ctx.fillStyle = '#ffffaa';
-            ctx.fillRect(-2, -2, 4, 4);
+
+            // Inner gradient highlight
+            ctx.fillStyle = '#ffee88';
+            ctx.fillRect(-size / 8, -size / 2 + 2, size / 4, size - 4);
+            ctx.fillRect(-size / 2 + 2, -size / 8, size - 4, size / 4);
+
+            // Bright glowing center
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(-3, -3, 6, 6);
+
+            // Corner jewel accents
+            ctx.fillStyle = '#ff6666';
+            ctx.fillRect(-size / 6, -size / 2, 3, 3);
+            ctx.fillRect(-size / 6, size / 2 - 3, 3, 3);
+            ctx.fillRect(-size / 2, -size / 6, 3, 3);
+            ctx.fillRect(size / 2 - 3, -size / 6, 3, 3);
+
             ctx.restore();
         } else if (proj.type === 'runetracer') {
             // Magic glow
@@ -4718,12 +4756,63 @@ function drawAreaEffects() {
 
             ctx.globalAlpha = 1;
         } else if (effect.type === 'pentagram') {
+            const centerX = effect.x;
+            const centerY = effect.y;
+            const radius = effect.radius * alpha;
+
+            // Outer pulsing glow
+            ctx.shadowColor = effect.color;
+            ctx.shadowBlur = 40 * alpha;
+
+            // Screen flash effect
+            ctx.globalAlpha = alpha * 0.15;
+            ctx.fillStyle = effect.color;
+            ctx.fillRect(centerX - radius, centerY - radius, radius * 2, radius * 2);
+            ctx.shadowBlur = 0;
+
+            // Draw pentagram star
             ctx.strokeStyle = effect.color;
-            ctx.globalAlpha = alpha * 0.5;
-            ctx.lineWidth = 5;
+            ctx.globalAlpha = alpha * 0.8;
+            ctx.lineWidth = 4;
             ctx.beginPath();
-            ctx.arc(effect.x, effect.y, effect.radius * alpha, 0, Math.PI * 2);
+            for (let i = 0; i < 5; i++) {
+                const angle = (i * 4 * Math.PI / 5) - Math.PI / 2;
+                const px = centerX + Math.cos(angle) * radius * 0.4;
+                const py = centerY + Math.sin(angle) * radius * 0.4;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
             ctx.stroke();
+
+            // Outer circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 0.45, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Multiple expanding rings
+            for (let i = 0; i < 3; i++) {
+                const ringRadius = radius * (0.3 + i * 0.3) * (1.5 - alpha);
+                ctx.strokeStyle = effect.color;
+                ctx.globalAlpha = alpha * (0.6 - i * 0.15);
+                ctx.lineWidth = 3 - i;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, ringRadius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // Particle sparkles
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = alpha;
+            const sparkleCount = 12;
+            for (let i = 0; i < sparkleCount; i++) {
+                const sparkAngle = (i / sparkleCount) * Math.PI * 2 + Date.now() / 500;
+                const sparkDist = radius * (0.2 + 0.3 * (1 - alpha));
+                const sx = centerX + Math.cos(sparkAngle) * sparkDist;
+                const sy = centerY + Math.sin(sparkAngle) * sparkDist;
+                ctx.fillRect(sx - 2, sy - 2, 4, 4);
+            }
+
             ctx.globalAlpha = 1;
         } else if (effect.type === 'madgroove') {
             // Mad Groove magnet pulse
@@ -4786,14 +4875,69 @@ function drawAreaEffects() {
             ctx.fill();
             ctx.globalAlpha = 1;
         } else if (effect.type === 'songofmana') {
-            // Vertical beam effect
+            // Vertical beam effect with enhanced visuals
+            const centerX = effect.x + effect.width / 2;
+            const beamTime = Date.now() / 100;
+
+            // Outer glow
+            ctx.shadowColor = effect.color;
+            ctx.shadowBlur = 20 * alpha;
+
+            // Background glow layer (wider)
+            const glowGradient = ctx.createLinearGradient(
+                effect.x - effect.width * 0.5, 0,
+                effect.x + effect.width * 1.5, 0
+            );
+            glowGradient.addColorStop(0, 'rgba(0,0,0,0)');
+            glowGradient.addColorStop(0.3, effect.color.replace(')', ', 0.2)').replace('rgb', 'rgba').replace('#', 'rgba('));
+            glowGradient.addColorStop(0.5, effect.color.replace(')', ', 0.3)').replace('rgb', 'rgba').replace('#', 'rgba('));
+            glowGradient.addColorStop(0.7, effect.color.replace(')', ', 0.2)').replace('rgb', 'rgba').replace('#', 'rgba('));
+            glowGradient.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = glowGradient;
+            ctx.fillRect(effect.x - effect.width * 0.5, effect.y, effect.width * 2, effect.height);
+            ctx.shadowBlur = 0;
+
+            // Main beam body
             ctx.fillStyle = effect.color;
-            ctx.globalAlpha = alpha * 0.4;
+            ctx.globalAlpha = alpha * 0.5;
             ctx.fillRect(effect.x, effect.y, effect.width, effect.height);
-            // Brighter center line
+
+            // Brighter inner beam
             ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = alpha * 0.7;
+            ctx.fillRect(effect.x + effect.width * 0.35, effect.y, effect.width * 0.3, effect.height);
+
+            // Musical note particles floating upward
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = alpha * 0.9;
+            const noteCount = 5;
+            for (let i = 0; i < noteCount; i++) {
+                const noteY = effect.y + effect.height * (1 - ((beamTime * 0.5 + i * 0.2) % 1));
+                const noteX = centerX + Math.sin(beamTime + i * 2) * (effect.width * 0.3);
+                // Simple note shape (circle with stem)
+                ctx.beginPath();
+                ctx.arc(noteX, noteY, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillRect(noteX + 2, noteY - 8, 2, 8);
+            }
+
+            // Edge sparkle lines
+            ctx.strokeStyle = '#ffffff';
             ctx.globalAlpha = alpha * 0.6;
-            ctx.fillRect(effect.x + effect.width * 0.3, effect.y, effect.width * 0.4, effect.height);
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 8; i++) {
+                const sparkY = effect.y + (effect.height / 8) * i + (beamTime * 30) % (effect.height / 8);
+                ctx.beginPath();
+                ctx.moveTo(effect.x, sparkY);
+                ctx.lineTo(effect.x + effect.width * 0.2, sparkY);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(effect.x + effect.width * 0.8, sparkY);
+                ctx.lineTo(effect.x + effect.width, sparkY);
+                ctx.stroke();
+            }
+
             ctx.globalAlpha = 1;
         } else if (effect.type === 'ventosacro') {
             // Fan slash effect
@@ -4852,18 +4996,60 @@ function drawBibleOrbits() {
     for (const bible of bibleOrbits) {
         const x = player.x + Math.cos(bible.angle) * bible.distance;
         const y = player.y + Math.sin(bible.angle) * bible.distance;
+        const rotation = bible.angle * 0.5 + Date.now() / 200;
 
-        ctx.fillStyle = bible.color;
         ctx.save();
         ctx.translate(x, y);
+        ctx.rotate(rotation);
 
-        // Book shape
+        // Holy glow effect
+        ctx.shadowColor = bible.color;
+        ctx.shadowBlur = 15;
+
+        // Outer glow ring
+        const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 18);
+        glowGradient.addColorStop(0, 'rgba(255, 255, 200, 0.4)');
+        glowGradient.addColorStop(1, 'rgba(255, 255, 100, 0)');
+        ctx.fillStyle = glowGradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, 18, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Black outline
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(-7, -9, 14, 18);
+
+        // Book cover
+        ctx.fillStyle = bible.color;
         ctx.fillRect(-6, -8, 12, 16);
+
+        // Pages (white)
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(-5, -7, 10, 14);
+
+        // Spine
         ctx.fillStyle = bible.color;
         ctx.fillRect(-1, -7, 2, 14);
 
+        // Cross on cover
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(-0.5, -5, 1, 6);
+        ctx.fillRect(-2, -3.5, 4, 1);
+
+        // Sparkle particles orbiting the bible
+        ctx.fillStyle = '#ffffff';
+        const sparkleTime = Date.now() / 300;
+        for (let i = 0; i < 3; i++) {
+            const sparkAngle = sparkleTime + i * (Math.PI * 2 / 3);
+            const sparkR = 12 + Math.sin(sparkleTime * 2 + i) * 3;
+            const sx = Math.cos(sparkAngle) * sparkR;
+            const sy = Math.sin(sparkAngle) * sparkR;
+            ctx.globalAlpha = 0.8;
+            ctx.fillRect(sx - 1, sy - 1, 2, 2);
+        }
+
+        ctx.globalAlpha = 1;
         ctx.restore();
     }
 }
@@ -5646,6 +5832,64 @@ function playSound(type) {
                 gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
                 oscillator.start(audioContext.currentTime);
                 oscillator.stop(audioContext.currentTime + 0.5);
+                break;
+            case 'evolution':
+                // Epic ascending fanfare for weapon evolution
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(440, audioContext.currentTime);        // A4
+                oscillator.frequency.setValueAtTime(554, audioContext.currentTime + 0.1);  // C#5
+                oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.2);  // E5
+                oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 0.3);  // A5
+                oscillator.frequency.setValueAtTime(1109, audioContext.currentTime + 0.4); // C#6
+                gainNode.gain.setValueAtTime(0.18, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime + 0.2);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.6);
+                break;
+            case 'union':
+                // Powerful dual-tone fanfare for Union (two weapons becoming one)
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(330, audioContext.currentTime);        // E4
+                oscillator.frequency.setValueAtTime(440, audioContext.currentTime + 0.08); // A4
+                oscillator.frequency.setValueAtTime(554, audioContext.currentTime + 0.16);// C#5
+                oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.24);// E5
+                oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 0.32);// A5
+                oscillator.frequency.setValueAtTime(1109, audioContext.currentTime + 0.4);// C#6
+                oscillator.frequency.setValueAtTime(1319, audioContext.currentTime + 0.5);// E6
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.25, audioContext.currentTime + 0.3);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.8);
+                break;
+            case 'chest':
+                // Sparkling treasure sound
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(1047, audioContext.currentTime);       // C6
+                oscillator.frequency.setValueAtTime(1319, audioContext.currentTime + 0.05);// E6
+                oscillator.frequency.setValueAtTime(1568, audioContext.currentTime + 0.1); // G6
+                oscillator.frequency.setValueAtTime(2093, audioContext.currentTime + 0.15);// C7
+                gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.25);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.25);
+                break;
+            case 'victory':
+                // Triumphant victory fanfare
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(523, audioContext.currentTime);        // C5
+                oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.15); // E5
+                oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.3);  // G5
+                oscillator.frequency.setValueAtTime(1047, audioContext.currentTime + 0.45);// C6
+                oscillator.frequency.setValueAtTime(1319, audioContext.currentTime + 0.6); // E6
+                oscillator.frequency.setValueAtTime(1568, audioContext.currentTime + 0.75);// G6
+                oscillator.frequency.setValueAtTime(2093, audioContext.currentTime + 0.9); // C7
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.22, audioContext.currentTime + 0.5);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.2);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 1.2);
                 break;
         }
     } catch (e) {

@@ -10,17 +10,19 @@ python -m http.server 8000
 # 브라우저에서 http://localhost:8000 접속
 ```
 
-## PWA (Progressive Web App) 지원
+## 최근 개선 사항 (현재 iteration)
 
-### 추가된 파일
-- `manifest.json`: 앱 메타데이터 정의
-- `sw.js`: Service Worker (오프라인 캐싱)
-- `icons/`: PWA 아이콘 (16px ~ 512px)
-- `icons/generate-icons.html`: 아이콘 생성기 (선택적)
+### 사운드 시스템 개선
+- `evolution`: 무기 진화 전용 사운드 (상승하는 팡파레 - A major chord)
+- `union`: Union 합체 전용 사운드 (더 극적인 팡파레 - E to E6)
+- `chest`: 보물상자 획득 사운드 (반짝이는 트레저 사운드 - C major arpeggio)
+- `victory`: 승리 전용 사운드 (장대한 팡파레 - C to C7)
 
-### 설치 방법
-1. Chrome/Edge: 주소창 오른쪽 설치 아이콘 클릭
-2. iOS Safari: 공유 > 홈 화면에 추가
+### 시각 효과 개선
+- **Pentagram**: 단순 원 → 실제 오망성 + 확장 링 + 스파클 파티클 + 화면 플래시
+- **Song of Mana**: 단순 빔 → 글로우 그래디언트 + 음표 파티클 + 에지 스파클 라인
+- **Bible (King Bible)**: 단순 책 → 홀리 글로우 + 십자가 장식 + 회전하는 스파클 오브잇
+- **Cross**: 단순 십자가 → 맥동하는 오라 + 트레일 파티클 + 보석 악센트
 
 ## 기존 시스템 (유지)
 - Pixel Survivor 게임 밸런스 조정 완료
@@ -29,20 +31,21 @@ python -m http.server 8000
 - 8개 캐릭터, 15개 패시브 아이템
 - 12개 기본 무기 + 12개 진화 무기 + 6개 새 무기 + 3개 Union 무기
 - 5개 스테이지 + Hyper Mode
+- PWA 오프라인 지원
 
 ## 다음 iteration 우선순위
 
-1. **사운드 개선**
-   - Union/Evolution 시 전용 사운드 효과
-   - 보물상자 획득 사운드 개선
+1. **추가 콘텐츠**
+   - 새로운 캐릭터 또는 무기 추가
+   - 업적 시스템 (Achievement System)
 
 2. **추가 시각 효과**
-   - Pentagram, Song of Mana 등 효과 개선
-   - Bible, Cross 등 투사체 효과 강화
+   - 다른 무기들 (Runetracer, Lightning Ring 등) 효과 강화
+   - 피격/대미지 이펙트 개선
 
-3. **추가 콘텐츠**
-   - 새로운 캐릭터 또는 무기 추가
-   - 업적 시스템
+3. **기타 개선**
+   - 게임 튜토리얼 추가
+   - 통계 화면 (플레이 시간, 총 킬수 등)
 
 4. **PWA 개선 (선택적)**
    - 앱 업데이트 알림 기능
