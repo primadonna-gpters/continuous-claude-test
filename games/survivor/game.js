@@ -4462,49 +4462,252 @@ function drawAreaEffects() {
         const alpha = effect.lifetime / effect.maxLifetime;
 
         if (effect.type === 'whip') {
+            const centerX = effect.x + effect.width / 2;
+            const centerY = effect.y + effect.height / 2;
+
+            // Outer glow effect
+            ctx.shadowColor = effect.color;
+            ctx.shadowBlur = 15 * alpha;
+            ctx.globalAlpha = alpha * 0.3;
             ctx.fillStyle = effect.color;
+            ctx.fillRect(effect.x - 4, effect.y - 4, effect.width + 8, effect.height + 8);
+            ctx.shadowBlur = 0;
+
+            // Black pixel outline
+            ctx.fillStyle = '#000000';
+            ctx.globalAlpha = alpha * 0.9;
+            ctx.fillRect(effect.x - 2, effect.y - 2, effect.width + 4, 2); // Top
+            ctx.fillRect(effect.x - 2, effect.y + effect.height, effect.width + 4, 2); // Bottom
+            ctx.fillRect(effect.x - 2, effect.y, 2, effect.height); // Left
+            ctx.fillRect(effect.x + effect.width, effect.y, 2, effect.height); // Right
+
+            // Main whip body with gradient effect
             ctx.globalAlpha = alpha;
+            ctx.fillStyle = effect.color;
             ctx.fillRect(effect.x, effect.y, effect.width, effect.height);
+
+            // Inner highlight (whip crack effect)
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = alpha * 0.6;
+            ctx.fillRect(effect.x + effect.width * 0.1, effect.y + effect.height * 0.3, effect.width * 0.8, effect.height * 0.2);
+
+            // Slash lines for motion effect
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = alpha * 0.4;
+            for (let i = 0; i < 3; i++) {
+                const lineX = effect.x + effect.width * (0.2 + i * 0.3);
+                ctx.fillRect(lineX, effect.y + 2, 2, effect.height - 4);
+            }
             ctx.globalAlpha = 1;
         } else if (effect.type === 'holywater') {
+            const centerX = effect.x + effect.width / 2;
+            const centerY = effect.y + effect.height / 2;
+            const radiusX = effect.width / 2;
+            const radiusY = effect.height / 2;
+
+            // Outer glow pulsing effect
+            const pulse = 1 + 0.2 * Math.sin(Date.now() / 100);
+            ctx.shadowColor = effect.color;
+            ctx.shadowBlur = 20 * alpha * pulse;
             ctx.fillStyle = effect.color;
-            ctx.globalAlpha = alpha * 0.5;
+            ctx.globalAlpha = alpha * 0.2;
             ctx.beginPath();
-            ctx.ellipse(
-                effect.x + effect.width / 2,
-                effect.y + effect.height / 2,
-                effect.width / 2,
-                effect.height / 2,
-                0, 0, Math.PI * 2
-            );
+            ctx.ellipse(centerX, centerY, radiusX * 1.3, radiusY * 1.3, 0, 0, Math.PI * 2);
             ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Black outline (pixelated ellipse border)
+            ctx.fillStyle = '#000000';
+            ctx.globalAlpha = alpha * 0.8;
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, radiusX + 3, radiusY + 3, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Main holy water pool
+            ctx.fillStyle = effect.color;
+            ctx.globalAlpha = alpha * 0.6;
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Inner lighter gradient
+            ctx.fillStyle = '#aaddff';
+            ctx.globalAlpha = alpha * 0.4;
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY - radiusY * 0.2, radiusX * 0.6, radiusY * 0.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Bubble/sparkle effects
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = alpha * 0.8;
+            const bubbleTime = Date.now() / 200;
+            for (let i = 0; i < 5; i++) {
+                const bubbleAngle = (i / 5) * Math.PI * 2 + bubbleTime;
+                const bubbleR = radiusX * 0.4 * (0.5 + 0.5 * Math.sin(bubbleTime + i));
+                const bx = centerX + Math.cos(bubbleAngle) * bubbleR;
+                const by = centerY + Math.sin(bubbleAngle) * bubbleR * 0.6;
+                ctx.fillRect(bx - 1, by - 1, 3, 3);
+            }
             ctx.globalAlpha = 1;
         } else if (effect.type === 'explosion') {
+            const centerX = effect.x + effect.width / 2;
+            const centerY = effect.y + effect.height / 2;
+            const radius = effect.width / 2 * (1 + (1 - alpha) * 0.5);
+
+            // Outer glow
+            ctx.shadowColor = effect.color;
+            ctx.shadowBlur = 30 * alpha;
+
+            // Black outline ring
+            ctx.strokeStyle = '#000000';
+            ctx.globalAlpha = alpha * 0.6;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius + 2, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Main explosion fill
             ctx.fillStyle = effect.color;
+            ctx.globalAlpha = alpha * 0.8;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Inner bright core
+            ctx.fillStyle = '#ffff88';
             ctx.globalAlpha = alpha;
             ctx.beginPath();
-            ctx.arc(
-                effect.x + effect.width / 2,
-                effect.y + effect.height / 2,
-                effect.width / 2 * (1 + (1 - alpha) * 0.5),
-                0, Math.PI * 2
-            );
+            ctx.arc(centerX, centerY, radius * 0.5, 0, Math.PI * 2);
             ctx.fill();
+
+            // White hot center
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = alpha;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 0.25, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Spark particles flying outward
+            ctx.fillStyle = '#ffcc00';
+            ctx.globalAlpha = alpha * 0.9;
+            for (let i = 0; i < 8; i++) {
+                const sparkAngle = (i / 8) * Math.PI * 2;
+                const sparkR = radius * (0.8 + (1 - alpha) * 0.4);
+                const sx = centerX + Math.cos(sparkAngle) * sparkR;
+                const sy = centerY + Math.sin(sparkAngle) * sparkR;
+                ctx.fillRect(sx - 2, sy - 2, 4, 4);
+            }
+
             ctx.globalAlpha = 1;
         } else if (effect.type === 'garlic') {
+            // Outer glow pulsing aura
+            const pulse = 1 + 0.15 * Math.sin(Date.now() / 80);
+            ctx.shadowColor = effect.color;
+            ctx.shadowBlur = 25 * alpha * pulse;
+
+            // Outermost glow ring
             ctx.strokeStyle = effect.color;
-            ctx.globalAlpha = alpha;
+            ctx.globalAlpha = alpha * 0.2;
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, effect.radius * 1.15, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Black outline for visibility
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = '#000000';
+            ctx.globalAlpha = alpha * 0.7;
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Main garlic aura ring
+            ctx.strokeStyle = effect.color;
+            ctx.globalAlpha = alpha * 0.9;
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
             ctx.stroke();
+
+            // Inner fill with transparency
+            ctx.fillStyle = effect.color;
+            ctx.globalAlpha = alpha * 0.15;
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Swirling particles around the aura
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = alpha * 0.6;
+            const particleTime = Date.now() / 150;
+            for (let i = 0; i < 6; i++) {
+                const particleAngle = (i / 6) * Math.PI * 2 + particleTime;
+                const particleR = effect.radius * (0.7 + 0.2 * Math.sin(particleTime * 2 + i));
+                const px = effect.x + Math.cos(particleAngle) * particleR;
+                const py = effect.y + Math.sin(particleAngle) * particleR;
+                ctx.fillRect(px - 2, py - 2, 4, 4);
+            }
+
+            // Inner bright ring
+            ctx.strokeStyle = '#ffffff';
+            ctx.globalAlpha = alpha * 0.4;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, effect.radius * 0.85, 0, Math.PI * 2);
+            ctx.stroke();
+
             ctx.globalAlpha = 1;
         } else if (effect.type === 'lightning') {
+            const radius = effect.radius * (1 + (1 - alpha));
+
+            // Electric glow
+            ctx.shadowColor = '#88ffff';
+            ctx.shadowBlur = 35 * alpha;
+
+            // Outer electric ring
+            ctx.strokeStyle = '#000000';
+            ctx.globalAlpha = alpha * 0.5;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, radius + 2, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Main lightning strike area
             ctx.fillStyle = effect.color;
+            ctx.globalAlpha = alpha * 0.7;
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Bright core
+            ctx.fillStyle = '#ffffff';
             ctx.globalAlpha = alpha;
             ctx.beginPath();
-            ctx.arc(effect.x, effect.y, effect.radius * (1 + (1 - alpha)), 0, Math.PI * 2);
+            ctx.arc(effect.x, effect.y, radius * 0.4, 0, Math.PI * 2);
             ctx.fill();
+
+            // Lightning bolt sparks (jagged lines)
+            ctx.strokeStyle = '#ffffff';
+            ctx.globalAlpha = alpha * 0.8;
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 4; i++) {
+                const boltAngle = (i / 4) * Math.PI * 2 + Date.now() / 100;
+                ctx.beginPath();
+                ctx.moveTo(effect.x, effect.y);
+                let bx = effect.x;
+                let by = effect.y;
+                for (let j = 0; j < 3; j++) {
+                    const jag = (Math.random() - 0.5) * 10;
+                    bx += Math.cos(boltAngle) * (radius / 3) + jag;
+                    by += Math.sin(boltAngle) * (radius / 3) + jag;
+                    ctx.lineTo(bx, by);
+                }
+                ctx.stroke();
+            }
+
             ctx.globalAlpha = 1;
         } else if (effect.type === 'pentagram') {
             ctx.strokeStyle = effect.color;
