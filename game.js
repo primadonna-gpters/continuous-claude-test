@@ -7,6 +7,7 @@ class Game2048 {
         this.won = false;
         this.over = false;
         this.keepPlaying = false;
+        this.previousState = null;
 
         this.tileContainer = document.getElementById('tile-container');
         this.gridBackground = document.getElementById('grid-background');
@@ -17,6 +18,7 @@ class Game2048 {
         this.retryButton = document.getElementById('retry-btn');
         this.keepPlayingButton = document.getElementById('keep-playing-btn');
         this.newGameButton = document.getElementById('new-game-btn');
+        this.undoButton = document.getElementById('undo-btn');
 
         this.initGridBackground();
         this.bindEvents();
@@ -36,6 +38,7 @@ class Game2048 {
         this.newGameButton.addEventListener('click', () => this.init());
         this.retryButton.addEventListener('click', () => this.init());
         this.keepPlayingButton.addEventListener('click', () => this.continueGame());
+        this.undoButton.addEventListener('click', () => this.undo());
 
         // Touch events for mobile
         let touchStartX = 0;
@@ -79,6 +82,11 @@ class Game2048 {
             event.preventDefault();
             this.move(direction);
         }
+
+        if (event.key === 'z' || event.key === 'Z') {
+            event.preventDefault();
+            this.undo();
+        }
     }
 
     handleSwipe(startX, startY, endX, endY) {
@@ -106,12 +114,49 @@ class Game2048 {
         this.won = false;
         this.over = false;
         this.keepPlaying = false;
+        this.previousState = null;
 
         this.updateScore();
+        this.updateUndoButton();
         this.hideMessage();
         this.addRandomTile();
         this.addRandomTile();
         this.render();
+    }
+
+    saveState() {
+        this.previousState = {
+            grid: this.grid.map(row => row.map(tile => tile ? { ...tile } : null)),
+            score: this.score,
+            won: this.won,
+            over: this.over
+        };
+        this.updateUndoButton();
+    }
+
+    undo() {
+        if (!this.previousState) return;
+
+        this.grid = this.previousState.grid.map(row => row.map(tile => tile ? { ...tile } : null));
+        this.score = this.previousState.score;
+        this.won = this.previousState.won;
+        this.over = this.previousState.over;
+        this.previousState = null;
+
+        this.updateScore();
+        this.updateUndoButton();
+        this.hideMessage();
+        this.render();
+    }
+
+    updateUndoButton() {
+        if (this.previousState) {
+            this.undoButton.classList.remove('disabled');
+            this.undoButton.disabled = false;
+        } else {
+            this.undoButton.classList.add('disabled');
+            this.undoButton.disabled = true;
+        }
     }
 
     addRandomTile() {
@@ -147,6 +192,9 @@ class Game2048 {
 
         const vector = vectors[direction];
         let moved = false;
+
+        // Save state before move for undo
+        this.saveState();
 
         // Clear merge flags
         for (let row = 0; row < this.size; row++) {
@@ -215,6 +263,10 @@ class Game2048 {
             } else if (this.over) {
                 this.showMessage('Game Over!', 'game-over');
             }
+        } else {
+            // No move happened, discard the saved state
+            this.previousState = null;
+            this.updateUndoButton();
         }
     }
 
