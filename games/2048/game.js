@@ -691,7 +691,7 @@ class ThemeManager {
     }
 
     loadTheme() {
-        const savedTheme = localStorage.getItem('2048-theme');
+        const savedTheme = localStorage.getItem('game-hub-theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
         if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
@@ -702,7 +702,7 @@ class ThemeManager {
     toggleTheme() {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem('2048-theme', isDark ? 'dark' : 'light');
+        localStorage.setItem('game-hub-theme', isDark ? 'dark' : 'light');
     }
 }
 

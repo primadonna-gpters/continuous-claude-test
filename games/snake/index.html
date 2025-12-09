@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <a href="../../index.html" class="back-btn" aria-label="Back to Game Hub">← Hub</a>
+                <h1>🐍 Snake</h1>
+            </div>
+            <div class="score-container">
+                <div class="score-box">
+                    <div class="score-label">SCORE</div>
+                    <div id="score">0</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-label">BEST</div>
+                    <div id="best-score">0</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-info">
+            <p>먹이를 먹고 뱀을 길게 키워보세요!</p>
+            <div class="game-buttons">
+                <button id="new-game-btn">New Game</button>
+                <button id="pause-btn" aria-label="Pause game">⏸️</button>
+                <button id="sound-toggle-btn" aria-label="Toggle sound">
+                    <span class="sound-on-icon">🔊</span>
+                    <span class="sound-off-icon">🔇</span>
+                </button>
+                <button id="theme-toggle-btn" aria-label="Toggle dark mode">
+                    <span class="theme-icon light-icon">🌙</span>
+                    <span class="theme-icon dark-icon">☀️</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="game-container">
+            <canvas id="game-canvas"></canvas>
+            <div id="game-message" class="hidden">
+                <p></p>
+                <button id="retry-btn">Try again</button>
+            </div>
+            <div id="start-message">
+                <p>Press Space or Tap to Start</p>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <p><strong>조작 방법:</strong> 화살표 키 또는 WASD로 방향을 바꾸세요.</p>
+            <p>모바일: 스와이프로 이동 | <strong>Space</strong>: 일시정지</p>
+        </div>
+
+        <div class="mobile-controls">
+            <button class="control-btn" data-direction="up">↑</button>
+            <div class="control-row">
+                <button class="control-btn" data-direction="left">←</button>
+                <button class="control-btn" data-direction="down">↓</button>
+                <button class="control-btn" data-direction="right">→</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
