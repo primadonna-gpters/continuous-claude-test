@@ -1737,6 +1737,25 @@ function checkUnion(weapon) {
     return !!partnerWeapon;
 }
 
+// Check if a weapon is ready for Union (for UI display)
+// Returns the partner weapon if Union is possible, null otherwise
+function checkForUnionPossibility(weapon) {
+    if (weapon.evolved || weapon.unioned || weapon.level < weapon.maxLevel) return null;
+
+    const weaponType = WEAPON_TYPES[weapon.id];
+    if (!weaponType.unionWith || !weaponType.unionResult) return null;
+
+    // Check if we have the partner weapon at max level
+    const partnerWeapon = player.weapons.find(w =>
+        w.id === weaponType.unionWith &&
+        w.level >= w.maxLevel &&
+        !w.evolved &&
+        !w.unioned
+    );
+
+    return partnerWeapon || null;
+}
+
 function performUnion(weapon) {
     const weaponType = WEAPON_TYPES[weapon.id];
     const unionResult = UNION_WEAPONS[weaponType.unionResult];
@@ -4604,14 +4623,38 @@ function drawExpGems() {
         const x = Math.floor(gem.x);
         const y = Math.floor(gem.y);
 
+        // Glow effect based on gem value
+        const glowColor = gem.value >= 5 ? 'rgba(255, 68, 68, 0.6)' :
+                          gem.value >= 3 ? 'rgba(68, 255, 68, 0.6)' : 'rgba(68, 170, 255, 0.6)';
+        const glowSize = gem.value >= 5 ? 12 : gem.value >= 3 ? 10 : 8;
+
+        // Pulse effect
+        const pulse = Math.sin(Date.now() / 300 + gem.x * 0.1) * 0.3 + 0.7;
+
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = glowSize * pulse;
+
+        // Black outline
+        ctx.fillStyle = '#000';
+        drawPixelRect(x - 3, y - 5, 6, 2);
+        drawPixelRect(x - 4, y - 3, 8, 2);
+        drawPixelRect(x - 4, y - 1, 8, 2);
+        drawPixelRect(x - 3, y + 1, 6, 2);
+        drawPixelRect(x - 2, y + 3, 4, 2);
+
+        // Main gem body
         ctx.fillStyle = gem.value >= 5 ? '#ff4444' : gem.value >= 3 ? '#44ff44' : '#44aaff';
         drawPixelRect(x - 2, y - 4, 4, 2);
         drawPixelRect(x - 3, y - 2, 6, 2);
         drawPixelRect(x - 2, y, 4, 2);
         drawPixelRect(x - 1, y + 2, 2, 2);
 
+        // Highlight
         ctx.fillStyle = gem.value >= 5 ? '#ff8888' : gem.value >= 3 ? '#88ff88' : '#88ccff';
         drawPixelRect(x - 1, y - 3, 2, 1);
+        drawPixelRect(x - 2, y - 2, 1, 1);
+
+        ctx.shadowBlur = 0;
     }
 }
 
@@ -4622,12 +4665,38 @@ function drawChests() {
 
         const glow = Math.sin(Date.now() / 200) * 0.3 + 0.7;
 
+        // Golden glow effect
+        ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+        ctx.shadowBlur = 15 * glow;
+
+        // Black outline
+        ctx.fillStyle = '#000';
+        drawPixelRect(x - 9, y - 7, 18, 2);
+        drawPixelRect(x - 9, y - 5, 2, 12);
+        drawPixelRect(x + 7, y - 5, 2, 12);
+        drawPixelRect(x - 9, y + 5, 18, 2);
+
+        // Chest body (wood)
         ctx.fillStyle = '#8B4513';
         drawPixelRect(x - 8, y - 4, 16, 10);
+
+        // Chest lid (gold trim)
         ctx.fillStyle = `rgba(212, 175, 55, ${glow})`;
         drawPixelRect(x - 6, y - 6, 12, 4);
+
+        // Gold lock
         ctx.fillStyle = '#FFD700';
         drawPixelRect(x - 2, y - 2, 4, 4);
+
+        // Highlight on lid
+        ctx.fillStyle = '#fff';
+        drawPixelRect(x - 5, y - 5, 2, 1);
+
+        // Inner shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        drawPixelRect(x - 7, y + 2, 14, 2);
+
+        ctx.shadowBlur = 0;
     }
 }
 
@@ -4677,19 +4746,37 @@ function drawWeaponSlots() {
         if (player.weapons[i]) {
             const weapon = player.weapons[i];
             const weaponType = WEAPON_TYPES[weapon.id];
-            const type = weapon.evolved ? EVOLVED_WEAPONS[weapon.evolvedId] : weaponType;
+            const type = weapon.evolved ? EVOLVED_WEAPONS[weapon.evolvedId] :
+                         weapon.unioned ? UNION_WEAPONS[weapon.unionId] : weaponType;
 
             // Check if evolution is ready
-            const evolutionReady = !weapon.evolved && weapon.level >= weapon.maxLevel &&
+            const evolutionReady = !weapon.evolved && !weapon.unioned && weapon.level >= weapon.maxLevel &&
                 player.passives.some(p => p.id === weaponType.requiresPassive);
 
+            // Check if Union is ready
+            const unionReady = checkForUnionPossibility(weapon) !== null;
+
             // Border color based on state
-            if (weapon.evolved) {
+            if (weapon.unioned) {
+                // Unioned weapon - cyan glow with rainbow pulse
+                const hue = (Date.now() / 20) % 360;
+                ctx.strokeStyle = `hsl(${hue}, 100%, 70%)`;
+                ctx.lineWidth = 2;
+                ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+                ctx.shadowBlur = 10;
+            } else if (weapon.evolved) {
                 // Evolved weapon - purple glow
                 ctx.strokeStyle = '#ff44ff';
                 ctx.lineWidth = 2;
                 ctx.shadowColor = '#ff44ff';
                 ctx.shadowBlur = 8;
+            } else if (unionReady) {
+                // Union ready - cyan pulsing
+                const pulse = Math.sin(Date.now() / 150) * 0.3 + 0.7;
+                ctx.strokeStyle = `rgba(0, 255, 255, ${pulse})`;
+                ctx.lineWidth = 2;
+                ctx.shadowColor = '#00ffff';
+                ctx.shadowBlur = 12 * pulse;
             } else if (evolutionReady) {
                 // Evolution ready - gold pulsing
                 const pulse = Math.sin(Date.now() / 200) * 0.3 + 0.7;
@@ -4716,13 +4803,14 @@ function drawWeaponSlots() {
             ctx.fillText(type.icon, x + slotSize / 2, startY + slotSize / 2 - 2);
 
             // Level indicator background
-            ctx.fillStyle = weapon.evolved ? '#ff44ff' : 'rgba(0, 0, 0, 0.8)';
+            ctx.fillStyle = weapon.unioned ? '#00ffff' : weapon.evolved ? '#ff44ff' : 'rgba(0, 0, 0, 0.8)';
             ctx.fillRect(x + slotSize - 12, startY + slotSize - 12, 12, 12);
 
             // Level text
             ctx.font = 'bold 8px sans-serif';
-            ctx.fillStyle = weapon.evolved ? '#fff' : '#ffd700';
-            ctx.fillText(weapon.evolved ? 'E' : weapon.level, x + slotSize - 6, startY + slotSize - 5);
+            ctx.fillStyle = weapon.unioned ? '#000' : weapon.evolved ? '#fff' : '#ffd700';
+            const levelText = weapon.unioned ? 'U' : weapon.evolved ? 'E' : weapon.level;
+            ctx.fillText(levelText, x + slotSize - 6, startY + slotSize - 5);
 
             // Cooldown overlay
             if (weapon.cooldownTimer > 0) {
