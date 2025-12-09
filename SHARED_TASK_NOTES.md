@@ -2,7 +2,7 @@
 
 ## Current Status
 멀티 게임 허브 완성. 2048, Snake, Minesweeper, Tetris, Breakout, Memory, Pixel Survivor 7개 게임 플레이 가능.
-Pixel Survivor가 뱀파이어 서바이벌 시스템으로 대폭 개선됨.
+**Pixel Survivor가 뱀파이어 서바이벌과 동일한 시스템으로 대규모 업데이트 완료!**
 
 ## 게임 실행 방법
 ```bash
@@ -10,117 +10,69 @@ python -m http.server 8000
 # 브라우저에서 http://localhost:8000 접속
 ```
 
-## 프로젝트 구조
-```
-├── index.html          # Game Hub 메인 페이지
-├── style.css           # Hub 스타일
-├── hub.js              # Hub 테마 관리
-├── games/
-│   ├── 2048/
-│   ├── snake/
-│   ├── minesweeper/
-│   ├── tetris/
-│   ├── breakout/
-│   ├── memory/
-│   └── survivor/       # Pixel Survivor (Vampire Survivors clone)
-└── SHARED_TASK_NOTES.md
-```
+## Pixel Survivor - 뱀파이어 서바이벌 클론 (대규모 업데이트)
 
-## 구현된 게임
+### 캐릭터 선택 시스템 (8명)
+| 캐릭터 | 시작 무기 | 특수 효과 |
+|--------|----------|----------|
+| Antonio | Whip | +10% 데미지, 레벨당 +1 HP |
+| Imelda | Magic Wand | +10% 경험치 |
+| Gennaro | Knife | +1 투사체 |
+| Pasqualina | Runetracer | +10% 이동속도 |
+| Poe | Garlic | -30% HP, +25% 픽업범위 |
+| Arca | Fire Wand | -5% 쿨다운 |
+| Porta | Lightning Ring | +30% 공격범위 |
+| Dommario | King Bible | +40% 지속시간 |
 
-### 2048
-- 4x4 그리드, 타일 합치기 게임
-- 화살표 키/WASD + 모바일 스와이프
-- Undo 기능, 애니메이션 + 사운드
-
-### Snake
-- 20x20 그리드, 클래식 스네이크 게임
-- 화살표 키/WASD + 모바일 스와이프/버튼
-- 일시정지, 속도 증가, 사운드
-
-### Minesweeper
-- 3단계 난이도 (Easy/Medium/Hard)
-- 클릭: 칸 열기, 우클릭/롱프레스: 깃발
-- 타이머, 최고 기록 저장 (난이도별)
-- 첫 클릭 안전 보장 (지뢰 없음)
-
-### Tetris
-- 10x20 그리드, 클래식 테트리스
-- 화살표 키: 이동/회전, Space: 하드 드롭
-- X/Z: 회전, C: 홀드 기능
-- Next 피스 미리보기, Hold 기능
-- 7-bag 랜덤화, 고스트 피스 표시
-- 레벨업 시스템 (10줄마다), 사운드
-
-### Breakout
-- 10x5 벽돌 그리드, 클래식 벽돌 깨기 게임
-- 화살표 키/WASD/마우스로 패들 이동
-- Space/클릭으로 공 발사
-- 레벨업 시스템 (모든 벽돌 파괴 시 다음 레벨)
-- Lives 시스템 (3개), 사운드
-
-### Memory
-- 카드 짝 맞추기 게임
-- 3단계 난이도 (Easy 4x3, Medium 4x4, Hard 6x4)
-- 클릭으로 카드 뒤집기
-- 이동 횟수, 타이머 표시
-- 난이도별 최고 기록 저장, 사운드
-
-### Pixel Survivor (Vampire Survivors Clone) - UPDATED
-**뱀파이어 서바이벌과 동일한 시스템으로 대폭 개선됨**
-
-#### 무기 시스템 (6개 슬롯)
+### 무기 시스템 (12개, 6슬롯)
 | 무기 | 설명 | 진화 | 필요 패시브 |
 |------|------|------|------------|
-| Whip 🔪 | 수평 공격 | Bloody Tear 🩸 (적중 시 회복) | Hollow Heart |
-| Magic Wand 🪄 | 가장 가까운 적 타겟팅 | Holy Wand ✨ (쿨다운 감소) | Empty Tome |
-| Knife 🗡️ | 이동 방향으로 발사 | Thousand Edge ⚔️ (다중 발사체) | Bracer |
-| Axe 🪓 | 포물선 궤적 | Death Spiral 💀 (궤도 회전) | Candelabrador |
-| Fire Wand 🔥 | 화염구 발사 | Hellfire ☄️ (폭발 효과) | Spinach |
-| Holy Water 💧 | 데미지 존 생성 | La Borra 🌊 (플레이어 따라다님) | Attractorb |
+| Whip 🔪 | 수평 관통 공격 | Bloody Tear 🩸 | Hollow Heart |
+| Magic Wand 🪄 | 가장 가까운 적 타겟팅 | Holy Wand ✨ | Empty Tome |
+| Knife 🗡️ | 이동 방향 빠른 발사 | Thousand Edge ⚔️ | Bracer |
+| Axe 🪓 | 포물선 궤적 | Death Spiral 💀 | Candelabrador |
+| Fire Wand 🔥 | 랜덤 적 화염구 | Hellfire ☄️ | Spinach |
+| Santa Water 💧 | 데미지 존 생성 | La Borra 🌊 | Attractorb |
+| King Bible 📖 | 플레이어 주위 회전 | Unholy Vespers 📕 | Spellbinder |
+| Cross ✝️ | 부메랑 (돌아옴) | Heaven Sword 🗡️ | Clover |
+| Garlic 🧄 | 주변 지속 데미지 | Soul Eater 👻 | Pummarola |
+| Lightning Ring ⚡ | 랜덤 적 번개 | Thunder Loop 🌩️ | Duplicator |
+| Runetracer 💠 | 화면 내 바운스 | NO FUTURE 💥 | Armor |
+| Pentagram ⭐ | 화면 전체 공격 | Gorgeous Moon 🌙 | Crown |
 
-#### 패시브 아이템 시스템 (6개 슬롯)
-| 패시브 | 효과 |
-|--------|------|
-| Hollow Heart ❤️ | +20% 최대 체력 |
-| Empty Tome 📕 | -8% 쿨다운 |
-| Bracer 🦾 | +10% 투사체 속도 |
-| Candelabrador 🕯️ | +10% 공격 범위 |
-| Spinach 🥬 | +10% 데미지 |
-| Attractorb 🧲 | +50% 픽업 범위 |
-| Clover 🍀 | +10% 행운 (보물상자 드롭률) |
-| Pummarola 🍅 | +0.2 HP/초 재생 |
-| Duplicator 📋 | +1 투사체 수 |
+### 패시브 아이템 (15개, 6슬롯)
+Spinach, Armor, Hollow Heart, Pummarola, Empty Tome, Candelabrador, Bracer, Spellbinder, Duplicator, Wings, Attractorb, Clover, Crown, Stone Mask, Tiragisu
 
-#### 진화 시스템
-- 무기 레벨 8 (최대) + 해당 패시브 보유 시 보물상자에서 진화
-- 진화 무기는 강력한 특수 효과 보유
+### 적 웨이브 시스템 (분 기반)
+- 0~30초: Zombie
+- 30초~1분: +Bat
+- 1분~: +Skeleton, BOSS: Giant
+- 2분~: +Ghost
+- 3분~: BOSS: Necromancer
+- 4분~: +Demon
+- 5분~: BOSS: Vampire
+- 10분~: +Reaper
+- 15분~: BOSS: Death
+- 25분~: BOSS: Red Death (즉사 공격)
 
-#### 적 타입
-- Zombie (기본): 표준 스탯
-- Bat: 빠르지만 체력 낮음
-- Skeleton: 느리지만 체력 높고 데미지 강함
-- Ghost: 중간 스탯, 반투명
-- Boss: 5분 후 등장, 매우 높은 스탯
+### 게임 메카닉
+- **승리 조건**: 30분 생존
+- 무기 진화: 레벨 8 + 해당 패시브 + 보물상자
+- 미니맵, 무기/패시브 슬롯 UI
+- 월드 크기: 2000x2000, 카메라 추적
 
-#### 게임 메카닉
-- 레벨업 시 무기/패시브 중 3-4개 선택지
-- 보물상자: 적 처치 시 2% 확률 드롭 (Clover로 증가)
-- 난이도: 30초마다 적 스탯 증가, 스폰 속도 증가
-- 화면 하단에 무기/패시브 슬롯 UI 표시
-
-## 공통 기능
-- 다크 모드 (테마 공유: game-hub-theme)
-- 사운드 on/off 토글
-- 반응형 디자인 + 모바일 지원
-- localStorage로 설정/점수 저장
+### UI 개선사항
+- 캐릭터 선택 화면 (8캐릭터 그리드)
+- 희귀도별 컬러 (common/uncommon/rare/legendary)
+- 레벨업/타이틀 애니메이션
+- 진화 가능 무기 골드 테두리
 
 ## 다음 iteration에서 고려할 개선사항
-1. **Pixel Survivor 추가 개선**
-   - King Bible (회전 무기) 추가
-   - Lightning Ring (연쇄 번개) 추가
-   - 더 많은 적 타입 및 보스
-   - 30분 생존 시 승리 조건
+1. **Pixel Survivor 추가 콘텐츠**
+   - 언락 시스템 (캐릭터/무기)
+   - 아케인 (조합 진화)
+   - 스테이지 선택
+   - 실적 시스템
 2. **새 게임 추가** - Flappy Bird, Pong, Sudoku 등
 3. **PWA 지원** - 오프라인 플레이
 4. **통계 페이지** - 전체 게임 통계 대시보드
