@@ -1,5 +1,97 @@
-class Game2048 {
+// Sound effects manager using Web Audio API
+class SoundManager {
     constructor() {
+        this.enabled = this.loadSoundPreference();
+        this.audioContext = null;
+    }
+
+    initAudioContext() {
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+    }
+
+    loadSoundPreference() {
+        const saved = localStorage.getItem('2048-sound');
+        return saved !== 'false';
+    }
+
+    saveSoundPreference() {
+        localStorage.setItem('2048-sound', this.enabled.toString());
+    }
+
+    toggle() {
+        this.enabled = !this.enabled;
+        this.saveSoundPreference();
+        return this.enabled;
+    }
+
+    playTone(frequency, duration, type = 'sine', volume = 0.3) {
+        if (!this.enabled) return;
+        this.initAudioContext();
+
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+
+        gainNode.gain.setValueAtTime(volume, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration);
+    }
+
+    playMove() {
+        this.playTone(220, 0.1, 'sine', 0.15);
+    }
+
+    playMerge(value) {
+        // Higher pitch for higher value tiles
+        const baseFreq = 330;
+        const multiplier = Math.min(Math.log2(value) / 11, 1);
+        const freq = baseFreq + (multiplier * 440);
+        this.playTone(freq, 0.15, 'sine', 0.25);
+    }
+
+    playNewTile() {
+        this.playTone(523, 0.08, 'sine', 0.1);
+    }
+
+    playWin() {
+        if (!this.enabled) return;
+        this.initAudioContext();
+
+        const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6 (C major chord arpeggio)
+        notes.forEach((freq, i) => {
+            setTimeout(() => this.playTone(freq, 0.3, 'sine', 0.3), i * 100);
+        });
+    }
+
+    playGameOver() {
+        if (!this.enabled) return;
+        this.initAudioContext();
+
+        const notes = [392, 349, 330, 262]; // G4, F4, E4, C4 (descending)
+        notes.forEach((freq, i) => {
+            setTimeout(() => this.playTone(freq, 0.25, 'sine', 0.2), i * 150);
+        });
+    }
+
+    playUndo() {
+        this.playTone(392, 0.1, 'triangle', 0.15);
+    }
+}
+
+class Game2048 {
+    constructor(soundManager) {
         this.size = 4;
         this.grid = [];
         this.score = 0;
@@ -10,6 +102,7 @@ class Game2048 {
         this.previousState = null;
         this.tileId = 0;
         this.tileElements = new Map();
+        this.soundManager = soundManager;
 
         this.tileContainer = document.getElementById('tile-container');
         this.gridBackground = document.getElementById('grid-background');
@@ -155,6 +248,8 @@ class Game2048 {
     undo() {
         if (!this.previousState) return;
 
+        this.soundManager.playUndo();
+
         // Restore grid with new IDs to prevent animation artifacts
         this.grid = this.previousState.grid.map(row => row.map(tile => {
             if (tile) {
@@ -276,6 +371,7 @@ class Game2048 {
                         this.grid[row][col] = null;
                         this.score += newValue;
                         moved = true;
+                        this.soundManager.playMerge(newValue);
 
                         if (newValue === 2048 && !this.keepPlaying) {
                             this.won = true;
@@ -297,6 +393,7 @@ class Game2048 {
 
         if (moved) {
             this.addRandomTile();
+            this.soundManager.playNewTile();
             this.updateScore();
 
             if (!this.movesAvailable()) {
@@ -307,8 +404,10 @@ class Game2048 {
 
             if (this.won) {
                 this.showMessage('You Win!', 'game-won');
+                this.soundManager.playWin();
             } else if (this.over) {
                 this.showMessage('Game Over!', 'game-over');
+                this.soundManager.playGameOver();
             }
         } else {
             // No move happened, discard the saved state
@@ -609,10 +708,34 @@ class ThemeManager {
 
 // Initialize game when DOM is loaded
 let game2048Instance = null;
+let soundManagerInstance = null;
 document.addEventListener('DOMContentLoaded', () => {
     new ThemeManager();
-    game2048Instance = new Game2048();
+    soundManagerInstance = new SoundManager();
+    game2048Instance = new Game2048(soundManagerInstance);
+
+    // Sound toggle button
+    const soundToggleBtn = document.getElementById('sound-toggle-btn');
+    if (soundToggleBtn) {
+        updateSoundButtonIcon(soundToggleBtn, soundManagerInstance.enabled);
+        soundToggleBtn.addEventListener('click', () => {
+            const enabled = soundManagerInstance.toggle();
+            updateSoundButtonIcon(soundToggleBtn, enabled);
+        });
+    }
 });
+
+function updateSoundButtonIcon(button, enabled) {
+    const onIcon = button.querySelector('.sound-on-icon');
+    const offIcon = button.querySelector('.sound-off-icon');
+    if (enabled) {
+        onIcon.style.display = 'inline';
+        offIcon.style.display = 'none';
+    } else {
+        onIcon.style.display = 'none';
+        offIcon.style.display = 'inline';
+    }
+}
 
 // Handle window resize for proper tile sizing
 window.addEventListener('resize', () => {
