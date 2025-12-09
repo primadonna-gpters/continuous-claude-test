@@ -94,6 +94,8 @@ const CHARACTERS = {
 };
 
 let selectedCharacter = 'antonio';
+let selectedArcana = null; // Starting arcana selection
+let arcanaSelectionMode = false; // For arcana selection at start
 
 // Weapon definitions (matching Vampire Survivors)
 const WEAPON_TYPES = {
@@ -360,6 +362,145 @@ const EVOLVED_WEAPONS = {
     }
 };
 
+// Arcana definitions (game modifiers like Vampire Survivors)
+const ARCANA_TYPES = {
+    sarabande: {
+        name: 'I - Sarabande of Healing',
+        desc: 'Healing is more effective. +50% healing from all sources.',
+        icon: '💚',
+        effect: { healingBoost: 0.5 }
+    },
+    twilight: {
+        name: 'II - Twilight Requiem',
+        desc: 'Projectiles explode on hit. Explosions deal 30% damage.',
+        icon: '💥',
+        effect: { projectileExplode: true, explosionDamage: 0.3 }
+    },
+    tragedy: {
+        name: 'III - Tragic Princess',
+        desc: 'The faster you move, the more damage you deal. Up to +50%.',
+        icon: '👸',
+        effect: { movementDamage: true }
+    },
+    slash: {
+        name: 'IV - Slash',
+        desc: 'All weapons have +3 pierce.',
+        icon: '⚔️',
+        effect: { pierceBonus: 3 }
+    },
+    chaos: {
+        name: 'V - Chaos Malachite',
+        desc: '+100% projectile speed but -25% duration.',
+        icon: '💎',
+        effect: { projectileSpeed: 1.0, duration: -0.25 }
+    },
+    divineBlood: {
+        name: 'VI - Divine Bloodline',
+        desc: 'Armor also increases damage. +2% damage per armor.',
+        icon: '🩸',
+        effect: { armorToDamage: 0.02 }
+    },
+    ironBlue: {
+        name: 'VII - Iron Blue Will',
+        desc: 'Getting hit grants +10% damage for 5 seconds. Stacks 5 times.',
+        icon: '🔵',
+        effect: { damageOnHit: true }
+    },
+    madGroove: {
+        name: 'VIII - Mad Groove',
+        desc: 'Every 2 minutes, attract all gems and chests on screen.',
+        icon: '🎵',
+        effect: { magnetPulse: true }
+    },
+    silverWind: {
+        name: 'IX - Silver Wind',
+        desc: '+15% move speed, +15% attack speed, +10% luck.',
+        icon: '💨',
+        effect: { moveSpeed: 0.15, cooldown: 0.15, luck: 0.10 }
+    },
+    beginningArcana: {
+        name: 'X - Beginning',
+        desc: '+3 Projectiles, -30% damage.',
+        icon: '✨',
+        effect: { amount: 3, damage: -0.3 }
+    },
+    waltzArcana: {
+        name: 'XI - Waltz of Pearls',
+        desc: 'Bouncing projectiles bounce 3 additional times.',
+        icon: '🔮',
+        effect: { bounceBonus: 3 }
+    },
+    outOfBounds: {
+        name: 'XII - Out of Bounds',
+        desc: 'Weapons that expire deal explosion damage.',
+        icon: '🌀',
+        effect: { expirationExplosion: true }
+    }
+};
+
+// Union weapon definitions (two weapons combine into one)
+const UNION_WEAPONS = {
+    vandalier: {
+        name: 'Vandalier',
+        desc: 'Union of Peachone and Ebony Wings. Bombards everywhere.',
+        icon: '🦅',
+        requires: ['peachone', 'ebonyWings'],
+        damageMultiplier: 2.0,
+        amountBonus: 2,
+        areaMultiplier: 1.5
+    },
+    fuwalafuwaloo: {
+        name: 'Fuwalafuwaloo',
+        desc: 'Union of Vento Sacro and Bloody Tear. Ultimate slash.',
+        icon: '🌸',
+        requires: ['ventoSacro', 'bloodyTear'],
+        damageMultiplier: 2.5,
+        critChance: 0.3
+    },
+    phieraggi: {
+        name: 'Phieraggi',
+        desc: 'Union of Phiera and Eight. Dual wielding mastery.',
+        icon: '🔫',
+        requires: ['phiera', 'eight'],
+        damageMultiplier: 1.8,
+        amountBonus: 4
+    }
+};
+
+// Additional weapons for Union
+const ADDITIONAL_WEAPONS = {
+    peachone: {
+        name: 'Peachone',
+        desc: 'Bombards in a circular area',
+        icon: '🕊️',
+        damage: 10,
+        cooldown: 3.0,
+        area: 1.0,
+        speed: 0.5,
+        amount: 1,
+        pierce: -1,
+        evolvesTo: null,
+        unionWith: 'ebonyWings',
+        unionResult: 'vandalier',
+        rarity: 'rare'
+    },
+    ebonyWings: {
+        name: 'Ebony Wings',
+        desc: 'Bombards in a circular area (dark)',
+        icon: '🦇',
+        damage: 10,
+        cooldown: 3.0,
+        area: 1.0,
+        speed: 0.5,
+        amount: 1,
+        pierce: -1,
+        evolvesTo: null,
+        unionWith: 'peachone',
+        unionResult: 'vandalier',
+        rarity: 'rare'
+    }
+};
+
 // Passive item definitions (matching Vampire Survivors)
 const PASSIVE_TYPES = {
     spinach: {
@@ -514,7 +655,11 @@ let player = {
     goldMultiplier: 1,
     revivals: 0,
     invincibleTimer: 0,
-    character: null
+    character: null,
+    arcanas: [], // Selected arcanas for this run
+    damageOnHitStacks: 0, // For Iron Blue Will arcana
+    damageOnHitTimer: 0, // Timer for damage on hit buff
+    magnetPulseTimer: 0 // Timer for Mad Groove arcana
 };
 
 // Enemies
@@ -729,6 +874,14 @@ function showMenu() {
     document.getElementById('game-message').classList.add('hidden');
     document.getElementById('level-up-modal').classList.add('hidden');
     document.getElementById('character-select').classList.add('hidden');
+    hideArcanaSelect();
+}
+
+function hideArcanaSelect() {
+    const existingModal = document.getElementById('arcana-select');
+    if (existingModal) {
+        existingModal.classList.add('hidden');
+    }
 }
 
 function showCharacterSelect() {
@@ -763,14 +916,91 @@ function showCharacterSelect() {
 
     const startBtn = document.createElement('button');
     startBtn.className = 'start-run-btn';
-    startBtn.textContent = 'Start Run';
+    startBtn.textContent = 'SELECT ARCANA';
     startBtn.onclick = () => {
         selectModal.classList.add('hidden');
-        startNewGame();
+        showArcanaSelect();
     };
     container.appendChild(startBtn);
 
     selectModal.classList.remove('hidden');
+}
+
+function showArcanaSelect() {
+    gameState = 'arcanaSelect';
+    arcanaSelectionMode = true;
+    selectedArcana = null;
+
+    // Create or get arcana modal
+    let arcanaModal = document.getElementById('arcana-select');
+    if (!arcanaModal) {
+        arcanaModal = document.createElement('div');
+        arcanaModal.id = 'arcana-select';
+        arcanaModal.className = 'hidden';
+        document.getElementById('game-container').appendChild(arcanaModal);
+    }
+
+    arcanaModal.innerHTML = `
+        <h2>SELECT ARCANA</h2>
+        <p class="arcana-subtitle">Choose a powerful modifier for your run</p>
+        <div id="arcana-options"></div>
+    `;
+
+    const container = document.getElementById('arcana-options');
+
+    // Get 3 random arcanas to offer
+    const arcanaKeys = Object.keys(ARCANA_TYPES);
+    const shuffled = arcanaKeys.sort(() => Math.random() - 0.5);
+    const offered = shuffled.slice(0, 3);
+
+    offered.forEach(id => {
+        const arcana = ARCANA_TYPES[id];
+        const btn = document.createElement('button');
+        btn.className = 'arcana-btn';
+        btn.innerHTML = `
+            <div class="arcana-icon">${arcana.icon}</div>
+            <div class="arcana-info">
+                <div class="arcana-name">${arcana.name}</div>
+                <div class="arcana-desc">${arcana.desc}</div>
+            </div>
+        `;
+        btn.onclick = () => {
+            selectedArcana = id;
+            document.querySelectorAll('.arcana-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            playSound('pickup');
+        };
+        container.appendChild(btn);
+    });
+
+    // Skip arcana option
+    const skipBtn = document.createElement('button');
+    skipBtn.className = 'arcana-btn arcana-skip';
+    skipBtn.innerHTML = `
+        <div class="arcana-icon">❌</div>
+        <div class="arcana-info">
+            <div class="arcana-name">No Arcana</div>
+            <div class="arcana-desc">Start without any modifier</div>
+        </div>
+    `;
+    skipBtn.onclick = () => {
+        selectedArcana = null;
+        document.querySelectorAll('.arcana-btn').forEach(b => b.classList.remove('selected'));
+        skipBtn.classList.add('selected');
+        playSound('pickup');
+    };
+    container.appendChild(skipBtn);
+
+    const startBtn = document.createElement('button');
+    startBtn.className = 'start-run-btn';
+    startBtn.textContent = 'START RUN';
+    startBtn.onclick = () => {
+        arcanaModal.classList.add('hidden');
+        startNewGame();
+    };
+    container.appendChild(startBtn);
+
+    arcanaModal.classList.remove('hidden');
 }
 
 function startNewGame() {
@@ -806,8 +1036,19 @@ function startNewGame() {
         revivals: 0,
         invincibleTimer: 0,
         character: char,
-        levelBonus: char.levelBonus || {}
+        levelBonus: char.levelBonus || {},
+        arcanas: selectedArcana ? [selectedArcana] : [],
+        damageOnHitStacks: 0,
+        damageOnHitTimer: 0,
+        magnetPulseTimer: 0,
+        healingBoost: 0,
+        pierceBonus: 0
     };
+
+    // Apply starting arcana effects
+    if (selectedArcana) {
+        applyArcanaEffects();
+    }
 
     addWeapon(char.startingWeapon);
 
@@ -841,6 +1082,160 @@ function startNewGame() {
     lastTime = performance.now();
 
     playSound('start');
+}
+
+function applyArcanaEffects() {
+    // Reset arcana-specific bonuses
+    player.healingBoost = 0;
+    player.pierceBonus = 0;
+
+    for (const arcanaId of player.arcanas) {
+        const arcana = ARCANA_TYPES[arcanaId];
+        if (!arcana || !arcana.effect) continue;
+
+        const effect = arcana.effect;
+
+        // Sarabande - Healing boost
+        if (effect.healingBoost) {
+            player.healingBoost += effect.healingBoost;
+        }
+
+        // Slash - Pierce bonus
+        if (effect.pierceBonus) {
+            player.pierceBonus += effect.pierceBonus;
+        }
+
+        // Chaos Malachite - Projectile speed and duration
+        if (effect.projectileSpeed) {
+            player.projectileSpeedMultiplier += effect.projectileSpeed;
+        }
+        if (effect.duration) {
+            player.durationMultiplier += effect.duration;
+        }
+
+        // Silver Wind - Move speed, cooldown, luck
+        if (effect.moveSpeed) {
+            player.speedMultiplier += effect.moveSpeed;
+            player.speed = player.baseSpeed * player.speedMultiplier;
+        }
+        if (effect.cooldown) {
+            player.cooldownMultiplier -= effect.cooldown;
+        }
+        if (effect.luck) {
+            player.luck += effect.luck;
+        }
+
+        // Beginning - Amount and damage
+        if (effect.amount) {
+            player.amountBonus += effect.amount;
+        }
+        if (effect.damage) {
+            player.damageMultiplier += effect.damage;
+        }
+    }
+}
+
+function hasArcana(arcanaId) {
+    return player.arcanas && player.arcanas.includes(arcanaId);
+}
+
+function updateArcanaEffects() {
+    // Iron Blue Will - Damage on hit timer decay
+    if (player.damageOnHitTimer > 0) {
+        player.damageOnHitTimer -= deltaTime;
+        if (player.damageOnHitTimer <= 0) {
+            player.damageOnHitStacks = 0;
+        }
+    }
+
+    // Mad Groove - Magnet pulse every 2 minutes
+    if (hasArcana('madGroove')) {
+        player.magnetPulseTimer += deltaTime;
+        if (player.magnetPulseTimer >= 120) { // 2 minutes
+            player.magnetPulseTimer = 0;
+            triggerMadGroovePulse();
+        }
+    }
+}
+
+function triggerMadGroovePulse() {
+    // Attract all gems and chests on screen instantly
+    playSound('levelup');
+
+    // Pull all exp gems to player
+    for (const gem of expGems) {
+        const dx = player.x - gem.x;
+        const dy = player.y - gem.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 10) {
+            gem.x = player.x;
+            gem.y = player.y;
+        }
+    }
+
+    // Pull all chests to player
+    for (const chest of chests) {
+        chest.x = player.x + (Math.random() - 0.5) * 50;
+        chest.y = player.y + (Math.random() - 0.5) * 50;
+    }
+
+    // Visual effect
+    areaEffects.push({
+        x: player.x,
+        y: player.y,
+        radius: canvas.width,
+        damage: 0,
+        lifetime: 0.5,
+        maxLifetime: 0.5,
+        type: 'madgroove',
+        color: '#ff00ff'
+    });
+}
+
+function applyDamageOnHit() {
+    // Iron Blue Will - Getting hit grants damage bonus
+    if (hasArcana('ironBlue')) {
+        player.damageOnHitStacks = Math.min(5, player.damageOnHitStacks + 1);
+        player.damageOnHitTimer = 5; // 5 seconds duration
+    }
+}
+
+function getArcanaMovementDamageBonus() {
+    // Tragic Princess - Movement speed affects damage
+    if (hasArcana('tragedy')) {
+        // Calculate current velocity based on key states
+        let dx = 0, dy = 0;
+        if (keys['w'] || keys['arrowup']) dy -= 1;
+        if (keys['s'] || keys['arrowdown']) dy += 1;
+        if (keys['a'] || keys['arrowleft']) dx -= 1;
+        if (keys['d'] || keys['arrowright']) dx += 1;
+        if (joystickVector.x !== 0 || joystickVector.y !== 0) {
+            dx = joystickVector.x;
+            dy = joystickVector.y;
+        }
+        const isMoving = dx !== 0 || dy !== 0;
+        return isMoving ? 0.5 : 0; // +50% when moving
+    }
+    return 0;
+}
+
+function getArcanaDamageBonus() {
+    let bonus = 0;
+
+    // Iron Blue Will - Damage from being hit
+    if (hasArcana('ironBlue') && player.damageOnHitStacks > 0) {
+        bonus += player.damageOnHitStacks * 0.1; // +10% per stack
+    }
+
+    // Divine Bloodline - Armor to damage
+    if (hasArcana('divineBlood')) {
+        bonus += player.armor * 0.02; // +2% per armor
+    }
+
+    // Tragic Princess - Movement damage
+    bonus += getArcanaMovementDamageBonus();
+
+    return bonus;
 }
 
 function addWeapon(weaponId) {
@@ -1016,10 +1411,14 @@ function update(currentTime) {
         player.invincibleTimer -= deltaTime;
     }
 
-    // HP regeneration
+    // HP regeneration (with healing boost from arcana)
     if (player.regen > 0) {
-        player.health = Math.min(player.health + player.regen * deltaTime, player.maxHealth);
+        const healAmount = player.regen * deltaTime * (1 + (player.healingBoost || 0));
+        player.health = Math.min(player.health + healAmount, player.maxHealth);
     }
+
+    // Update arcana timers
+    updateArcanaEffects();
 
     updateDifficulty();
     updatePlayer();
@@ -1144,6 +1543,8 @@ function fireWeapon(weapon) {
 
     let damage = weaponType.damage * player.damageMultiplier * (1 + (weapon.level - 1) * 0.1);
     if (evolved) damage *= evolved.damageMultiplier;
+    // Apply arcana damage bonuses
+    damage *= (1 + getArcanaDamageBonus());
 
     let amount = weaponType.amount + Math.floor((weapon.level - 1) / 2) + player.amountBonus;
     if (evolved && evolved.amountBonus) amount += evolved.amountBonus;
@@ -1248,6 +1649,8 @@ function fireMagicWand(damage, amount, speed, level, evolved) {
 function fireKnife(damage, amount, speed, pierce, evolved) {
     const baseAngle = Math.atan2(lastMoveDirection.y, lastMoveDirection.x);
     const spread = 0.12;
+    // Apply arcana pierce bonus
+    const totalPierce = pierce + (player.pierceBonus || 0);
 
     for (let i = 0; i < amount; i++) {
         const angleOffset = (i - (amount - 1) / 2) * spread;
@@ -1259,7 +1662,7 @@ function fireKnife(damage, amount, speed, pierce, evolved) {
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed,
             damage: damage,
-            pierce: pierce,
+            pierce: totalPierce,
             type: 'knife',
             color: evolved ? '#aaaaff' : '#cccccc'
         });
@@ -1267,6 +1670,7 @@ function fireKnife(damage, amount, speed, pierce, evolved) {
 }
 
 function fireAxe(damage, amount, area, pierce, evolved) {
+    const totalPierce = pierce + (player.pierceBonus || 0);
     if (evolved && evolved.orbits) {
         for (let i = 0; i < amount; i++) {
             const angle = (i / amount) * Math.PI * 2;
@@ -1274,7 +1678,7 @@ function fireAxe(damage, amount, area, pierce, evolved) {
                 angle: angle,
                 distance: 80 * area,
                 damage: damage,
-                pierce: pierce,
+                pierce: totalPierce,
                 lifetime: 4,
                 rotationSpeed: 3,
                 type: 'axe',
@@ -2259,10 +2663,102 @@ function togglePause() {
     if (gameState === 'playing') {
         gameState = 'paused';
         document.getElementById('pause-btn').textContent = '▶️';
+        showPauseOverlay();
     } else if (gameState === 'paused') {
         gameState = 'playing';
         lastTime = performance.now();
         document.getElementById('pause-btn').textContent = '⏸️';
+        hidePauseOverlay();
+    }
+}
+
+function showPauseOverlay() {
+    // Create pause overlay if it doesn't exist
+    let overlay = document.getElementById('pause-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'pause-overlay';
+        document.getElementById('game-container').appendChild(overlay);
+    }
+
+    // Generate equipment details
+    const weaponDetails = player.weapons.map(w => {
+        const type = WEAPON_TYPES[w.id];
+        const evolved = w.evolved ? EVOLVED_WEAPONS[w.evolvedId] : null;
+        const displayName = evolved ? evolved.name : type.name;
+        const displayIcon = evolved ? evolved.icon : type.icon;
+        const levelText = w.evolved ? 'EVOLVED' : `LV ${w.level}/${w.maxLevel}`;
+        const canEvolve = !w.evolved && w.level >= w.maxLevel && player.passives.some(p => p.id === type.requiresPassive);
+        return `<div class="pause-equipment-item ${w.evolved ? 'evolved' : ''} ${canEvolve ? 'can-evolve' : ''}">
+            <span class="eq-icon">${displayIcon}</span>
+            <span class="eq-name">${displayName}</span>
+            <span class="eq-level">${levelText}</span>
+        </div>`;
+    }).join('');
+
+    const passiveDetails = player.passives.map(p => {
+        const type = PASSIVE_TYPES[p.id];
+        const isMax = p.level >= type.maxLevel;
+        return `<div class="pause-equipment-item ${isMax ? 'maxed' : ''}">
+            <span class="eq-icon">${type.icon}</span>
+            <span class="eq-name">${type.name}</span>
+            <span class="eq-level">LV ${p.level}/${type.maxLevel}</span>
+        </div>`;
+    }).join('');
+
+    const arcanaDetails = player.arcanas.length > 0 ? player.arcanas.map(a => {
+        const arcana = ARCANA_TYPES[a];
+        return `<div class="pause-equipment-item arcana-item">
+            <span class="eq-icon">${arcana.icon}</span>
+            <span class="eq-name">${arcana.name}</span>
+        </div>`;
+    }).join('') : '<div class="pause-no-items">No Arcana</div>';
+
+    overlay.innerHTML = `
+        <h2>PAUSED</h2>
+        <div class="pause-stats">
+            <div class="pause-stat">
+                <div class="pause-stat-label">Time</div>
+                <div class="pause-stat-value">${formatTime(gameTime)}</div>
+            </div>
+            <div class="pause-stat">
+                <div class="pause-stat-label">Kills</div>
+                <div class="pause-stat-value">${kills}</div>
+            </div>
+            <div class="pause-stat">
+                <div class="pause-stat-label">Level</div>
+                <div class="pause-stat-value">${player.level}</div>
+            </div>
+            <div class="pause-stat">
+                <div class="pause-stat-label">Coins</div>
+                <div class="pause-stat-value">${coins}</div>
+            </div>
+        </div>
+        <div class="pause-equipment">
+            <div class="pause-section">
+                <h3>WEAPONS</h3>
+                <div class="pause-items">${weaponDetails || '<div class="pause-no-items">No weapons</div>'}</div>
+            </div>
+            <div class="pause-section">
+                <h3>PASSIVES</h3>
+                <div class="pause-items">${passiveDetails || '<div class="pause-no-items">No passives</div>'}</div>
+            </div>
+            <div class="pause-section">
+                <h3>ARCANA</h3>
+                <div class="pause-items">${arcanaDetails}</div>
+            </div>
+        </div>
+        <button class="pause-resume-btn" onclick="togglePause()">RESUME</button>
+        <p class="pause-hint">Press Space or Esc to continue</p>
+    `;
+
+    overlay.classList.remove('hidden');
+}
+
+function hidePauseOverlay() {
+    const overlay = document.getElementById('pause-overlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
     }
 }
 
@@ -2295,7 +2791,7 @@ function render() {
     ctx.fillStyle = isDark ? '#0a0a14' : '#1a1a2e';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    if (gameState === 'menu' || gameState === 'characterSelect') {
+    if (gameState === 'menu' || gameState === 'characterSelect' || gameState === 'arcanaSelect') {
         drawMenuBackground();
         return;
     }
@@ -2319,6 +2815,8 @@ function render() {
     drawWeaponSlots();
     drawMinimap();
     drawKillCounter();
+    drawBossHealthBar();
+    drawArcanaIndicator();
 }
 
 function drawMenuBackground() {
@@ -2663,6 +3161,19 @@ function drawAreaEffects() {
             ctx.beginPath();
             ctx.arc(effect.x, effect.y, effect.radius * alpha, 0, Math.PI * 2);
             ctx.stroke();
+            ctx.globalAlpha = 1;
+        } else if (effect.type === 'madgroove') {
+            // Mad Groove magnet pulse
+            ctx.strokeStyle = effect.color;
+            ctx.globalAlpha = alpha * 0.6;
+            ctx.lineWidth = 3;
+            // Multiple expanding rings
+            for (let i = 0; i < 3; i++) {
+                const ringAlpha = (1 - alpha) + i * 0.2;
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, effect.radius * ringAlpha, 0, Math.PI * 2);
+                ctx.stroke();
+            }
             ctx.globalAlpha = 1;
         }
     }
@@ -3132,6 +3643,124 @@ function drawKillCounter() {
     ctx.font = 'bold 12px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(`💰 ${coins}`, coinX + coinW / 2, timerY + 4 + coinH / 2 + 1);
+}
+
+function drawBossHealthBar() {
+    // Find active boss
+    const boss = enemies.find(e => e.isBoss);
+    if (!boss) return;
+
+    const barWidth = canvas.width * 0.6;
+    const barHeight = 24;
+    const barX = (canvas.width - barWidth) / 2;
+    const barY = 52; // Below the timer
+
+    // Background
+    const grad = ctx.createLinearGradient(barX, barY, barX, barY + barHeight);
+    grad.addColorStop(0, 'rgba(30, 10, 10, 0.95)');
+    grad.addColorStop(1, 'rgba(15, 5, 5, 0.98)');
+    ctx.fillStyle = grad;
+    drawRoundedRect(barX, barY, barWidth, barHeight, 4);
+    ctx.fill();
+
+    // Border with pulsing effect
+    const pulse = Math.sin(Date.now() / 200) * 0.3 + 0.7;
+    ctx.strokeStyle = `rgba(255, 0, 0, ${pulse})`;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#ff0000';
+    ctx.shadowBlur = 10 * pulse;
+    drawRoundedRect(barX, barY, barWidth, barHeight, 4);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Health bar fill
+    const healthPercent = Math.max(0, boss.health / boss.maxHealth);
+    const healthWidth = (barWidth - 6) * healthPercent;
+
+    // Health gradient
+    const healthGrad = ctx.createLinearGradient(barX + 3, barY + 3, barX + 3, barY + barHeight - 6);
+    healthGrad.addColorStop(0, '#ff4444');
+    healthGrad.addColorStop(0.5, '#cc0000');
+    healthGrad.addColorStop(1, '#880000');
+    ctx.fillStyle = healthGrad;
+    ctx.fillRect(barX + 3, barY + 3, healthWidth, barHeight - 6);
+
+    // Health shine effect
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.fillRect(barX + 3, barY + 3, healthWidth, (barHeight - 6) / 3);
+
+    // Boss name
+    const bossType = ENEMY_TYPES[boss.type];
+    const bossName = boss.type.toUpperCase().replace(/([A-Z])/g, ' $1').trim();
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ff6666';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`💀 ${bossName}`, barX + barWidth / 2, barY + barHeight / 2 - 1);
+
+    // Health percentage
+    ctx.font = 'bold 9px sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'right';
+    ctx.fillText(`${Math.ceil(healthPercent * 100)}%`, barX + barWidth - 8, barY + barHeight / 2);
+}
+
+function drawArcanaIndicator() {
+    // Show active arcana in bottom left corner
+    if (!player.arcanas || player.arcanas.length === 0) return;
+
+    const arcanaId = player.arcanas[0];
+    const arcana = ARCANA_TYPES[arcanaId];
+    if (!arcana) return;
+
+    const x = 10;
+    const y = canvas.height - 85; // Above weapon slots
+
+    // Background
+    const size = 40;
+    const grad = ctx.createLinearGradient(x, y, x, y + size);
+    grad.addColorStop(0, 'rgba(50, 30, 70, 0.9)');
+    grad.addColorStop(1, 'rgba(30, 15, 50, 0.95)');
+    ctx.fillStyle = grad;
+    drawRoundedRect(x, y, size, size, 6);
+    ctx.fill();
+
+    // Border
+    ctx.strokeStyle = '#aa44ff';
+    ctx.lineWidth = 2;
+    drawRoundedRect(x, y, size, size, 6);
+    ctx.stroke();
+
+    // Icon
+    ctx.font = '22px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(arcana.icon, x + size / 2, y + size / 2);
+
+    // Label
+    ctx.font = 'bold 8px sans-serif';
+    ctx.fillStyle = '#aa44ff';
+    ctx.textAlign = 'left';
+    ctx.fillText('ARCANA', x, y - 4);
+
+    // Show Iron Blue Will stacks
+    if (hasArcana('ironBlue') && player.damageOnHitStacks > 0) {
+        ctx.fillStyle = '#4488ff';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`x${player.damageOnHitStacks}`, x + size / 2, y + size + 10);
+    }
+
+    // Show Mad Groove timer
+    if (hasArcana('madGroove')) {
+        const timeToNext = 120 - player.magnetPulseTimer;
+        if (timeToNext > 0 && timeToNext < 120) {
+            ctx.fillStyle = '#ff44ff';
+            ctx.font = 'bold 10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${Math.ceil(timeToNext)}s`, x + size / 2, y + size + 10);
+        }
+    }
 }
 
 function drawPixelRect(x, y, width, height) {
