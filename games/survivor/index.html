@@ -2,16 +2,17 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixel Survivor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pixel Survivor - Vampire Survivors Clone</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💀</text></svg>">
 </head>
 <body>
     <div class="container">
         <header>
             <div class="header-left">
                 <a href="../../index.html" class="back-btn" aria-label="Back to Game Hub">← Hub</a>
-                <h1>Pixel Survivor</h1>
+                <h1>PIXEL SURVIVOR</h1>
             </div>
             <div class="score-container">
                 <div class="score-box">
@@ -30,17 +31,17 @@
         </header>
 
         <div class="game-info">
-            <p>30분 생존에 도전하세요! 적을 처치하고 무기를 진화시키세요.</p>
+            <p>Survive 30 minutes! Slay enemies and evolve your weapons.</p>
             <div class="game-buttons">
-                <button id="new-game-btn">New Game</button>
+                <button id="new-game-btn">NEW GAME</button>
                 <button id="pause-btn" aria-label="Pause game">⏸️</button>
                 <button id="sound-toggle-btn" aria-label="Toggle sound">
                     <span class="sound-on-icon">🔊</span>
                     <span class="sound-off-icon">🔇</span>
                 </button>
-                <button id="theme-toggle-btn" aria-label="Toggle dark mode">
-                    <span class="theme-icon light-icon">🌙</span>
-                    <span class="theme-icon dark-icon">☀️</span>
+                <button id="theme-toggle-btn" aria-label="Toggle theme">
+                    <span class="theme-icon light-icon">☀️</span>
+                    <span class="theme-icon dark-icon">🌙</span>
                 </button>
             </div>
         </div>
@@ -60,12 +61,12 @@
             <div id="game-message" class="hidden">
                 <h2></h2>
                 <p></p>
-                <button id="retry-btn">Try Again</button>
+                <button id="retry-btn">TRY AGAIN</button>
             </div>
             <div id="start-message">
-                <div class="title-logo">PIXEL SURVIVOR</div>
+                <div class="title-logo">PIXEL<br>SURVIVOR</div>
                 <p>Press Space or Tap to Start</p>
-                <div class="start-subtitle">Survive 30 minutes to win!</div>
+                <div class="start-subtitle">A Vampire Survivors Clone</div>
             </div>
             <div id="character-select" class="hidden">
                 <h2>SELECT CHARACTER</h2>
@@ -78,9 +79,9 @@
         </div>
 
         <div class="instructions">
-            <p><strong>조작:</strong> WASD 또는 화살표 키로 이동 | 공격은 자동!</p>
-            <p>모바일: 조이스틱으로 이동 | <strong>Space/Esc</strong>: 일시정지</p>
-            <p class="tip">💡 무기를 최대 레벨로 올린 후 해당 패시브와 함께 보물상자를 열면 진화합니다!</p>
+            <p><strong>Controls:</strong> WASD or Arrow Keys to move | Attacks are automatic!</p>
+            <p><strong>Mobile:</strong> Use the joystick | <strong>Space/Esc:</strong> Pause</p>
+            <p class="tip">Tip: Max out a weapon (Lv8) + get its paired passive + open a chest = EVOLUTION!</p>
         </div>
 
         <div class="mobile-controls">

@@ -743,17 +743,20 @@ function showCharacterSelect() {
     Object.entries(CHARACTERS).forEach(([id, char]) => {
         const btn = document.createElement('button');
         btn.className = 'character-btn' + (id === selectedCharacter ? ' selected' : '');
+        const weaponType = WEAPON_TYPES[char.startingWeapon];
         btn.innerHTML = `
             <div class="char-icon">${char.icon}</div>
             <div class="char-info">
                 <div class="char-name">${char.name}</div>
                 <div class="char-desc">${char.desc}</div>
+                <div class="char-weapon">${weaponType.icon} ${weaponType.name}</div>
             </div>
         `;
         btn.onclick = () => {
             selectedCharacter = id;
             document.querySelectorAll('.character-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
+            playSound('pickup');
         };
         container.appendChild(btn);
     });
@@ -2749,123 +2752,386 @@ function drawDamageNumbers() {
 }
 
 function drawWeaponSlots() {
-    const slotSize = 28;
-    const padding = 4;
+    const slotSize = 32;
+    const padding = 5;
     const startX = 10;
-    const startY = canvas.height - slotSize - 10;
+    const startY = canvas.height - slotSize - 12;
+
+    // Draw "WEAPONS" label
+    ctx.font = 'bold 9px sans-serif';
+    ctx.fillStyle = '#888';
+    ctx.textAlign = 'left';
+    ctx.fillText('WEAPONS', startX, startY - 5);
 
     // Weapon slots
     for (let i = 0; i < MAX_WEAPONS; i++) {
         const x = startX + i * (slotSize + padding);
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(x, startY, slotSize, slotSize);
-        ctx.strokeStyle = '#444';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x, startY, slotSize, slotSize);
+        // Slot background with gradient
+        const grad = ctx.createLinearGradient(x, startY, x, startY + slotSize);
+        grad.addColorStop(0, 'rgba(30, 30, 50, 0.9)');
+        grad.addColorStop(1, 'rgba(10, 10, 20, 0.95)');
+        ctx.fillStyle = grad;
+
+        // Rounded rect
+        drawRoundedRect(x, startY, slotSize, slotSize, 4);
+        ctx.fill();
 
         if (player.weapons[i]) {
             const weapon = player.weapons[i];
-            const type = weapon.evolved ? EVOLVED_WEAPONS[weapon.evolvedId] : WEAPON_TYPES[weapon.id];
+            const weaponType = WEAPON_TYPES[weapon.id];
+            const type = weapon.evolved ? EVOLVED_WEAPONS[weapon.evolvedId] : weaponType;
 
-            ctx.font = '16px sans-serif';
+            // Check if evolution is ready
+            const evolutionReady = !weapon.evolved && weapon.level >= weapon.maxLevel &&
+                player.passives.some(p => p.id === weaponType.requiresPassive);
+
+            // Border color based on state
+            if (weapon.evolved) {
+                // Evolved weapon - purple glow
+                ctx.strokeStyle = '#ff44ff';
+                ctx.lineWidth = 2;
+                ctx.shadowColor = '#ff44ff';
+                ctx.shadowBlur = 8;
+            } else if (evolutionReady) {
+                // Evolution ready - gold pulsing
+                const pulse = Math.sin(Date.now() / 200) * 0.3 + 0.7;
+                ctx.strokeStyle = `rgba(255, 215, 0, ${pulse})`;
+                ctx.lineWidth = 2;
+                ctx.shadowColor = '#ffd700';
+                ctx.shadowBlur = 10 * pulse;
+            } else {
+                // Normal - rarity color
+                ctx.strokeStyle = getRarityColor(weaponType.rarity);
+                ctx.lineWidth = 1;
+                ctx.shadowBlur = 0;
+            }
+
+            drawRoundedRect(x, startY, slotSize, slotSize, 4);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Weapon icon
+            ctx.font = '18px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(type.icon, x + slotSize / 2, startY + slotSize / 2);
+            ctx.fillStyle = '#fff';
+            ctx.fillText(type.icon, x + slotSize / 2, startY + slotSize / 2 - 2);
 
-            // Level indicator
-            ctx.font = '9px sans-serif';
-            ctx.fillStyle = weapon.evolved ? '#ffd700' : '#fff';
-            ctx.fillText(weapon.evolved ? 'E' : weapon.level, x + slotSize - 7, startY + slotSize - 7);
+            // Level indicator background
+            ctx.fillStyle = weapon.evolved ? '#ff44ff' : 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(x + slotSize - 12, startY + slotSize - 12, 12, 12);
 
-            // Evolution ready indicator
-            if (!weapon.evolved && weapon.level >= weapon.maxLevel) {
-                const weaponType = WEAPON_TYPES[weapon.id];
-                const hasPassive = player.passives.some(p => p.id === weaponType.requiresPassive);
-                if (hasPassive) {
-                    ctx.strokeStyle = '#ffd700';
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(x, startY, slotSize, slotSize);
-                }
+            // Level text
+            ctx.font = 'bold 8px sans-serif';
+            ctx.fillStyle = weapon.evolved ? '#fff' : '#ffd700';
+            ctx.fillText(weapon.evolved ? 'E' : weapon.level, x + slotSize - 6, startY + slotSize - 5);
+
+            // Cooldown overlay
+            if (weapon.cooldownTimer > 0) {
+                const weaponData = WEAPON_TYPES[weapon.id];
+                let cooldown = weaponData.cooldown * player.cooldownMultiplier;
+                const cooldownPercent = weapon.cooldownTimer / cooldown;
+
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(x + 1, startY + 1, slotSize - 2, (slotSize - 2) * cooldownPercent);
             }
+        } else {
+            // Empty slot
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            drawRoundedRect(x, startY, slotSize, slotSize, 4);
+            ctx.stroke();
         }
     }
 
-    // Passive slots
+    // Draw "PASSIVES" label
     const passiveStartX = canvas.width - (MAX_PASSIVES * (slotSize + padding)) - 10 + padding;
+    ctx.font = 'bold 9px sans-serif';
+    ctx.fillStyle = '#888';
+    ctx.textAlign = 'right';
+    ctx.fillText('PASSIVES', canvas.width - 10, startY - 5);
+
+    // Passive slots
     for (let i = 0; i < MAX_PASSIVES; i++) {
         const x = passiveStartX + i * (slotSize + padding);
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(x, startY, slotSize, slotSize);
-        ctx.strokeStyle = '#666';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x, startY, slotSize, slotSize);
+        // Slot background
+        const grad = ctx.createLinearGradient(x, startY, x, startY + slotSize);
+        grad.addColorStop(0, 'rgba(20, 30, 20, 0.9)');
+        grad.addColorStop(1, 'rgba(10, 15, 10, 0.95)');
+        ctx.fillStyle = grad;
+
+        drawRoundedRect(x, startY, slotSize, slotSize, 4);
+        ctx.fill();
 
         if (player.passives[i]) {
             const passive = player.passives[i];
             const type = PASSIVE_TYPES[passive.id];
+            const isMaxLevel = passive.level >= type.maxLevel;
 
-            ctx.font = '16px sans-serif';
+            // Border based on rarity
+            ctx.strokeStyle = isMaxLevel ? '#ffd700' : getRarityColor(type.rarity);
+            ctx.lineWidth = isMaxLevel ? 2 : 1;
+            drawRoundedRect(x, startY, slotSize, slotSize, 4);
+            ctx.stroke();
+
+            // Passive icon
+            ctx.font = '18px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(type.icon, x + slotSize / 2, startY + slotSize / 2);
-
-            ctx.font = '9px sans-serif';
             ctx.fillStyle = '#fff';
-            ctx.fillText(passive.level, x + slotSize - 7, startY + slotSize - 7);
+            ctx.fillText(type.icon, x + slotSize / 2, startY + slotSize / 2 - 2);
+
+            // Level indicator
+            ctx.fillStyle = isMaxLevel ? '#ffd700' : 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(x + slotSize - 12, startY + slotSize - 12, 12, 12);
+
+            ctx.font = 'bold 8px sans-serif';
+            ctx.fillStyle = isMaxLevel ? '#000' : '#4ade80';
+            ctx.fillText(passive.level, x + slotSize - 6, startY + slotSize - 5);
+        } else {
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            drawRoundedRect(x, startY, slotSize, slotSize, 4);
+            ctx.stroke();
         }
     }
 }
 
+function getRarityColor(rarity) {
+    switch (rarity) {
+        case 'legendary': return '#fbbf24';
+        case 'rare': return '#60a5fa';
+        case 'uncommon': return '#4ade80';
+        default: return '#666';
+    }
+}
+
+function drawRoundedRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+}
+
 function drawMinimap() {
-    const mapSize = 80;
+    const mapSize = 90;
     const mapX = canvas.width - mapSize - 10;
     const mapY = 60;
+    const borderRadius = 6;
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillRect(mapX, mapY, mapSize, mapSize);
-    ctx.strokeStyle = '#444';
-    ctx.strokeRect(mapX, mapY, mapSize, mapSize);
+    // Background with gradient
+    const grad = ctx.createLinearGradient(mapX, mapY, mapX, mapY + mapSize);
+    grad.addColorStop(0, 'rgba(15, 15, 25, 0.9)');
+    grad.addColorStop(1, 'rgba(5, 5, 15, 0.95)');
+    ctx.fillStyle = grad;
+
+    drawRoundedRect(mapX, mapY, mapSize, mapSize, borderRadius);
+    ctx.fill();
+
+    // Border
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 2;
+    drawRoundedRect(mapX, mapY, mapSize, mapSize, borderRadius);
+    ctx.stroke();
+
+    // Inner map area
+    const innerPadding = 4;
+    const innerSize = mapSize - innerPadding * 2;
+    const innerX = mapX + innerPadding;
+    const innerY = mapY + innerPadding;
+
+    // Grid lines on map
+    ctx.strokeStyle = 'rgba(50, 50, 70, 0.5)';
+    ctx.lineWidth = 1;
+    for (let i = 1; i < 4; i++) {
+        ctx.beginPath();
+        ctx.moveTo(innerX + (innerSize / 4) * i, innerY);
+        ctx.lineTo(innerX + (innerSize / 4) * i, innerY + innerSize);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(innerX, innerY + (innerSize / 4) * i);
+        ctx.lineTo(innerX + innerSize, innerY + (innerSize / 4) * i);
+        ctx.stroke();
+    }
+
+    // Viewport rectangle
+    const viewX = innerX + ((camera.x) / WORLD_SIZE) * innerSize;
+    const viewY = innerY + ((camera.y) / WORLD_SIZE) * innerSize;
+    const viewW = (canvas.width / WORLD_SIZE) * innerSize;
+    const viewH = (canvas.height / WORLD_SIZE) * innerSize;
+
+    ctx.strokeStyle = 'rgba(68, 136, 255, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(viewX, viewY, viewW, viewH);
+
+    // Enemy dots (batch drawing for performance)
+    ctx.fillStyle = 'rgba(255, 80, 80, 0.6)';
+    for (const enemy of enemies) {
+        if (enemy.isBoss) continue;
+        const enemyMapX = innerX + (enemy.x / WORLD_SIZE) * innerSize;
+        const enemyMapY = innerY + (enemy.y / WORLD_SIZE) * innerSize;
+        ctx.fillRect(enemyMapX - 1, enemyMapY - 1, 2, 2);
+    }
+
+    // Boss dots (larger, pulsing)
+    const bossPulse = Math.sin(Date.now() / 150) * 0.3 + 0.7;
+    for (const enemy of enemies) {
+        if (!enemy.isBoss) continue;
+        const enemyMapX = innerX + (enemy.x / WORLD_SIZE) * innerSize;
+        const enemyMapY = innerY + (enemy.y / WORLD_SIZE) * innerSize;
+
+        ctx.fillStyle = `rgba(255, 0, 0, ${bossPulse})`;
+        ctx.beginPath();
+        ctx.arc(enemyMapX, enemyMapY, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Boss skull icon
+        ctx.fillStyle = '#fff';
+        ctx.font = '6px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('💀', enemyMapX, enemyMapY);
+    }
+
+    // Chest dots
+    ctx.fillStyle = '#ffd700';
+    for (const chest of chests) {
+        const chestMapX = innerX + (chest.x / WORLD_SIZE) * innerSize;
+        const chestMapY = innerY + (chest.y / WORLD_SIZE) * innerSize;
+        ctx.fillRect(chestMapX - 2, chestMapY - 2, 4, 4);
+    }
+
+    // Player dot (always on top)
+    const playerMapX = innerX + (player.x / WORLD_SIZE) * innerSize;
+    const playerMapY = innerY + (player.y / WORLD_SIZE) * innerSize;
+
+    // Player glow
+    ctx.fillStyle = 'rgba(68, 170, 255, 0.3)';
+    ctx.beginPath();
+    ctx.arc(playerMapX, playerMapY, 6, 0, Math.PI * 2);
+    ctx.fill();
 
     // Player dot
-    const playerMapX = mapX + (player.x / WORLD_SIZE) * mapSize;
-    const playerMapY = mapY + (player.y / WORLD_SIZE) * mapSize;
     ctx.fillStyle = '#44aaff';
     ctx.beginPath();
     ctx.arc(playerMapX, playerMapY, 3, 0, Math.PI * 2);
     ctx.fill();
 
-    // Enemy dots
-    ctx.fillStyle = 'rgba(255, 68, 68, 0.5)';
-    for (const enemy of enemies) {
-        const enemyMapX = mapX + (enemy.x / WORLD_SIZE) * mapSize;
-        const enemyMapY = mapY + (enemy.y / WORLD_SIZE) * mapSize;
-        if (enemy.isBoss) {
-            ctx.fillStyle = '#ff0000';
-            ctx.beginPath();
-            ctx.arc(enemyMapX, enemyMapY, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = 'rgba(255, 68, 68, 0.5)';
-        } else {
-            ctx.fillRect(enemyMapX - 1, enemyMapY - 1, 2, 2);
-        }
+    // Player direction indicator
+    const dirX = lastMoveDirection.x;
+    const dirY = lastMoveDirection.y;
+    if (dirX !== 0 || dirY !== 0) {
+        ctx.strokeStyle = '#44aaff';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(playerMapX, playerMapY);
+        ctx.lineTo(playerMapX + dirX * 5, playerMapY + dirY * 5);
+        ctx.stroke();
     }
 }
 
 function drawKillCounter() {
-    // Kill counter with style
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillRect(canvas.width / 2 - 40, 10, 80, 30);
-    ctx.strokeStyle = '#8b0000';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(canvas.width / 2 - 40, 10, 80, 30);
+    // Timer and stats at top center
+    const centerX = canvas.width / 2;
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 14px sans-serif';
+    // Main timer box
+    const timerW = 100;
+    const timerH = 36;
+    const timerX = centerX - timerW / 2;
+    const timerY = 8;
+
+    // Timer background
+    const grad = ctx.createLinearGradient(timerX, timerY, timerX, timerY + timerH);
+    grad.addColorStop(0, 'rgba(20, 20, 35, 0.95)');
+    grad.addColorStop(1, 'rgba(10, 10, 20, 0.98)');
+    ctx.fillStyle = grad;
+    drawRoundedRect(timerX, timerY, timerW, timerH, 6);
+    ctx.fill();
+
+    // Border
+    const timeProgress = gameTime / VICTORY_TIME;
+    const borderColor = timeProgress > 0.8 ? '#ff4444' : timeProgress > 0.5 ? '#ffd700' : '#4488ff';
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 2;
+    drawRoundedRect(timerX, timerY, timerW, timerH, 6);
+    ctx.stroke();
+
+    // Timer text
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 18px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`💀 ${kills}`, canvas.width / 2, 25);
+    ctx.fillText(formatTime(gameTime), centerX, timerY + 13);
+
+    // Progress bar under timer
+    const barY = timerY + timerH - 8;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(timerX + 4, barY, timerW - 8, 4);
+
+    ctx.fillStyle = borderColor;
+    ctx.fillRect(timerX + 4, barY, (timerW - 8) * timeProgress, 4);
+
+    // Wave indicator
+    let currentWave = 1;
+    for (let i = 0; i < WAVE_EVENTS.length; i++) {
+        if (gameTime >= WAVE_EVENTS[i].time) currentWave = i + 1;
+    }
+    ctx.font = '10px sans-serif';
+    ctx.fillStyle = '#888';
+    ctx.fillText(`WAVE ${currentWave}`, centerX, timerY + timerH - 3);
+
+    // Kill counter (left of timer)
+    const killX = timerX - 60;
+    const killW = 55;
+    const killH = 28;
+
+    const killGrad = ctx.createLinearGradient(killX, timerY, killX, timerY + killH);
+    killGrad.addColorStop(0, 'rgba(40, 20, 20, 0.9)');
+    killGrad.addColorStop(1, 'rgba(20, 10, 10, 0.95)');
+    ctx.fillStyle = killGrad;
+    drawRoundedRect(killX, timerY + 4, killW, killH, 4);
+    ctx.fill();
+
+    ctx.strokeStyle = '#662222';
+    ctx.lineWidth = 1;
+    drawRoundedRect(killX, timerY + 4, killW, killH, 4);
+    ctx.stroke();
+
+    ctx.fillStyle = '#ff6666';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`💀 ${kills}`, killX + killW / 2, timerY + 4 + killH / 2 + 1);
+
+    // Coin counter (right of timer)
+    const coinX = timerX + timerW + 5;
+    const coinW = 55;
+    const coinH = 28;
+
+    const coinGrad = ctx.createLinearGradient(coinX, timerY, coinX, timerY + coinH);
+    coinGrad.addColorStop(0, 'rgba(40, 35, 10, 0.9)');
+    coinGrad.addColorStop(1, 'rgba(20, 18, 5, 0.95)');
+    ctx.fillStyle = coinGrad;
+    drawRoundedRect(coinX, timerY + 4, coinW, coinH, 4);
+    ctx.fill();
+
+    ctx.strokeStyle = '#665522';
+    ctx.lineWidth = 1;
+    drawRoundedRect(coinX, timerY + 4, coinW, coinH, 4);
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`💰 ${coins}`, coinX + coinW / 2, timerY + 4 + coinH / 2 + 1);
 }
 
 function drawPixelRect(x, y, width, height) {
