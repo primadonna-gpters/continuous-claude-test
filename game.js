@@ -371,8 +371,37 @@ class Game2048 {
     }
 }
 
+// Theme management
+class ThemeManager {
+    constructor() {
+        this.themeToggleBtn = document.getElementById('theme-toggle-btn');
+        this.loadTheme();
+        this.bindEvents();
+    }
+
+    bindEvents() {
+        this.themeToggleBtn.addEventListener('click', () => this.toggleTheme());
+    }
+
+    loadTheme() {
+        const savedTheme = localStorage.getItem('2048-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            document.body.classList.add('dark-mode');
+        }
+    }
+
+    toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('2048-theme', isDark ? 'dark' : 'light');
+    }
+}
+
 // Initialize game when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    new ThemeManager();
     new Game2048();
 });
 
