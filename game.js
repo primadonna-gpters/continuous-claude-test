@@ -8,6 +8,8 @@ class Game2048 {
         this.over = false;
         this.keepPlaying = false;
         this.previousState = null;
+        this.tileId = 0;
+        this.tileElements = new Map();
 
         this.tileContainer = document.getElementById('tile-container');
         this.gridBackground = document.getElementById('grid-background');
@@ -115,6 +117,8 @@ class Game2048 {
         this.over = false;
         this.keepPlaying = false;
         this.previousState = null;
+        this.tileId = 0;
+        this.clearTileElements();
 
         this.updateScore();
         this.updateUndoButton();
@@ -122,6 +126,20 @@ class Game2048 {
         this.addRandomTile();
         this.addRandomTile();
         this.render();
+    }
+
+    clearTileElements() {
+        this.tileElements.forEach((element) => {
+            if (element.parentNode) {
+                element.parentNode.removeChild(element);
+            }
+        });
+        this.tileElements.clear();
+        this.tileContainer.innerHTML = '';
+    }
+
+    generateTileId() {
+        return ++this.tileId;
     }
 
     saveState() {
@@ -137,11 +155,27 @@ class Game2048 {
     undo() {
         if (!this.previousState) return;
 
-        this.grid = this.previousState.grid.map(row => row.map(tile => tile ? { ...tile } : null));
+        // Restore grid with new IDs to prevent animation artifacts
+        this.grid = this.previousState.grid.map(row => row.map(tile => {
+            if (tile) {
+                return {
+                    ...tile,
+                    id: this.generateTileId(),
+                    previousPosition: null,
+                    mergedFrom: null,
+                    isNew: false,
+                    merged: false
+                };
+            }
+            return null;
+        }));
         this.score = this.previousState.score;
         this.won = this.previousState.won;
         this.over = this.previousState.over;
         this.previousState = null;
+
+        // Clear existing tile elements for clean render
+        this.clearTileElements();
 
         this.updateScore();
         this.updateUndoButton();
@@ -173,11 +207,14 @@ class Game2048 {
             const { row, col } = emptyCells[Math.floor(Math.random() * emptyCells.length)];
             const value = Math.random() < 0.9 ? 2 : 4;
             this.grid[row][col] = {
+                id: this.generateTileId(),
                 value,
                 row,
                 col,
                 isNew: true,
-                merged: false
+                merged: false,
+                previousPosition: null,
+                mergedFrom: null
             };
         }
     }
@@ -196,12 +233,14 @@ class Game2048 {
         // Save state before move for undo
         this.saveState();
 
-        // Clear merge flags
+        // Clear merge flags and store previous positions
         for (let row = 0; row < this.size; row++) {
             for (let col = 0; col < this.size; col++) {
                 if (this.grid[row][col]) {
                     this.grid[row][col].merged = false;
                     this.grid[row][col].isNew = false;
+                    this.grid[row][col].mergedFrom = null;
+                    this.grid[row][col].previousPosition = { row, col };
                 }
             }
         }
@@ -220,12 +259,19 @@ class Game2048 {
                         !this.grid[next.row][next.col].merged) {
                         // Merge tiles
                         const newValue = tile.value * 2;
+                        const targetTile = this.grid[next.row][next.col];
                         this.grid[next.row][next.col] = {
+                            id: this.generateTileId(),
                             value: newValue,
                             row: next.row,
                             col: next.col,
                             merged: true,
-                            isNew: false
+                            isNew: false,
+                            previousPosition: null,
+                            mergedFrom: [
+                                { ...tile, previousPosition: tile.previousPosition },
+                                { ...targetTile, previousPosition: targetTile.previousPosition }
+                            ]
                         };
                         this.grid[row][col] = null;
                         this.score += newValue;
@@ -239,7 +285,8 @@ class Game2048 {
                         this.grid[farthest.row][farthest.col] = {
                             ...tile,
                             row: farthest.row,
-                            col: farthest.col
+                            col: farthest.col,
+                            previousPosition: tile.previousPosition
                         };
                         this.grid[row][col] = null;
                         moved = true;
@@ -349,36 +396,145 @@ class Game2048 {
     }
 
     render() {
-        this.tileContainer.innerHTML = '';
-
         const containerRect = this.tileContainer.getBoundingClientRect();
         const gap = window.innerWidth <= 520 ? 8 : 12;
         const cellSize = (containerRect.width - gap * (this.size - 1)) / this.size;
+
+        // Track which tiles we've rendered
+        const renderedTileIds = new Set();
 
         for (let row = 0; row < this.size; row++) {
             for (let col = 0; col < this.size; col++) {
                 const tile = this.grid[row][col];
                 if (tile) {
-                    const tileElement = document.createElement('div');
-                    const tileClass = tile.value <= 2048 ? `tile-${tile.value}` : 'tile-super';
-                    tileElement.className = `tile ${tileClass}`;
+                    renderedTileIds.add(tile.id);
 
-                    if (tile.isNew) {
-                        tileElement.classList.add('tile-new');
-                    }
-                    if (tile.merged) {
-                        tileElement.classList.add('tile-merged');
+                    // Handle merged tiles - animate both source tiles to the merge position
+                    if (tile.mergedFrom) {
+                        for (const mergedTile of tile.mergedFrom) {
+                            this.renderMovingTile(mergedTile, tile.row, tile.col, cellSize, gap, true);
+                        }
                     }
 
-                    tileElement.textContent = tile.value;
-                    tileElement.style.width = `${cellSize}px`;
-                    tileElement.style.height = `${cellSize}px`;
-                    tileElement.style.left = `${col * (cellSize + gap)}px`;
-                    tileElement.style.top = `${row * (cellSize + gap)}px`;
-
-                    this.tileContainer.appendChild(tileElement);
+                    // Render the tile itself
+                    this.renderTile(tile, cellSize, gap);
                 }
             }
+        }
+
+        // Remove tile elements that are no longer in the grid
+        const toRemove = [];
+        this.tileElements.forEach((element, id) => {
+            if (!renderedTileIds.has(id)) {
+                toRemove.push(id);
+            }
+        });
+        for (const id of toRemove) {
+            const element = this.tileElements.get(id);
+            if (element && element.parentNode) {
+                element.parentNode.removeChild(element);
+            }
+            this.tileElements.delete(id);
+        }
+    }
+
+    renderTile(tile, cellSize, gap) {
+        let tileElement = this.tileElements.get(tile.id);
+        const isNewElement = !tileElement;
+
+        if (isNewElement) {
+            tileElement = document.createElement('div');
+            tileElement.className = 'tile';
+            this.tileContainer.appendChild(tileElement);
+            this.tileElements.set(tile.id, tileElement);
+        }
+
+        // Update tile class based on value
+        const tileClass = tile.value <= 2048 ? `tile-${tile.value}` : 'tile-super';
+        tileElement.className = `tile ${tileClass}`;
+
+        // Handle animations
+        if (tile.isNew) {
+            tileElement.classList.add('tile-new');
+        }
+        if (tile.merged) {
+            tileElement.classList.add('tile-merged');
+        }
+
+        tileElement.textContent = tile.value;
+        tileElement.style.width = `${cellSize}px`;
+        tileElement.style.height = `${cellSize}px`;
+
+        // If tile has a previous position and is not new, start from previous position
+        if (tile.previousPosition && !tile.isNew) {
+            const prevLeft = tile.previousPosition.col * (cellSize + gap);
+            const prevTop = tile.previousPosition.row * (cellSize + gap);
+            const newLeft = tile.col * (cellSize + gap);
+            const newTop = tile.row * (cellSize + gap);
+
+            // Set to previous position first (without transition)
+            if (isNewElement || (prevLeft !== newLeft || prevTop !== newTop)) {
+                tileElement.style.transition = 'none';
+                tileElement.style.left = `${prevLeft}px`;
+                tileElement.style.top = `${prevTop}px`;
+
+                // Force reflow to ensure the transition works
+                tileElement.offsetHeight;
+
+                // Enable transition and move to new position
+                tileElement.style.transition = '';
+                tileElement.style.left = `${newLeft}px`;
+                tileElement.style.top = `${newTop}px`;
+            }
+        } else {
+            // New tile or no previous position - just set position
+            tileElement.style.left = `${tile.col * (cellSize + gap)}px`;
+            tileElement.style.top = `${tile.row * (cellSize + gap)}px`;
+        }
+    }
+
+    renderMovingTile(tile, targetRow, targetCol, cellSize, gap, willBeRemoved) {
+        let tileElement = this.tileElements.get(tile.id);
+
+        if (!tileElement) {
+            // Create temporary element for animation
+            tileElement = document.createElement('div');
+            tileElement.className = 'tile';
+            this.tileContainer.appendChild(tileElement);
+        }
+
+        const tileClass = tile.value <= 2048 ? `tile-${tile.value}` : 'tile-super';
+        tileElement.className = `tile ${tileClass}`;
+        tileElement.textContent = tile.value;
+        tileElement.style.width = `${cellSize}px`;
+        tileElement.style.height = `${cellSize}px`;
+
+        // Start from previous position
+        if (tile.previousPosition) {
+            const prevLeft = tile.previousPosition.col * (cellSize + gap);
+            const prevTop = tile.previousPosition.row * (cellSize + gap);
+
+            tileElement.style.transition = 'none';
+            tileElement.style.left = `${prevLeft}px`;
+            tileElement.style.top = `${prevTop}px`;
+
+            // Force reflow
+            tileElement.offsetHeight;
+
+            // Animate to target position
+            tileElement.style.transition = '';
+            tileElement.style.left = `${targetCol * (cellSize + gap)}px`;
+            tileElement.style.top = `${targetRow * (cellSize + gap)}px`;
+        }
+
+        // Remove after animation if needed
+        if (willBeRemoved) {
+            this.tileElements.delete(tile.id);
+            setTimeout(() => {
+                if (tileElement.parentNode) {
+                    tileElement.parentNode.removeChild(tileElement);
+                }
+            }, 150); // Match CSS transition duration
         }
     }
 
@@ -452,14 +608,15 @@ class ThemeManager {
 }
 
 // Initialize game when DOM is loaded
+let game2048Instance = null;
 document.addEventListener('DOMContentLoaded', () => {
     new ThemeManager();
-    new Game2048();
+    game2048Instance = new Game2048();
 });
 
 // Handle window resize for proper tile sizing
 window.addEventListener('resize', () => {
-    if (window.game2048) {
-        window.game2048.render();
+    if (game2048Instance) {
+        game2048Instance.render();
     }
 });
