@@ -1,0 +1,534 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #faf8ef;
+    color: #776e65;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    max-width: 600px;
+    padding: 20px;
+    width: 100%;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.back-btn {
+    background-color: #8f7a66;
+    color: #f9f6f2;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.back-btn:hover {
+    background-color: #9f8b77;
+}
+
+h1 {
+    font-size: 32px;
+    font-weight: bold;
+    color: #776e65;
+}
+
+.score-container {
+    display: flex;
+    gap: 8px;
+}
+
+.score-box {
+    background-color: #8b0000;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 6px;
+    text-align: center;
+    min-width: 60px;
+}
+
+.score-label {
+    font-size: 11px;
+    font-weight: bold;
+    color: #ffcccc;
+}
+
+.score-box > div:last-child {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.game-info p {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+#new-game-btn, #retry-btn, #pause-btn {
+    background-color: #8b0000;
+    color: #f9f6f2;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+
+#new-game-btn:hover, #retry-btn:hover, #pause-btn:hover {
+    background-color: #a00000;
+}
+
+#pause-btn {
+    width: 48px;
+    height: 48px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+#game-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%;
+    background-color: #1a1a2e;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 3px solid #8b0000;
+}
+
+#game-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+/* HUD overlay */
+#hud {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 50;
+}
+
+#health-bar, #exp-bar {
+    height: 24px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    border: 2px solid #444;
+}
+
+#health-fill {
+    height: 100%;
+    background: linear-gradient(to bottom, #ff4444, #cc0000);
+    width: 100%;
+    transition: width 0.2s ease;
+}
+
+#exp-fill {
+    height: 100%;
+    background: linear-gradient(to bottom, #44aaff, #0066cc);
+    width: 0%;
+    transition: width 0.2s ease;
+}
+
+#health-text, #exp-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px black;
+}
+
+#game-message, #start-message {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(26, 26, 46, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    border-radius: 6px;
+    z-index: 100;
+}
+
+#game-message h2 {
+    font-size: 36px;
+    font-weight: bold;
+    color: #ff4444;
+    text-shadow: 2px 2px 4px black;
+}
+
+#game-message p, #start-message p {
+    font-size: 24px;
+    font-weight: bold;
+    color: #f9f6f2;
+    text-align: center;
+}
+
+/* Level up modal */
+#level-up-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(26, 26, 46, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    z-index: 110;
+}
+
+#level-up-modal h2 {
+    font-size: 36px;
+    color: #ffd700;
+    text-shadow: 2px 2px 4px black;
+}
+
+#upgrade-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 300px;
+}
+
+.upgrade-btn {
+    background-color: #2a2a4e;
+    border: 2px solid #4a4a8e;
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: white;
+    text-align: left;
+}
+
+.upgrade-btn:hover {
+    background-color: #3a3a6e;
+    border-color: #6a6aae;
+    transform: scale(1.02);
+}
+
+.upgrade-btn .upgrade-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffd700;
+    margin-bottom: 4px;
+}
+
+.upgrade-btn .upgrade-desc {
+    font-size: 12px;
+    color: #aaa;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.instructions {
+    margin-top: 20px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #776e65;
+}
+
+/* Game buttons container */
+.game-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Theme toggle button */
+#theme-toggle-btn {
+    background-color: #8b0000;
+    color: #f9f6f2;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+}
+
+#theme-toggle-btn:hover {
+    background-color: #a00000;
+}
+
+.theme-icon {
+    display: none;
+}
+
+.light-icon {
+    display: inline;
+}
+
+/* Sound toggle button */
+#sound-toggle-btn {
+    background-color: #8b0000;
+    color: #f9f6f2;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+}
+
+#sound-toggle-btn:hover {
+    background-color: #a00000;
+}
+
+.sound-off-icon {
+    display: none;
+}
+
+/* Mobile joystick controls */
+.mobile-controls {
+    display: none;
+    margin-top: 20px;
+    justify-content: center;
+}
+
+#joystick-zone {
+    width: 150px;
+    height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#joystick-base {
+    width: 120px;
+    height: 120px;
+    background-color: rgba(139, 0, 0, 0.3);
+    border: 3px solid #8b0000;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+#joystick-stick {
+    width: 50px;
+    height: 50px;
+    background-color: #8b0000;
+    border-radius: 50%;
+    position: absolute;
+    transition: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Dark mode styles */
+body.dark-mode {
+    background-color: #0a0a14;
+}
+
+body.dark-mode .container {
+    color: #eee4da;
+}
+
+body.dark-mode h1 {
+    color: #eee4da;
+}
+
+body.dark-mode .back-btn {
+    background-color: #4a4a6a;
+}
+
+body.dark-mode .back-btn:hover {
+    background-color: #5a5a7a;
+}
+
+body.dark-mode .score-box {
+    background-color: #5a0000;
+}
+
+body.dark-mode .game-info p {
+    color: #b8b8d1;
+}
+
+body.dark-mode #new-game-btn,
+body.dark-mode #retry-btn,
+body.dark-mode #pause-btn,
+body.dark-mode #theme-toggle-btn,
+body.dark-mode #sound-toggle-btn {
+    background-color: #5a0000;
+}
+
+body.dark-mode #new-game-btn:hover,
+body.dark-mode #retry-btn:hover,
+body.dark-mode #pause-btn:hover,
+body.dark-mode #theme-toggle-btn:hover,
+body.dark-mode #sound-toggle-btn:hover {
+    background-color: #7a0000;
+}
+
+body.dark-mode #game-container {
+    background-color: #0a0a14;
+    border-color: #5a0000;
+}
+
+body.dark-mode #joystick-base {
+    background-color: rgba(90, 0, 0, 0.3);
+    border-color: #5a0000;
+}
+
+body.dark-mode #joystick-stick {
+    background-color: #5a0000;
+}
+
+body.dark-mode .instructions {
+    color: #b8b8d1;
+}
+
+/* Dark mode theme icon toggle */
+body.dark-mode .light-icon {
+    display: none;
+}
+
+body.dark-mode .dark-icon {
+    display: inline;
+}
+
+@media (max-width: 620px) {
+    .container {
+        padding: 10px;
+    }
+
+    header {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .header-left {
+        gap: 10px;
+    }
+
+    .back-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    .score-box {
+        padding: 6px 10px;
+        min-width: 50px;
+    }
+
+    .score-label {
+        font-size: 10px;
+    }
+
+    .score-box > div:last-child {
+        font-size: 14px;
+    }
+
+    .game-info {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .game-buttons {
+        justify-content: center;
+    }
+
+    #theme-toggle-btn,
+    #sound-toggle-btn,
+    #pause-btn {
+        width: 40px;
+        height: 40px;
+        padding: 8px;
+        font-size: 16px;
+    }
+
+    #game-message h2 {
+        font-size: 28px;
+    }
+
+    #game-message p,
+    #start-message p {
+        font-size: 18px;
+    }
+
+    #level-up-modal h2 {
+        font-size: 28px;
+    }
+
+    .mobile-controls {
+        display: flex;
+    }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .mobile-controls {
+        display: flex;
+    }
+}
