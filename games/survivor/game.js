@@ -3879,46 +3879,91 @@ function drawPlayer() {
         ctx.globalAlpha = 0.5;
     }
 
-    // Shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    // Player glow effect (subtle pulsing)
+    const pulseIntensity = 0.15 + Math.sin(Date.now() / 300) * 0.05;
+    const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, 25);
+    glowGradient.addColorStop(0, `rgba(100, 150, 255, ${pulseIntensity})`);
+    glowGradient.addColorStop(0.5, `rgba(100, 150, 255, ${pulseIntensity * 0.3})`);
+    glowGradient.addColorStop(1, 'rgba(100, 150, 255, 0)');
+    ctx.fillStyle = glowGradient;
     ctx.beginPath();
-    ctx.ellipse(x, y + 8, 8, 4, 0, 0, Math.PI * 2);
+    ctx.arc(x, y, 25, 0, Math.PI * 2);
     ctx.fill();
 
-    // Body
-    ctx.fillStyle = '#4466aa';
+    // Shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 10, 10, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Black outline (draw first, slightly larger)
+    ctx.fillStyle = '#000000';
+    // Head outline
+    drawPixelRect(x - 4, y - 10, 8, 1);
+    drawPixelRect(x - 4, y - 3, 8, 1);
+    drawPixelRect(x - 4, y - 9, 1, 7);
+    drawPixelRect(x + 3, y - 9, 1, 7);
+    // Body outline
+    drawPixelRect(x - 5, y - 3, 10, 1);
+    drawPixelRect(x - 5, y + 6, 10, 1);
+    drawPixelRect(x - 5, y - 2, 1, 8);
+    drawPixelRect(x + 4, y - 2, 1, 8);
+    // Arms outline
+    drawPixelRect(x - 7, y - 2, 1, 8);
+    drawPixelRect(x + 6, y - 2, 1, 8);
+    // Legs outline
+    drawPixelRect(x - 4, y + 5, 1, 6);
+    drawPixelRect(x + 3, y + 5, 1, 6);
+    drawPixelRect(x - 3, y + 10, 6, 1);
+
+    // Body (brighter blue)
+    ctx.fillStyle = '#5588cc';
     drawPixelRect(x - 4, y - 2, 8, 8);
 
-    // Head
-    ctx.fillStyle = '#ffcc99';
-    drawPixelRect(x - 3, y - 8, 6, 6);
+    // Head (brighter skin tone)
+    ctx.fillStyle = '#ffddaa';
+    drawPixelRect(x - 3, y - 9, 6, 6);
 
-    // Hair based on character
-    ctx.fillStyle = '#664422';
-    drawPixelRect(x - 3, y - 9, 6, 2);
+    // Hair based on character (brighter)
+    ctx.fillStyle = '#886633';
+    drawPixelRect(x - 3, y - 10, 6, 2);
     if (player.facingRight) {
-        drawPixelRect(x - 4, y - 8, 2, 4);
+        drawPixelRect(x - 4, y - 9, 2, 4);
     } else {
-        drawPixelRect(x + 2, y - 8, 2, 4);
+        drawPixelRect(x + 2, y - 9, 2, 4);
     }
 
-    // Eyes
-    ctx.fillStyle = '#000000';
+    // Eyes (white with black pupil for better visibility)
+    ctx.fillStyle = '#ffffff';
     if (player.facingRight) {
-        drawPixelRect(x, y - 6, 2, 2);
+        drawPixelRect(x, y - 7, 2, 2);
+        ctx.fillStyle = '#000000';
+        drawPixelRect(x + 1, y - 6, 1, 1);
     } else {
-        drawPixelRect(x - 2, y - 6, 2, 2);
+        drawPixelRect(x - 2, y - 7, 2, 2);
+        ctx.fillStyle = '#000000';
+        drawPixelRect(x - 2, y - 6, 1, 1);
     }
 
-    // Arms
-    ctx.fillStyle = '#ffcc99';
+    // Arms (brighter)
+    ctx.fillStyle = '#ffddaa';
     drawPixelRect(x - 6, y - 1, 2, 6);
     drawPixelRect(x + 4, y - 1, 2, 6);
 
-    // Legs
-    ctx.fillStyle = '#553322';
+    // Legs (brighter brown)
+    ctx.fillStyle = '#775533';
     drawPixelRect(x - 3, y + 6, 3, 4);
     drawPixelRect(x, y + 6, 3, 4);
+
+    // Direction indicator (small arrow pointing facing direction)
+    ctx.fillStyle = '#ffff88';
+    if (player.facingRight) {
+        drawPixelRect(x + 7, y, 3, 2);
+        drawPixelRect(x + 9, y - 1, 1, 4);
+    } else {
+        drawPixelRect(x - 10, y, 3, 2);
+        drawPixelRect(x - 10, y - 1, 1, 4);
+    }
 
     ctx.globalAlpha = 1;
 }
@@ -3933,76 +3978,140 @@ function drawEnemies() {
         const flashColor = enemy.hitFlash > 0 ? '#ffffff' : null;
         const type = ENEMY_TYPES[enemy.type];
         const baseColor = type?.color || '#77aa77';
+        const outlineColor = '#000000';
 
-        // Shadow for bosses
+        // Shadow for all enemies (smaller for regular, bigger for bosses)
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+        ctx.beginPath();
         if (enemy.isBoss) {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            ctx.beginPath();
-            ctx.ellipse(x, y + 12, 16, 8, 0, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.ellipse(x, y + 14, 18, 9, 0, 0, Math.PI * 2);
+        } else {
+            ctx.ellipse(x, y + 8, 8, 4, 0, 0, Math.PI * 2);
         }
+        ctx.fill();
 
+        // Draw outline first, then fill
         switch (enemy.type) {
             case 'bat':
-                ctx.fillStyle = flashColor || baseColor;
+                // Outline
+                ctx.fillStyle = outlineColor;
+                drawPixelRect(x - 5, y - 3, 10, 1);
+                drawPixelRect(x - 5, y + 2, 10, 1);
+                drawPixelRect(x - 9, y - 2, 1, 4);
+                drawPixelRect(x + 8, y - 2, 1, 4);
+                // Body
+                ctx.fillStyle = flashColor || '#55aa55';
                 drawPixelRect(x - 4, y - 2, 8, 4);
-                ctx.fillStyle = flashColor || '#338833';
+                // Wings
+                ctx.fillStyle = flashColor || '#44aa44';
                 drawPixelRect(x - 8, y - 1, 4, 2);
                 drawPixelRect(x + 4, y - 1, 4, 2);
-                ctx.fillStyle = flashColor || '#ff0000';
+                // Eyes (brighter red)
+                ctx.fillStyle = flashColor || '#ff3333';
                 drawPixelRect(x - 2, y - 1, 2, 2);
                 drawPixelRect(x + 1, y - 1, 2, 2);
                 break;
 
             case 'skeleton':
-                ctx.fillStyle = flashColor || baseColor;
+                // Outline
+                ctx.fillStyle = outlineColor;
+                drawPixelRect(x - 6, y - 9, 12, 1);
+                drawPixelRect(x - 6, y - 8, 1, 16);
+                drawPixelRect(x + 5, y - 8, 1, 16);
+                drawPixelRect(x - 5, y + 8, 10, 1);
+                // Body (brighter white)
+                ctx.fillStyle = flashColor || '#eeeeee';
                 drawPixelRect(x - 5, y - 8, 10, 8);
                 drawPixelRect(x - 4, y, 8, 8);
-                ctx.fillStyle = flashColor || '#000000';
+                // Eyes (dark holes)
+                ctx.fillStyle = flashColor || '#222222';
                 drawPixelRect(x - 3, y - 6, 3, 3);
                 drawPixelRect(x + 1, y - 6, 3, 3);
                 break;
 
             case 'ghost':
-                ctx.fillStyle = flashColor || 'rgba(180, 180, 255, 0.7)';
+                // Glow effect
+                const ghostGlow = ctx.createRadialGradient(x, y, 0, x, y, 15);
+                ghostGlow.addColorStop(0, 'rgba(200, 200, 255, 0.2)');
+                ghostGlow.addColorStop(1, 'rgba(200, 200, 255, 0)');
+                ctx.fillStyle = ghostGlow;
+                ctx.beginPath();
+                ctx.arc(x, y, 15, 0, Math.PI * 2);
+                ctx.fill();
+                // Body
+                ctx.fillStyle = flashColor || 'rgba(200, 200, 255, 0.85)';
                 drawPixelRect(x - 5, y - 6, 10, 10);
                 drawPixelRect(x - 6, y + 2, 3, 4);
                 drawPixelRect(x + 3, y + 2, 3, 4);
-                ctx.fillStyle = flashColor || '#000000';
+                // Eyes
+                ctx.fillStyle = flashColor || '#111144';
                 drawPixelRect(x - 3, y - 4, 3, 3);
                 drawPixelRect(x + 1, y - 4, 3, 3);
                 break;
 
             case 'demon':
-                ctx.fillStyle = flashColor || baseColor;
+                // Outline
+                ctx.fillStyle = outlineColor;
+                drawPixelRect(x - 7, y - 7, 14, 1);
+                drawPixelRect(x - 7, y - 6, 1, 12);
+                drawPixelRect(x + 6, y - 6, 1, 12);
+                drawPixelRect(x - 6, y + 6, 12, 1);
+                // Body (brighter red)
+                ctx.fillStyle = flashColor || '#cc4444';
                 drawPixelRect(x - 6, y - 6, 12, 12);
-                ctx.fillStyle = flashColor || '#ffff00';
+                // Eyes (bright yellow)
+                ctx.fillStyle = flashColor || '#ffff44';
                 drawPixelRect(x - 4, y - 4, 3, 3);
                 drawPixelRect(x + 1, y - 4, 3, 3);
-                ctx.fillStyle = flashColor || '#440000';
+                // Horns (darker red)
+                ctx.fillStyle = flashColor || '#881111';
                 drawPixelRect(x - 7, y - 10, 3, 4);
                 drawPixelRect(x + 4, y - 10, 3, 4);
                 break;
 
             case 'wraith':
-                ctx.globalAlpha = 0.7;
-                ctx.fillStyle = flashColor || baseColor;
+                ctx.globalAlpha = 0.8;
+                // Glow
+                const wraithGlow = ctx.createRadialGradient(x, y, 0, x, y, 18);
+                wraithGlow.addColorStop(0, 'rgba(180, 100, 255, 0.2)');
+                wraithGlow.addColorStop(1, 'rgba(180, 100, 255, 0)');
+                ctx.fillStyle = wraithGlow;
+                ctx.beginPath();
+                ctx.arc(x, y, 18, 0, Math.PI * 2);
+                ctx.fill();
+                // Outline
+                ctx.fillStyle = '#330066';
+                drawPixelRect(x - 6, y - 9, 12, 1);
+                drawPixelRect(x - 6, y - 8, 1, 14);
+                drawPixelRect(x + 5, y - 8, 1, 14);
+                // Body
+                ctx.fillStyle = flashColor || '#6633aa';
                 drawPixelRect(x - 5, y - 8, 10, 14);
-                ctx.fillStyle = flashColor || '#ff00ff';
+                // Eyes (bright magenta)
+                ctx.fillStyle = flashColor || '#ff44ff';
                 drawPixelRect(x - 3, y - 5, 2, 2);
                 drawPixelRect(x + 1, y - 5, 2, 2);
                 ctx.globalAlpha = 1;
                 break;
 
             case 'reaper':
-                ctx.fillStyle = flashColor || baseColor;
+                // Outline
+                ctx.fillStyle = outlineColor;
+                drawPixelRect(x - 6, y - 11, 12, 1);
+                drawPixelRect(x - 6, y - 10, 1, 16);
+                drawPixelRect(x + 5, y - 10, 1, 16);
+                drawPixelRect(x - 5, y + 6, 10, 1);
+                // Body (darker)
+                ctx.fillStyle = flashColor || '#333344';
                 drawPixelRect(x - 5, y - 10, 10, 16);
-                ctx.fillStyle = flashColor || '#ff0000';
+                // Eyes (bright red)
+                ctx.fillStyle = flashColor || '#ff2222';
                 drawPixelRect(x - 3, y - 7, 2, 3);
                 drawPixelRect(x + 1, y - 7, 2, 3);
-                // Scythe
-                ctx.fillStyle = flashColor || '#888888';
+                // Scythe (brighter)
+                ctx.fillStyle = flashColor || '#aaaaaa';
                 drawPixelRect(x + 6, y - 12, 2, 14);
+                ctx.fillStyle = flashColor || '#cccccc';
                 drawPixelRect(x + 4, y - 14, 6, 2);
                 break;
 
@@ -4013,24 +4122,54 @@ function drawEnemies() {
             case 'deathLord':
             case 'death':
             case 'redDeath':
-                ctx.fillStyle = flashColor || baseColor;
                 const size = enemy.isBoss ? 20 : 12;
+                // Boss glow
+                if (enemy.isBoss) {
+                    const bossGlow = ctx.createRadialGradient(x, y, 0, x, y, size + 15);
+                    const glowColor = enemy.type === 'redDeath' ? '255, 50, 50' :
+                                     enemy.type === 'death' ? '100, 100, 100' :
+                                     enemy.type === 'vampire' ? '150, 50, 50' : '200, 150, 50';
+                    bossGlow.addColorStop(0, `rgba(${glowColor}, 0.3)`);
+                    bossGlow.addColorStop(1, `rgba(${glowColor}, 0)`);
+                    ctx.fillStyle = bossGlow;
+                    ctx.beginPath();
+                    ctx.arc(x, y, size + 15, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                // Outline
+                ctx.fillStyle = outlineColor;
+                drawPixelRect(x - size / 2 - 1, y - size / 2 - 5, size + 2, 1);
+                drawPixelRect(x - size / 2 - 1, y - size / 2 - 4, 1, size + 4);
+                drawPixelRect(x + size / 2, y - size / 2 - 4, 1, size + 4);
+                // Body
+                ctx.fillStyle = flashColor || baseColor;
                 drawPixelRect(x - size / 2, y - size / 2 - 4, size, size);
                 drawPixelRect(x - size / 2 - 2, y + size / 2 - 8, size + 4, size / 2);
-                ctx.fillStyle = flashColor || '#ffff00';
+                // Eyes (brighter)
+                ctx.fillStyle = flashColor || '#ffff66';
                 drawPixelRect(x - size / 4, y - size / 4 - 4, 3, 3);
                 drawPixelRect(x + size / 4 - 3, y - size / 4 - 4, 3, 3);
                 break;
 
             default: // zombie
-                ctx.fillStyle = flashColor || '#8844aa';
+                // Outline
+                ctx.fillStyle = outlineColor;
+                drawPixelRect(x - 4, y - 8, 8, 1);
+                drawPixelRect(x - 5, y - 7, 1, 14);
+                drawPixelRect(x + 4, y - 7, 1, 14);
+                drawPixelRect(x - 4, y + 6, 8, 1);
+                // Body (brighter purple)
+                ctx.fillStyle = flashColor || '#aa66cc';
                 drawPixelRect(x - 4, y - 2, 8, 8);
-                ctx.fillStyle = flashColor || baseColor;
+                // Head (brighter green)
+                ctx.fillStyle = flashColor || '#88cc88';
                 drawPixelRect(x - 3, y - 7, 6, 5);
-                ctx.fillStyle = flashColor || '#ff4444';
+                // Eyes (brighter red)
+                ctx.fillStyle = flashColor || '#ff5555';
                 drawPixelRect(x - 2, y - 5, 2, 2);
                 drawPixelRect(x + 1, y - 5, 2, 2);
-                ctx.fillStyle = flashColor || baseColor;
+                // Arms
+                ctx.fillStyle = flashColor || '#88cc88';
                 drawPixelRect(x - 6, y - 1, 2, 5);
                 drawPixelRect(x + 4, y - 1, 2, 5);
         }
@@ -4061,20 +4200,46 @@ function drawProjectiles() {
         const y = Math.floor(proj.y);
         const size = proj.size || PROJECTILE_SIZE;
 
-        ctx.fillStyle = proj.color;
-
         if (proj.type === 'axe') {
+            // Glow effect
+            const axeGlow = ctx.createRadialGradient(x, y, 0, x, y, size);
+            axeGlow.addColorStop(0, 'rgba(200, 100, 50, 0.3)');
+            axeGlow.addColorStop(1, 'rgba(200, 100, 50, 0)');
+            ctx.fillStyle = axeGlow;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            // Axe
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(proj.rotation || 0);
-            drawPixelRect(-size / 2, -size / 2, size, size);
+            // Outline
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(-size / 2 - 1, -size / 2 - 1, size + 2, size + 2);
+            // Body
+            ctx.fillStyle = '#cc8844';
+            ctx.fillRect(-size / 2, -size / 2, size, size);
+            // Blade highlight
+            ctx.fillStyle = '#ddaa66';
+            ctx.fillRect(-size / 4, -size / 2, size / 2, size / 2);
             ctx.restore();
         } else if (proj.type === 'fireball') {
-            ctx.fillStyle = proj.color;
+            // Enhanced glow
+            const fireGlow = ctx.createRadialGradient(x, y, 0, x, y, size);
+            fireGlow.addColorStop(0, 'rgba(255, 200, 100, 0.5)');
+            fireGlow.addColorStop(0.5, 'rgba(255, 100, 50, 0.3)');
+            fireGlow.addColorStop(1, 'rgba(255, 50, 0, 0)');
+            ctx.fillStyle = fireGlow;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            // Fire core
+            ctx.fillStyle = '#ff6622';
             ctx.beginPath();
             ctx.arc(x, y, size / 2, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = '#ffff00';
+            // Bright center
+            ctx.fillStyle = '#ffff88';
             ctx.beginPath();
             ctx.arc(x, y, size / 4, 0, Math.PI * 2);
             ctx.fill();
@@ -4083,30 +4248,79 @@ function drawProjectiles() {
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(angle);
-            ctx.fillStyle = proj.color;
+            // Trail
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = '#aaaaaa';
+            ctx.fillRect(-12, -1, 8, 2);
+            ctx.globalAlpha = 1;
+            // Outline
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(-7, -3, 14, 6);
+            // Blade
+            ctx.fillStyle = '#cccccc';
             ctx.fillRect(-6, -2, 12, 4);
-            ctx.fillStyle = '#888888';
+            // Handle
+            ctx.fillStyle = '#886644';
             ctx.fillRect(-6, -1, 4, 2);
+            // Highlight
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(2, -1, 4, 1);
             ctx.restore();
         } else if (proj.type === 'cross') {
+            // Holy glow
+            const crossGlow = ctx.createRadialGradient(x, y, 0, x, y, size);
+            crossGlow.addColorStop(0, 'rgba(255, 255, 200, 0.4)');
+            crossGlow.addColorStop(1, 'rgba(255, 255, 100, 0)');
+            ctx.fillStyle = crossGlow;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            // Cross
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(Date.now() / 100);
-            ctx.fillStyle = proj.color;
+            // Outline
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(-size / 6 - 1, -size / 2 - 1, size / 3 + 2, size + 2);
+            ctx.fillRect(-size / 2 - 1, -size / 6 - 1, size + 2, size / 3 + 2);
+            // Cross body
+            ctx.fillStyle = '#ffdd44';
             ctx.fillRect(-size / 6, -size / 2, size / 3, size);
             ctx.fillRect(-size / 2, -size / 6, size, size / 3);
+            // Bright center
+            ctx.fillStyle = '#ffffaa';
+            ctx.fillRect(-2, -2, 4, 4);
             ctx.restore();
         } else if (proj.type === 'runetracer') {
-            ctx.fillStyle = proj.color;
+            // Magic glow
+            const runeGlow = ctx.createRadialGradient(x, y, 0, x, y, size);
+            runeGlow.addColorStop(0, 'rgba(100, 200, 255, 0.4)');
+            runeGlow.addColorStop(1, 'rgba(100, 200, 255, 0)');
+            ctx.fillStyle = runeGlow;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            // Rune
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(Date.now() / 80);
             const s = size / 2;
+            // Outline
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(0, -s);
             ctx.lineTo(s * 0.6, s * 0.8);
             ctx.lineTo(-s * 0.6, s * 0.8);
             ctx.closePath();
+            ctx.stroke();
+            // Fill
+            ctx.fillStyle = '#66ddff';
+            ctx.fill();
+            // Center
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(0, 0, 2, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
         } else if (proj.type === 'phiera' || proj.type === 'eight') {
@@ -4115,32 +4329,70 @@ function drawProjectiles() {
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(angle);
+            // Trail
+            ctx.globalAlpha = 0.4;
             ctx.fillStyle = proj.color;
+            ctx.fillRect(-12, -1, 8, 2);
+            ctx.globalAlpha = 0.2;
+            ctx.fillRect(-18, -1, 6, 2);
+            ctx.globalAlpha = 1;
+            // Outline
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(-5, -3, 12, 6);
             // Bullet shape
-            ctx.fillRect(-4, -2, 8, 4);
-            // Tip
+            ctx.fillStyle = proj.color;
+            ctx.fillRect(-4, -2, 10, 4);
+            // Tip highlight
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(2, -1, 4, 2);
+            ctx.fillRect(4, -1, 2, 2);
             ctx.restore();
         } else if (proj.type === 'phieraggi') {
             // Dual-colored union projectile
             const angle = Math.atan2(proj.vy, proj.vx);
+            // Powerful glow
+            const phieraggiGlow = ctx.createRadialGradient(x, y, 0, x, y, 15);
+            phieraggiGlow.addColorStop(0, 'rgba(255, 200, 100, 0.4)');
+            phieraggiGlow.addColorStop(1, 'rgba(255, 100, 50, 0)');
+            ctx.fillStyle = phieraggiGlow;
+            ctx.beginPath();
+            ctx.arc(x, y, 15, 0, Math.PI * 2);
+            ctx.fill();
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(angle);
+            // Trail effect
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = proj.color;
+            ctx.fillRect(-18, -2, 12, 4);
+            ctx.globalAlpha = 0.25;
+            ctx.fillRect(-26, -1, 8, 2);
+            ctx.globalAlpha = 1;
+            // Outline
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(-7, -4, 14, 8);
+            // Body
             ctx.fillStyle = proj.color;
             ctx.fillRect(-6, -3, 12, 6);
             // Glowing core
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(-2, -1, 4, 2);
-            // Trail effect
-            ctx.globalAlpha = 0.5;
-            ctx.fillStyle = proj.color;
-            ctx.fillRect(-12, -2, 6, 4);
-            ctx.globalAlpha = 1;
+            ctx.fillRect(-2, -1, 6, 2);
             ctx.restore();
         } else {
+            // Default projectile with glow
+            const defaultGlow = ctx.createRadialGradient(x, y, 0, x, y, 8);
+            defaultGlow.addColorStop(0, proj.color.replace(')', ', 0.4)').replace('rgb', 'rgba').replace('#', 'rgba('));
+            defaultGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = defaultGlow;
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, Math.PI * 2);
+            ctx.fill();
+            // Outline
+            ctx.fillStyle = '#000000';
+            drawPixelRect(x - 3, y - 3, 6, 6);
+            // Body
+            ctx.fillStyle = proj.color;
             drawPixelRect(x - 2, y - 2, 4, 4);
+            // Highlight
             ctx.fillStyle = '#ffffff';
             drawPixelRect(x - 1, y - 1, 2, 2);
         }
@@ -4899,6 +5151,58 @@ function drawArcanaIndicator() {
 
 function drawPixelRect(x, y, width, height) {
     ctx.fillRect(Math.floor(x), Math.floor(y), width, height);
+}
+
+// Draw pixel rectangle with outline for better visibility
+function drawPixelRectOutline(x, y, width, height, outlineColor = '#000000', outlineWidth = 1) {
+    const fx = Math.floor(x);
+    const fy = Math.floor(y);
+    ctx.fillRect(fx, fy, width, height);
+    // Draw outline
+    const prevStyle = ctx.fillStyle;
+    ctx.fillStyle = outlineColor;
+    // Top
+    ctx.fillRect(fx - outlineWidth, fy - outlineWidth, width + outlineWidth * 2, outlineWidth);
+    // Bottom
+    ctx.fillRect(fx - outlineWidth, fy + height, width + outlineWidth * 2, outlineWidth);
+    // Left
+    ctx.fillRect(fx - outlineWidth, fy, outlineWidth, height);
+    // Right
+    ctx.fillRect(fx + width, fy, outlineWidth, height);
+    ctx.fillStyle = prevStyle;
+}
+
+// Draw a glowing circle effect
+function drawGlow(x, y, radius, color, intensity = 0.3) {
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+    gradient.addColorStop(0, color.replace(')', `, ${intensity})`).replace('rgb', 'rgba'));
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// Draw pixel outline around a shape (for character visibility)
+function drawCharacterOutline(x, y, color = '#000000') {
+    ctx.fillStyle = color;
+    // Simple character silhouette outline (1px bigger all around)
+    // Head outline
+    drawPixelRect(x - 4, y - 10, 8, 1); // top
+    drawPixelRect(x - 4, y - 3, 8, 1);  // bottom of head
+    drawPixelRect(x - 4, y - 9, 1, 7);  // left
+    drawPixelRect(x + 3, y - 9, 1, 7);  // right
+    // Body outline
+    drawPixelRect(x - 5, y - 3, 10, 1); // top of body
+    drawPixelRect(x - 5, y + 6, 10, 1); // bottom of body
+    drawPixelRect(x - 5, y - 2, 1, 8);  // left
+    drawPixelRect(x + 4, y - 2, 1, 8);  // right
+    // Arms outline
+    drawPixelRect(x - 7, y - 2, 1, 8);
+    drawPixelRect(x + 6, y - 2, 1, 8);
+    // Legs outline
+    drawPixelRect(x - 4, y + 6, 8, 1);
+    drawPixelRect(x - 4, y + 10, 8, 1);
 }
 
 // Sound effects

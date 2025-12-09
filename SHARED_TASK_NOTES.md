@@ -2,7 +2,7 @@
 
 ## Current Status
 멀티 게임 허브 완성. 2048, Snake, Minesweeper, Tetris, Breakout, Memory, Pixel Survivor 7개 게임 플레이 가능.
-**Pixel Survivor - 스테이지별 배경 그래픽 + 새 무기 동작 구현 완료!**
+**Pixel Survivor - 가시성 개선 완료! (외곽선, 글로우 효과 추가)**
 
 ## 게임 실행 방법
 ```bash
@@ -10,61 +10,68 @@ python -m http.server 8000
 # 브라우저에서 http://localhost:8000 접속
 ```
 
-## Pixel Survivor - 이번 iteration 업데이트
+## Pixel Survivor - 가시성 개선 (이번 iteration)
 
-### 1. 스테이지별 배경 그래픽 (NEW!)
-각 스테이지에 고유한 배경 요소 추가:
-- **Mad Forest**: 나무, 풀, 버섯 (어두운 숲)
-- **Inlaid Library**: 책장, 책, 촛불, 타일 바닥
-- **Dairy Plant**: 금속 바닥판, 파이프, 기어, 주의 줄무늬
-- **Gallo Tower**: 돌벽돌, 횃불, 사슬, 거미줄
-- **Cappella Magna**: 체크무늬 타일, 스테인드글라스 빛, 기둥, 촛대
+### 1. 플레이어 가시성 향상
+- 파란색 펄스 글로우 효과 추가 (플레이어 위치 쉽게 파악)
+- 검은색 픽셀 외곽선 추가 (배경과 명확히 구분)
+- 더 밝은 색상 사용 (파란색 #5588cc, 피부톤 #ffddaa)
+- 방향 표시 화살표 추가 (노란색 화살표로 이동 방향 표시)
+- 눈에 흰색 배경 + 검은 동공으로 표정 개선
 
-### 2. 새 무기 동작 구현 (NEW!)
-- **Peachone** (🕊️): 원형 영역에 성스러운 빛 폭격
-- **Ebony Wings** (🦇): 원형 영역에 어둠 에너지 폭격
-- **Phiera Der Tuphello** (🔫): 4방향(상하좌우) 속사
-- **Eight The Sparrow** (🐦): 4방향(대각선) 속사
-- **Song of Mana** (🎵): 수직 데미지 빔
-- **Vento Sacro** (🌀): 부채꼴 슬래시 공격
+### 2. 적 가시성 향상
+- 모든 적에 그림자 효과 추가 (깊이감)
+- 검은색 픽셀 외곽선 추가 (모든 적 유형)
+- 더 밝고 선명한 색상으로 변경:
+  - Bat: #55aa55 (밝은 녹색)
+  - Skeleton: #eeeeee (밝은 흰색)
+  - Ghost: 글로우 효과 + 85% 불투명도
+  - Demon: #cc4444 (밝은 빨강) + 노란 눈
+  - Wraith: 보라색 글로우 효과
+  - Reaper: 밝은 빨간 눈 + 은색 낫
+  - Zombie: #aa66cc (밝은 보라) + #88cc88 (밝은 초록)
+- 보스에 타입별 글로우 효과 추가
 
-### 3. Union 무기 동작 구현 (NEW!)
-- **Vandalier** (🦅): Peachone + Ebony Wings 합체 → 대규모 폭격
-- **Phieraggi** (🔫): Phiera + Eight 합체 → 8방향 관통 속사
-- **Fuwalafuwaloo** (🌸): Vento Sacro + Bloody Tear 합체 → 360도 크리티컬 슬래시
+### 3. 투사체 가시성 향상
+- 모든 투사체에 글로우 효과 추가
+- 검은색 외곽선 추가
+- 트레일(잔상) 효과 개선
+- 하이라이트 추가로 3D 느낌
+- 개별 무기별 이펙트:
+  - Axe: 주황색 글로우
+  - Fireball: 3중 그라데이션 글로우
+  - Knife: 트레일 + 은색 날
+  - Cross: 성스러운 노란 글로우
+  - Runetracer: 마법 파란 글로우 + 외곽선 stroke
+  - Phiera/Eight: 트레일 + 흰색 팁
+  - Phieraggi: 강력한 글로우 + 이중 트레일
 
-### 4. 시각 효과 추가
-- 새 무기들의 projectile/area effect 렌더링
-- Union 무기 특별 이펙트 (글로우, 스파클)
+### 4. 새 헬퍼 함수 추가 (game.js:4904-4954)
+- `drawPixelRectOutline()`: 외곽선이 있는 픽셀 사각형
+- `drawGlow()`: 방사형 글로우 효과
+- `drawCharacterOutline()`: 캐릭터 실루엣 외곽선
 
 ## 기존 시스템 (유지)
+- 스테이지별 배경 그래픽 (5종)
 - 아케인 시스템 (12종)
 - 8개 캐릭터
 - 12개 기본 무기 + 12개 진화 무기 + 6개 새 무기 + 3개 Union 무기
 - 15개 패시브 아이템
 - 5개 스테이지 + Hyper Mode
 - 웨이브 기반 적 스폰 (30분 생존)
-- 무기 진화: Lv8 + 패시브 + 보물상자
-- 미니맵/킬 카운터/코인 시스템
-- 보스 체력바 UI
-- 레트로 UI (Press Start 2P 폰트)
 
 ## 다음 iteration 우선순위
 1. **Union 트리거 로직**
-   - 현재 Union 무기는 수동으로 추가해야 함
-   - 보물상자 획득 시 자동 Union 합체 로직 필요
+   - 보물상자 획득 시 자동 Union 합체
    - checkForUnionPossibility() 함수 구현
 
-2. **Dairy Plant 트랩 이벤트**
-   - hasTrapEvents 플래그 사용
-   - 트랩 피자 터치 시 랜덤 이벤트 로직
+2. **경험치 젬/아이템 가시성 개선**
+   - 현재 작업과 동일하게 외곽선/글로우 추가
 
-3. **언락 시스템 UI**
-   - 새 캐릭터/무기 해금 알림
-   - 메인 화면에서 언락 가능 항목 표시
+3. **Area Effect 가시성 개선**
+   - Whip, Holy Water, Garlic 등 영역 효과 개선
 
 4. **게임 밸런스 조정**
    - 새 무기 데미지/쿨다운 밸런싱
-   - Union 무기 획득 조건 테스트
 
 5. **PWA 지원**
