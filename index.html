@@ -3,57 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2048 Game</title>
+    <title>Game Hub</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>2048</h1>
-            <div class="score-container">
-                <div class="score-box">
-                    <div class="score-label">SCORE</div>
-                    <div id="score">0</div>
-                </div>
-                <div class="score-box">
-                    <div class="score-label">BEST</div>
-                    <div id="best-score">0</div>
-                </div>
-            </div>
+    <div class="hub-container">
+        <header class="hub-header">
+            <h1>🎮 Game Hub</h1>
+            <p class="hub-subtitle">혼자서 즐기는 온라인 게임 컬렉션</p>
+            <button id="theme-toggle-btn" aria-label="Toggle dark mode">
+                <span class="theme-icon light-icon">🌙</span>
+                <span class="theme-icon dark-icon">☀️</span>
+            </button>
         </header>
 
-        <div class="game-info">
-            <p>숫자 타일을 합쳐서 <strong>2048</strong>을 만들어보세요!</p>
-            <div class="game-buttons">
-                <button id="undo-btn" aria-label="Undo last move">↶ Undo</button>
-                <button id="new-game-btn">New Game</button>
-                <button id="sound-toggle-btn" aria-label="Toggle sound">
-                    <span class="sound-on-icon">🔊</span>
-                    <span class="sound-off-icon">🔇</span>
-                </button>
-                <button id="theme-toggle-btn" aria-label="Toggle dark mode">
-                    <span class="theme-icon light-icon">🌙</span>
-                    <span class="theme-icon dark-icon">☀️</span>
-                </button>
-            </div>
+        <div class="games-grid">
+            <a href="games/2048/index.html" class="game-card">
+                <div class="game-card-icon">🔢</div>
+                <div class="game-card-content">
+                    <h2>2048</h2>
+                    <p>숫자 타일을 합쳐서 2048을 만들어보세요!</p>
+                </div>
+                <div class="game-card-arrow">→</div>
+            </a>
+
+            <a href="games/snake/index.html" class="game-card">
+                <div class="game-card-icon">🐍</div>
+                <div class="game-card-content">
+                    <h2>Snake</h2>
+                    <p>뱀을 조종해 먹이를 먹고 길게 자라보세요!</p>
+                </div>
+                <div class="game-card-arrow">→</div>
+            </a>
         </div>
 
-        <div id="game-container">
-            <div id="grid-background"></div>
-            <div id="tile-container"></div>
-            <div id="game-message" class="hidden">
-                <p></p>
-                <button id="retry-btn">Try again</button>
-                <button id="keep-playing-btn" class="hidden">Keep playing</button>
-            </div>
-        </div>
-
-        <div class="instructions">
-            <p><strong>조작 방법:</strong> 화살표 키 또는 WASD로 타일을 이동하세요.</p>
-            <p>모바일: 스와이프로 이동하세요. | <strong>Z</strong> 또는 <strong>Undo</strong> 버튼으로 되돌리기</p>
-        </div>
+        <footer class="hub-footer">
+            <p>키보드 또는 터치로 조작하세요</p>
+        </footer>
     </div>
 
-    <script src="game.js"></script>
+    <script src="hub.js"></script>
 </body>
 </html>
