@@ -16,7 +16,7 @@ const MAX_PASSIVES = 6;
 const VICTORY_TIME = 1800; // 30 minutes in seconds
 
 // Game state
-let gameState = 'menu'; // menu, playing, paused, levelup, gameover, victory
+let gameState = 'menu'; // menu, stageSelect, characterSelect, arcanaSelect, playing, paused, levelup, gameover, victory
 let gameLoop = null;
 let lastTime = 0;
 let deltaTime = 0;
@@ -25,7 +25,71 @@ let deltaTime = 0;
 let gameTime = 0;
 let kills = 0;
 let coins = 0;
+let totalCoins = parseInt(localStorage.getItem('survivor-total-coins')) || 0;
 let bestTime = parseInt(localStorage.getItem('survivor-best-time')) || 0;
+
+// Stage definitions (matching Vampire Survivors)
+const STAGES = {
+    madForest: {
+        name: 'Mad Forest',
+        desc: 'A dark forest teeming with monsters',
+        icon: '🌲',
+        bgColor: '#0a1a0a',
+        bgPattern: 'trees',
+        modifiers: {},
+        unlocked: true,
+        unlockCondition: null,
+        hyper: { unlocked: false, moveSpeed: 0.5, gold: 0.5, luck: 0.1 }
+    },
+    inlaidLibrary: {
+        name: 'Inlaid Library',
+        desc: 'Endless corridors of ancient tomes',
+        icon: '📚',
+        bgColor: '#1a1a2e',
+        bgPattern: 'library',
+        modifiers: { moveSpeed: 0.25 },
+        unlocked: false,
+        unlockCondition: { type: 'level', stage: 'madForest', value: 20 },
+        hyper: { unlocked: false, moveSpeed: 0.9, gold: 0.5, luck: 0.1 }
+    },
+    dairyPlant: {
+        name: 'Dairy Plant',
+        desc: 'An industrial facility with deadly traps',
+        icon: '🏭',
+        bgColor: '#1e1e24',
+        bgPattern: 'factory',
+        modifiers: { moveSpeed: 0.25, gold: 0.2 },
+        unlocked: false,
+        unlockCondition: { type: 'level', stage: 'inlaidLibrary', value: 40 },
+        hyper: { unlocked: false, moveSpeed: 0.9, gold: 0.7, luck: 0.1 },
+        hasTrapEvents: true
+    },
+    galloTower: {
+        name: 'Gallo Tower',
+        desc: 'A vertical challenge ascending the tower',
+        icon: '🗼',
+        bgColor: '#2a1a2a',
+        bgPattern: 'tower',
+        modifiers: { moveSpeed: 0.1, luck: 0.1 },
+        unlocked: false,
+        unlockCondition: { type: 'level', stage: 'dairyPlant', value: 60 },
+        hyper: { unlocked: false, moveSpeed: 0.8, gold: 0.6, luck: 0.2 }
+    },
+    cappellaMagna: {
+        name: 'Cappella Magna',
+        desc: 'The final stage. Face the ultimate challenge.',
+        icon: '⛪',
+        bgColor: '#1a0a1a',
+        bgPattern: 'cathedral',
+        modifiers: { damage: 0.2, maxHealth: -0.2 },
+        unlocked: false,
+        unlockCondition: { type: 'victory', stage: 'galloTower' },
+        hyper: { unlocked: false, moveSpeed: 1.0, gold: 1.0, luck: 0.2 }
+    }
+};
+
+let selectedStage = 'madForest';
+let currentStageModifiers = {};
 
 // Character definitions
 const CHARACTERS = {
@@ -467,11 +531,11 @@ const UNION_WEAPONS = {
     }
 };
 
-// Additional weapons for Union
-const ADDITIONAL_WEAPONS = {
+// Merge additional weapons into WEAPON_TYPES for Union
+Object.assign(WEAPON_TYPES, {
     peachone: {
         name: 'Peachone',
-        desc: 'Bombards in a circular area',
+        desc: 'Bombards in a circular area with holy light',
         icon: '🕊️',
         damage: 10,
         cooldown: 3.0,
@@ -486,7 +550,7 @@ const ADDITIONAL_WEAPONS = {
     },
     ebonyWings: {
         name: 'Ebony Wings',
-        desc: 'Bombards in a circular area (dark)',
+        desc: 'Bombards in a circular area with dark energy',
         icon: '🦇',
         damage: 10,
         cooldown: 3.0,
@@ -498,8 +562,79 @@ const ADDITIONAL_WEAPONS = {
         unionWith: 'peachone',
         unionResult: 'vandalier',
         rarity: 'rare'
+    },
+    phiera: {
+        name: 'Phiera Der Tuphello',
+        desc: 'Fires rapidly in four fixed directions',
+        icon: '🔫',
+        damage: 8,
+        cooldown: 0.3,
+        area: 0.8,
+        speed: 2.5,
+        amount: 4,
+        pierce: 0,
+        evolvesTo: null,
+        unionWith: 'eight',
+        unionResult: 'phieraggi',
+        rarity: 'rare'
+    },
+    eight: {
+        name: 'Eight The Sparrow',
+        desc: 'Fires rapidly in four fixed directions (opposite)',
+        icon: '🐦',
+        damage: 8,
+        cooldown: 0.3,
+        area: 0.8,
+        speed: 2.5,
+        amount: 4,
+        pierce: 0,
+        evolvesTo: null,
+        unionWith: 'phiera',
+        unionResult: 'phieraggi',
+        rarity: 'rare'
+    },
+    songOfMana: {
+        name: 'Song of Mana',
+        desc: 'Creates vertical damaging zones',
+        icon: '🎵',
+        damage: 15,
+        cooldown: 2.0,
+        area: 1.2,
+        speed: 1.0,
+        amount: 1,
+        pierce: -1,
+        duration: 2.5,
+        evolvesTo: 'mannajja',
+        requiresPassive: 'stoneMask',
+        rarity: 'uncommon'
+    },
+    ventoSacro: {
+        name: 'Vento Sacro',
+        desc: 'Attacks in a fan pattern around you',
+        icon: '🌀',
+        damage: 12,
+        cooldown: 1.0,
+        area: 1.3,
+        speed: 1.0,
+        amount: 1,
+        pierce: 2,
+        evolvesTo: null,
+        unionWith: 'bloodyTear',
+        unionResult: 'fuwalafuwaloo',
+        rarity: 'rare'
     }
-};
+});
+
+// Add additional evolved weapons
+Object.assign(EVOLVED_WEAPONS, {
+    mannajja: {
+        name: 'Mannajja',
+        desc: 'Evolved Song of Mana - Massive vertical beams',
+        icon: '⚔️',
+        damageMultiplier: 2.0,
+        areaMultiplier: 1.5
+    }
+});
 
 // Passive item definitions (matching Vampire Survivors)
 const PASSIVE_TYPES = {
@@ -747,8 +882,8 @@ function init() {
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
 
-    document.getElementById('new-game-btn').addEventListener('click', showCharacterSelect);
-    document.getElementById('retry-btn').addEventListener('click', showCharacterSelect);
+    document.getElementById('new-game-btn').addEventListener('click', showStageSelect);
+    document.getElementById('retry-btn').addEventListener('click', showStageSelect);
     document.getElementById('pause-btn').addEventListener('click', togglePause);
     document.getElementById('sound-toggle-btn').addEventListener('click', toggleSound);
     document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
@@ -778,7 +913,7 @@ function handleKeyDown(e) {
     if (e.key === ' ' || e.code === 'Space') {
         e.preventDefault();
         if (gameState === 'menu') {
-            showCharacterSelect();
+            showStageSelect();
         } else if (gameState === 'playing') {
             togglePause();
         } else if (gameState === 'paused') {
@@ -800,7 +935,7 @@ function handleKeyUp(e) {
 function handleCanvasClick(e) {
     e.preventDefault();
     if (gameState === 'menu') {
-        showCharacterSelect();
+        showStageSelect();
     }
 }
 
@@ -884,6 +1019,152 @@ function hideArcanaSelect() {
     }
 }
 
+function showStageSelect() {
+    gameState = 'stageSelect';
+    document.getElementById('start-message').classList.add('hidden');
+    document.getElementById('game-message').classList.add('hidden');
+    document.getElementById('character-select').classList.add('hidden');
+    hideArcanaSelect();
+
+    // Create stage select modal if doesn't exist
+    let stageModal = document.getElementById('stage-select');
+    if (!stageModal) {
+        stageModal = document.createElement('div');
+        stageModal.id = 'stage-select';
+        document.getElementById('game-container').appendChild(stageModal);
+    }
+
+    // Load stage unlock progress
+    loadStageProgress();
+
+    stageModal.innerHTML = `
+        <h2>SELECT STAGE</h2>
+        <p class="stage-subtitle">Choose your battlefield</p>
+        <div id="stage-options"></div>
+    `;
+
+    const container = document.getElementById('stage-options');
+
+    Object.entries(STAGES).forEach(([id, stage]) => {
+        const isUnlocked = stage.unlocked;
+        const btn = document.createElement('button');
+        btn.className = 'stage-btn' + (id === selectedStage ? ' selected' : '') + (!isUnlocked ? ' locked' : '');
+
+        const modifierText = Object.entries(stage.modifiers)
+            .map(([key, val]) => {
+                const sign = val > 0 ? '+' : '';
+                const label = key.replace(/([A-Z])/g, ' $1').toLowerCase();
+                return `${sign}${Math.round(val * 100)}% ${label}`;
+            })
+            .join(', ') || 'No modifiers';
+
+        const lockReason = !isUnlocked ? getUnlockConditionText(stage.unlockCondition) : '';
+
+        btn.innerHTML = `
+            <div class="stage-icon">${isUnlocked ? stage.icon : '🔒'}</div>
+            <div class="stage-info">
+                <div class="stage-name">${stage.name}</div>
+                <div class="stage-desc">${isUnlocked ? stage.desc : lockReason}</div>
+                ${isUnlocked ? `<div class="stage-mods">${modifierText}</div>` : ''}
+            </div>
+            ${isUnlocked && stage.hyper && stage.hyper.unlocked ? '<div class="hyper-badge">HYPER</div>' : ''}
+        `;
+
+        if (isUnlocked) {
+            btn.onclick = () => {
+                selectedStage = id;
+                document.querySelectorAll('.stage-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                playSound('pickup');
+            };
+        }
+
+        container.appendChild(btn);
+    });
+
+    // Continue button
+    const startBtn = document.createElement('button');
+    startBtn.className = 'start-run-btn';
+    startBtn.textContent = 'SELECT CHARACTER';
+    startBtn.onclick = () => {
+        stageModal.classList.add('hidden');
+        showCharacterSelect();
+    };
+    container.appendChild(startBtn);
+
+    stageModal.classList.remove('hidden');
+}
+
+function getUnlockConditionText(condition) {
+    if (!condition) return 'Locked';
+
+    switch (condition.type) {
+        case 'level':
+            return `Reach LV ${condition.value} in ${STAGES[condition.stage]?.name || 'previous stage'}`;
+        case 'victory':
+            return `Complete ${STAGES[condition.stage]?.name || 'previous stage'}`;
+        case 'kills':
+            return `Get ${condition.value} kills in ${STAGES[condition.stage]?.name || 'any stage'}`;
+        default:
+            return 'Locked';
+    }
+}
+
+function loadStageProgress() {
+    const progress = JSON.parse(localStorage.getItem('survivor-stage-progress') || '{}');
+
+    Object.keys(STAGES).forEach(stageId => {
+        const stage = STAGES[stageId];
+        const savedProgress = progress[stageId];
+
+        if (savedProgress) {
+            stage.unlocked = savedProgress.unlocked || stage.unlocked;
+            if (stage.hyper) {
+                stage.hyper.unlocked = savedProgress.hyperUnlocked || false;
+            }
+        }
+
+        // Check unlock conditions
+        if (!stage.unlocked && stage.unlockCondition) {
+            const cond = stage.unlockCondition;
+            const condStageProgress = progress[cond.stage];
+
+            if (condStageProgress) {
+                if (cond.type === 'level' && condStageProgress.maxLevel >= cond.value) {
+                    stage.unlocked = true;
+                } else if (cond.type === 'victory' && condStageProgress.completed) {
+                    stage.unlocked = true;
+                } else if (cond.type === 'kills' && condStageProgress.maxKills >= cond.value) {
+                    stage.unlocked = true;
+                }
+            }
+        }
+    });
+}
+
+function saveStageProgress() {
+    const progress = JSON.parse(localStorage.getItem('survivor-stage-progress') || '{}');
+
+    if (!progress[selectedStage]) {
+        progress[selectedStage] = {};
+    }
+
+    progress[selectedStage].maxLevel = Math.max(progress[selectedStage].maxLevel || 0, player.level);
+    progress[selectedStage].maxKills = Math.max(progress[selectedStage].maxKills || 0, kills);
+    progress[selectedStage].maxTime = Math.max(progress[selectedStage].maxTime || 0, gameTime);
+
+    if (gameTime >= VICTORY_TIME) {
+        progress[selectedStage].completed = true;
+    }
+
+    // Save hyper unlocks (beat boss at 25 min)
+    if (gameTime >= 1500 && enemies.some(e => e.isBoss && e.health <= 0)) {
+        progress[selectedStage].hyperUnlocked = true;
+    }
+
+    localStorage.setItem('survivor-stage-progress', JSON.stringify(progress));
+}
+
 function showCharacterSelect() {
     gameState = 'characterSelect';
     document.getElementById('start-message').classList.add('hidden');
@@ -892,6 +1173,13 @@ function showCharacterSelect() {
     const selectModal = document.getElementById('character-select');
     const container = document.getElementById('character-options');
     container.innerHTML = '';
+
+    // Show selected stage at top
+    const stageInfo = document.createElement('div');
+    stageInfo.className = 'selected-stage-info';
+    const stage = STAGES[selectedStage];
+    stageInfo.innerHTML = `<span class="stage-label">Stage:</span> ${stage.icon} ${stage.name}`;
+    container.appendChild(stageInfo);
 
     Object.entries(CHARACTERS).forEach(([id, char]) => {
         const btn = document.createElement('button');
@@ -1005,14 +1293,23 @@ function showArcanaSelect() {
 
 function startNewGame() {
     const char = CHARACTERS[selectedCharacter];
+    const stage = STAGES[selectedStage];
+    currentStageModifiers = stage.modifiers;
+
+    // Calculate stage modifiers
+    const stageDamageMod = 1 + (currentStageModifiers.damage || 0);
+    const stageHealthMod = 1 + (currentStageModifiers.maxHealth || 0);
+    const stageSpeedMod = 1 + (currentStageModifiers.moveSpeed || 0);
+    const stageGoldMod = 1 + (currentStageModifiers.gold || 0);
+    const stageLuckMod = 1 + (currentStageModifiers.luck || 0);
 
     player = {
         x: WORLD_SIZE / 2,
         y: WORLD_SIZE / 2,
         baseSpeed: 100,
-        speed: 100 * (char.stats.moveSpeed || 1),
-        health: 100 * (char.stats.maxHealth || 1),
-        maxHealth: 100 * (char.stats.maxHealth || 1),
+        speed: 100 * (char.stats.moveSpeed || 1) * stageSpeedMod,
+        health: 100 * (char.stats.maxHealth || 1) * stageHealthMod,
+        maxHealth: 100 * (char.stats.maxHealth || 1) * stageHealthMod,
         baseMaxHealth: 100,
         exp: 0,
         level: 1,
@@ -1020,19 +1317,19 @@ function startNewGame() {
         facingRight: true,
         weapons: [],
         passives: [],
-        damageMultiplier: char.stats.damage || 1,
+        damageMultiplier: (char.stats.damage || 1) * stageDamageMod,
         cooldownMultiplier: char.stats.cooldown || 1,
         areaMultiplier: char.areaBonus || 1,
-        speedMultiplier: char.stats.moveSpeed || 1,
+        speedMultiplier: (char.stats.moveSpeed || 1) * stageSpeedMod,
         projectileSpeedMultiplier: 1,
         durationMultiplier: char.durationBonus || 1,
         pickupRange: 80 * (char.pickupBonus || 1),
-        luck: 1,
+        luck: stageLuckMod,
         regen: char.stats.regen || 0,
         amountBonus: char.amountBonus || 0,
         armor: char.stats.armor || 0,
         expMultiplier: char.expBonus || 1,
-        goldMultiplier: 1,
+        goldMultiplier: stageGoldMod,
         revivals: 0,
         invincibleTimer: 0,
         character: char,
@@ -1042,7 +1339,8 @@ function startNewGame() {
         damageOnHitTimer: 0,
         magnetPulseTimer: 0,
         healingBoost: 0,
-        pierceBonus: 0
+        pierceBonus: 0,
+        stage: selectedStage
     };
 
     // Apply starting arcana effects
@@ -1077,6 +1375,10 @@ function startNewGame() {
     document.getElementById('game-message').classList.add('hidden');
     document.getElementById('level-up-modal').classList.add('hidden');
     document.getElementById('character-select').classList.add('hidden');
+
+    // Hide stage select if exists
+    const stageModal = document.getElementById('stage-select');
+    if (stageModal) stageModal.classList.add('hidden');
 
     gameState = 'playing';
     lastTime = performance.now();
@@ -1373,6 +1675,52 @@ function checkEvolution(weapon) {
     return hasRequiredPassive;
 }
 
+function checkUnion(weapon) {
+    if (weapon.evolved || weapon.unioned || weapon.level < weapon.maxLevel) return false;
+
+    const weaponType = WEAPON_TYPES[weapon.id];
+    if (!weaponType.unionWith || !weaponType.unionResult) return false;
+
+    // Check if we have the partner weapon at max level
+    const partnerWeapon = player.weapons.find(w =>
+        w.id === weaponType.unionWith &&
+        w.level >= w.maxLevel &&
+        !w.evolved &&
+        !w.unioned
+    );
+
+    return !!partnerWeapon;
+}
+
+function performUnion(weapon) {
+    const weaponType = WEAPON_TYPES[weapon.id];
+    const unionResult = UNION_WEAPONS[weaponType.unionResult];
+    if (!unionResult) return false;
+
+    // Find partner weapon
+    const partnerWeapon = player.weapons.find(w =>
+        w.id === weaponType.unionWith &&
+        w.level >= w.maxLevel &&
+        !w.evolved &&
+        !w.unioned
+    );
+
+    if (!partnerWeapon) return false;
+
+    // Mark the main weapon as unioned with the result
+    weapon.unioned = true;
+    weapon.unionId = weaponType.unionResult;
+
+    // Remove partner weapon from player's weapons
+    const partnerIndex = player.weapons.indexOf(partnerWeapon);
+    if (partnerIndex > -1) {
+        player.weapons.splice(partnerIndex, 1);
+    }
+
+    playSound('levelup');
+    return true;
+}
+
 function evolveWeapon(weapon) {
     const weaponType = WEAPON_TYPES[weapon.id];
     weapon.evolved = true;
@@ -1381,7 +1729,7 @@ function evolveWeapon(weapon) {
 }
 
 function update(currentTime) {
-    if (gameState === 'menu' || gameState === 'characterSelect') {
+    if (gameState === 'menu' || gameState === 'stageSelect' || gameState === 'characterSelect' || gameState === 'arcanaSelect') {
         render();
         gameLoop = requestAnimationFrame(update);
         return;
@@ -2427,10 +2775,20 @@ function createExplosion(x, y, radius, damage) {
 function openChest(chest) {
     playSound('levelup');
 
-    // Check for weapon evolution
+    // First check for Union (two weapons combine into one)
+    for (const weapon of player.weapons) {
+        if (checkUnion(weapon)) {
+            performUnion(weapon);
+            showUnionNotification(weapon);
+            return;
+        }
+    }
+
+    // Then check for weapon evolution
     for (const weapon of player.weapons) {
         if (checkEvolution(weapon)) {
             evolveWeapon(weapon);
+            showEvolutionNotification(weapon);
             return;
         }
     }
@@ -2447,6 +2805,36 @@ function openChest(chest) {
     } else {
         coins += Math.floor(25 * player.goldMultiplier);
     }
+}
+
+function showUnionNotification(weapon) {
+    const unionWeapon = UNION_WEAPONS[weapon.unionId];
+    if (!unionWeapon) return;
+
+    // Add floating notification
+    damageNumbers.push({
+        x: player.x,
+        y: player.y - 40,
+        text: `UNION! ${unionWeapon.icon} ${unionWeapon.name}`,
+        color: '#ff44ff',
+        lifetime: 2.5,
+        fontSize: 16
+    });
+}
+
+function showEvolutionNotification(weapon) {
+    const evolvedWeapon = EVOLVED_WEAPONS[weapon.evolvedId];
+    if (!evolvedWeapon) return;
+
+    // Add floating notification
+    damageNumbers.push({
+        x: player.x,
+        y: player.y - 40,
+        text: `EVOLVED! ${evolvedWeapon.icon} ${evolvedWeapon.name}`,
+        color: '#ffd700',
+        lifetime: 2.5,
+        fontSize: 16
+    });
 }
 
 function levelUp() {
@@ -2622,6 +3010,13 @@ function selectUpgrade(option) {
 function gameOver() {
     gameState = 'gameover';
 
+    // Save stage progress
+    saveStageProgress();
+
+    // Save total coins
+    totalCoins += coins;
+    localStorage.setItem('survivor-total-coins', totalCoins);
+
     if (gameTime > bestTime) {
         bestTime = Math.floor(gameTime);
         localStorage.setItem('survivor-best-time', bestTime);
@@ -2630,12 +3025,15 @@ function gameOver() {
 
     playSound('gameover');
 
+    const stage = STAGES[selectedStage];
     const messageDiv = document.getElementById('game-message');
     messageDiv.querySelector('h2').textContent = 'GAME OVER';
     messageDiv.querySelector('p').innerHTML = `
+        <span class="stat">${stage.icon} ${stage.name}</span><br>
         <span class="stat">Survived: ${formatTime(gameTime)}</span><br>
         <span class="stat">Kills: ${kills}</span><br>
-        <span class="stat">Level: ${player.level}</span>
+        <span class="stat">Level: ${player.level}</span><br>
+        <span class="stat">Coins: ${coins}</span>
     `;
     messageDiv.classList.remove('hidden');
 }
@@ -2643,18 +3041,28 @@ function gameOver() {
 function victory() {
     gameState = 'victory';
 
+    // Save stage progress (including completion)
+    saveStageProgress();
+
+    // Save total coins
+    totalCoins += coins;
+    localStorage.setItem('survivor-total-coins', totalCoins);
+
     bestTime = Math.max(bestTime, Math.floor(gameTime));
     localStorage.setItem('survivor-best-time', bestTime);
     updateBestTimeDisplay();
 
     playSound('levelup');
 
+    const stage = STAGES[selectedStage];
     const messageDiv = document.getElementById('game-message');
     messageDiv.querySelector('h2').textContent = 'VICTORY!';
     messageDiv.querySelector('p').innerHTML = `
+        <span class="stat">${stage.icon} ${stage.name} CLEARED!</span><br>
         <span class="stat">You survived 30 minutes!</span><br>
         <span class="stat">Kills: ${kills}</span><br>
-        <span class="stat">Level: ${player.level}</span>
+        <span class="stat">Level: ${player.level}</span><br>
+        <span class="stat">Coins: ${coins}</span>
     `;
     messageDiv.classList.remove('hidden');
 }
@@ -2685,11 +3093,33 @@ function showPauseOverlay() {
     const weaponDetails = player.weapons.map(w => {
         const type = WEAPON_TYPES[w.id];
         const evolved = w.evolved ? EVOLVED_WEAPONS[w.evolvedId] : null;
-        const displayName = evolved ? evolved.name : type.name;
-        const displayIcon = evolved ? evolved.icon : type.icon;
-        const levelText = w.evolved ? 'EVOLVED' : `LV ${w.level}/${w.maxLevel}`;
-        const canEvolve = !w.evolved && w.level >= w.maxLevel && player.passives.some(p => p.id === type.requiresPassive);
-        return `<div class="pause-equipment-item ${w.evolved ? 'evolved' : ''} ${canEvolve ? 'can-evolve' : ''}">
+        const unioned = w.unioned ? UNION_WEAPONS[w.unionId] : null;
+        let displayName, displayIcon, levelText, itemClass;
+
+        if (unioned) {
+            displayName = unioned.name;
+            displayIcon = unioned.icon;
+            levelText = 'UNION';
+            itemClass = 'unioned';
+        } else if (evolved) {
+            displayName = evolved.name;
+            displayIcon = evolved.icon;
+            levelText = 'EVOLVED';
+            itemClass = 'evolved';
+        } else {
+            displayName = type.name;
+            displayIcon = type.icon;
+            levelText = `LV ${w.level}/${w.maxLevel}`;
+            itemClass = '';
+        }
+
+        const canEvolve = !w.evolved && !w.unioned && w.level >= w.maxLevel && player.passives.some(p => p.id === type.requiresPassive);
+        const canUnion = !w.evolved && !w.unioned && checkUnion(w);
+
+        if (canEvolve) itemClass = 'can-evolve';
+        if (canUnion) itemClass = 'can-union';
+
+        return `<div class="pause-equipment-item ${itemClass}">
             <span class="eq-icon">${displayIcon}</span>
             <span class="eq-name">${displayName}</span>
             <span class="eq-level">${levelText}</span>

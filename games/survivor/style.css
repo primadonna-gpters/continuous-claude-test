@@ -1206,6 +1206,211 @@ body.light-mode .dark-icon {
     }
 }
 
+/* Stage Select Modal */
+#stage-select {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at center, rgba(15, 20, 25, 0.99) 0%, rgba(5, 10, 15, 1) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 20px;
+    z-index: 110;
+    overflow-y: auto;
+}
+
+#stage-select h2 {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 22px;
+    color: var(--accent-green);
+    text-shadow: 3px 3px 6px black, 0 0 30px rgba(34, 255, 136, 0.4);
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+}
+
+.stage-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+#stage-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.stage-btn {
+    background: linear-gradient(180deg, rgba(20, 40, 30, 0.9) 0%, rgba(10, 25, 15, 0.95) 100%);
+    border: 2px solid var(--accent-green);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: white;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+}
+
+.stage-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(34, 255, 136, 0.08) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.stage-btn:hover:not(.locked) {
+    background: linear-gradient(180deg, rgba(30, 60, 40, 0.95) 0%, rgba(20, 40, 25, 0.98) 100%);
+    border-color: #44ff88;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(34, 255, 136, 0.3);
+}
+
+.stage-btn.selected {
+    border-color: var(--accent-gold);
+    background: linear-gradient(180deg, rgba(60, 50, 20, 0.9) 0%, rgba(40, 30, 10, 0.95) 100%);
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.4), inset 0 0 40px rgba(255, 215, 0, 0.08);
+}
+
+.stage-btn.locked {
+    border-color: #444;
+    background: linear-gradient(180deg, rgba(30, 30, 35, 0.7) 0%, rgba(20, 20, 25, 0.8) 100%);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.stage-btn .stage-icon {
+    font-size: 36px;
+    min-width: 50px;
+    text-align: center;
+    filter: drop-shadow(0 2px 6px rgba(34, 255, 136, 0.4));
+}
+
+.stage-btn.locked .stage-icon {
+    filter: grayscale(1) opacity(0.5);
+}
+
+.stage-btn .stage-info {
+    flex: 1;
+}
+
+.stage-btn .stage-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--accent-green);
+    text-shadow: 0 0 10px rgba(34, 255, 136, 0.4);
+    margin-bottom: 4px;
+}
+
+.stage-btn.locked .stage-name {
+    color: #666;
+    text-shadow: none;
+}
+
+.stage-btn .stage-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-bottom: 4px;
+}
+
+.stage-btn .stage-mods {
+    font-size: 10px;
+    color: var(--accent-blue);
+    background: rgba(68, 136, 255, 0.15);
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.hyper-badge {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    font-size: 9px;
+    color: #fff;
+    background: linear-gradient(135deg, #ff4444 0%, #ff0088 100%);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    animation: hyperPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes hyperPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(255, 0, 136, 0.5); }
+    50% { box-shadow: 0 0 20px rgba(255, 0, 136, 0.8); }
+}
+
+/* Selected stage info in character select */
+.selected-stage-info {
+    grid-column: span 2;
+    background: linear-gradient(180deg, rgba(20, 40, 30, 0.8) 0%, rgba(10, 25, 15, 0.9) 100%);
+    border: 1px solid var(--accent-green);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.selected-stage-info .stage-label {
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin-right: 8px;
+}
+
+/* Union weapon styles */
+.pause-equipment-item.unioned {
+    border-color: #ff44ff;
+    background: linear-gradient(180deg, rgba(100, 30, 100, 0.4) 0%, rgba(60, 15, 60, 0.5) 100%);
+    box-shadow: 0 0 15px rgba(255, 68, 255, 0.3);
+}
+
+.pause-equipment-item.unioned .eq-level {
+    color: #ff44ff;
+    background: rgba(255, 68, 255, 0.2);
+}
+
+/* Union ready indicator */
+.pause-equipment-item.can-union {
+    border-color: #ff44ff;
+    background: linear-gradient(180deg, rgba(80, 20, 80, 0.3) 0%, rgba(50, 10, 50, 0.4) 100%);
+    animation: unionPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes unionPulse {
+    0%, 100% { box-shadow: 0 0 15px rgba(255, 68, 255, 0.4); }
+    50% { box-shadow: 0 0 30px rgba(255, 68, 255, 0.7); }
+}
+
+/* Rarity: Union */
+.upgrade-btn .upgrade-name.rarity-union {
+    color: #ff44ff;
+    text-shadow: 0 0 15px rgba(255, 68, 255, 0.6);
+    animation: unionGlow 2s ease-in-out infinite;
+}
+
+@keyframes unionGlow {
+    0%, 100% { text-shadow: 0 0 15px rgba(255, 68, 255, 0.6); }
+    50% { text-shadow: 0 0 25px rgba(255, 68, 255, 0.9); }
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
     width: 8px;
@@ -1222,4 +1427,28 @@ body.light-mode .dark-icon {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--accent-blue);
+}
+
+/* Mobile responsive for stage select */
+@media (max-width: 620px) {
+    #stage-select h2 {
+        font-size: 16px;
+    }
+
+    .stage-btn {
+        padding: 12px;
+    }
+
+    .stage-btn .stage-icon {
+        font-size: 28px;
+        min-width: 40px;
+    }
+
+    .stage-btn .stage-name {
+        font-size: 12px;
+    }
+
+    .selected-stage-info {
+        grid-column: span 1;
+    }
 }
