@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PWA Icon Generator</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+        .icon-grid { display: flex; flex-wrap: wrap; gap: 20px; }
+        .icon-item { background: white; padding: 15px; border-radius: 8px; text-align: center; }
+        canvas { display: block; margin: 10px auto; border: 1px solid #ddd; }
+        button { margin-top: 10px; padding: 8px 16px; cursor: pointer; }
+        h1 { color: #333; }
+    </style>
+</head>
+<body>
+    <h1>Game Hub PWA Icon Generator</h1>
+    <p>Click each button to download the icon. Save them to the /icons folder.</p>
+    <div class="icon-grid" id="icons"></div>
+
+    <script>
+        const sizes = [16, 32, 72, 96, 128, 144, 152, 192, 384, 512];
+        const container = document.getElementById('icons');
+
+        function drawIcon(ctx, size) {
+            const s = size / 512;
+
+            // Background gradient
+            const grad = ctx.createLinearGradient(0, 0, size, size);
+            grad.addColorStop(0, '#8f7a66');
+            grad.addColorStop(1, '#776e65');
+
+            // Rounded rectangle background
+            const r = 100 * s;
+            ctx.beginPath();
+            ctx.moveTo(r, 0);
+            ctx.lineTo(size - r, 0);
+            ctx.quadraticCurveTo(size, 0, size, r);
+            ctx.lineTo(size, size - r);
+            ctx.quadraticCurveTo(size, size, size - r, size);
+            ctx.lineTo(r, size);
+            ctx.quadraticCurveTo(0, size, 0, size - r);
+            ctx.lineTo(0, r);
+            ctx.quadraticCurveTo(0, 0, r, 0);
+            ctx.closePath();
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Game controller icon - simplified for smaller sizes
+            ctx.fillStyle = '#f9f6f2';
+
+            if (size >= 64) {
+                // Controller body
+                ctx.beginPath();
+                ctx.ellipse(size/2, size*0.45, size*0.35, size*0.18, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Left handle
+                ctx.beginPath();
+                ctx.ellipse(size*0.25, size*0.55, size*0.1, size*0.15, -0.3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Right handle
+                ctx.beginPath();
+                ctx.ellipse(size*0.75, size*0.55, size*0.1, size*0.15, 0.3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // D-pad
+                ctx.fillStyle = '#8f7a66';
+                ctx.fillRect(size*0.28, size*0.38, size*0.06, size*0.14);
+                ctx.fillRect(size*0.24, size*0.42, size*0.14, size*0.06);
+
+                // Buttons
+                const btnSize = size * 0.04;
+                ctx.fillStyle = '#edc22e';
+                ctx.beginPath();
+                ctx.arc(size*0.68, size*0.4, btnSize, 0, Math.PI*2);
+                ctx.fill();
+
+                ctx.fillStyle = '#f65e3b';
+                ctx.beginPath();
+                ctx.arc(size*0.74, size*0.46, btnSize, 0, Math.PI*2);
+                ctx.fill();
+
+                ctx.fillStyle = '#59b95a';
+                ctx.beginPath();
+                ctx.arc(size*0.62, size*0.46, btnSize, 0, Math.PI*2);
+                ctx.fill();
+
+                ctx.fillStyle = '#5495d4';
+                ctx.beginPath();
+                ctx.arc(size*0.68, size*0.52, btnSize, 0, Math.PI*2);
+                ctx.fill();
+            } else {
+                // Simplified icon for small sizes - just a game controller outline
+                ctx.beginPath();
+                ctx.ellipse(size/2, size/2, size*0.35, size*0.2, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Text for larger sizes
+            if (size >= 128) {
+                ctx.fillStyle = '#f9f6f2';
+                ctx.font = `bold ${size * 0.09}px Arial, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME HUB', size/2, size * 0.78);
+            }
+        }
+
+        sizes.forEach(size => {
+            const div = document.createElement('div');
+            div.className = 'icon-item';
+
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            drawIcon(ctx, size);
+
+            const label = document.createElement('div');
+            label.textContent = `${size}x${size}`;
+
+            const btn = document.createElement('button');
+            btn.textContent = 'Download';
+            btn.onclick = () => {
+                const link = document.createElement('a');
+                link.download = `icon-${size}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            };
+
+            div.appendChild(canvas);
+            div.appendChild(label);
+            div.appendChild(btn);
+            container.appendChild(div);
+        });
+    </script>
+</body>
+</html>
