@@ -1,7 +1,7 @@
 # Game Hub - Task Notes
 
 ## Current Status
-멀티 게임 허브 완성. 2048, Snake, Minesweeper 3개 게임 플레이 가능.
+멀티 게임 허브 완성. 2048, Snake, Minesweeper, Tetris 4개 게임 플레이 가능.
 
 ## 게임 실행 방법
 ```bash
@@ -17,7 +17,8 @@ python -m http.server 8000
 ├── games/
 │   ├── 2048/
 │   ├── snake/
-│   └── minesweeper/
+│   ├── minesweeper/
+│   └── tetris/
 └── SHARED_TASK_NOTES.md
 ```
 
@@ -39,6 +40,14 @@ python -m http.server 8000
 - 타이머, 최고 기록 저장 (난이도별)
 - 첫 클릭 안전 보장 (지뢰 없음)
 
+### Tetris
+- 10x20 그리드, 클래식 테트리스
+- 화살표 키: 이동/회전, Space: 하드 드롭
+- X/Z: 회전, C: 홀드 기능
+- Next 피스 미리보기, Hold 기능
+- 7-bag 랜덤화, 고스트 피스 표시
+- 레벨업 시스템 (10줄마다), 사운드
+
 ## 공통 기능
 - 다크 모드 (테마 공유: game-hub-theme)
 - 사운드 on/off 토글
@@ -46,6 +55,6 @@ python -m http.server 8000
 - localStorage로 설정/점수 저장
 
 ## 다음 iteration에서 고려할 개선사항
-1. **새 게임 추가** - Tetris, Flappy Bird, Breakout 등
+1. **새 게임 추가** - Flappy Bird, Breakout, Pong 등
 2. **PWA 지원** - 오프라인 플레이
 3. **통계 페이지** - 전체 게임 통계 대시보드
