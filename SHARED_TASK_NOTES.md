@@ -3,6 +3,8 @@
 ## Current Status
 멀티 게임 허브 완성. 2048, Snake, Minesweeper, Tetris, Breakout, Memory, Pixel Survivor 7개 게임 플레이 가능.
 
+**Pixel Survivor가 뱀파이어 서바이벌 스타일로 대폭 개선됨!**
+
 ## 게임 실행 방법
 ```bash
 python -m http.server 8000
@@ -21,7 +23,7 @@ python -m http.server 8000
 │   ├── tetris/
 │   ├── breakout/
 │   ├── memory/
-│   └── survivor/       # NEW - Pixel Survivor
+│   └── survivor/       # Pixel Survivor (뱀파이어 서바이벌 스타일)
 └── SHARED_TASK_NOTES.md
 ```
 
@@ -65,13 +67,26 @@ python -m http.server 8000
 - 이동 횟수, 타이머 표시
 - 난이도별 최고 기록 저장, 사운드
 
-### Pixel Survivor (NEW)
-- 뱀파이어 서바이벌 스타일 pixel art 게임
+### Pixel Survivor (뱀파이버 서바이벌 스타일)
 - WASD/화살표 키 + 모바일 조이스틱으로 이동
-- 자동 공격 (가장 가까운 적 타겟팅)
-- 3가지 적 타입: Normal(좀비), Fast(박쥐), Tank(스켈레톤)
-- 레벨업 시 업그레이드 선택 (공격력, 이동속도, 체력 등)
-- 시간 경과에 따른 난이도 상승
+- **8가지 무기**: Whip, Knife, Axe, Cross, Holy Water, Garlic, Lightning Ring, Magic Wand
+- **12가지 패시브 아이템**: Spinach, Armor, Wings, Empty Tome, Bracer, Candelabrador, Clover, Pummarola, Attractorb, Duplicator, Crown, Hollow Heart
+- **무기 진화 시스템**: 무기 레벨 8 + 특정 패시브 → 진화 무기 (보스 상자에서)
+  - Whip + Empty Tome → Bloody Tear (흡혈)
+  - Knife + Bracer → Thousand Edge (다중 투사체)
+  - Axe + Candelabrador → Death Spiral (공전)
+  - Cross + Clover → Heaven Sword
+  - Holy Water + Attractorb → La Borra
+  - Garlic + Pummarola → Soul Eater (흡혈)
+  - Lightning + Duplicator → Thunder Loop
+  - Magic Wand + Empty Tome → Holy Wand
+- **6슬롯 제한**: 무기 6개, 패시브 6개 최대
+- **5가지 일반 적**: Zombie, Bat, Skeleton, Ghost, Demon (시간에 따라 등장)
+- **3가지 보스**: Giant, Werewolf, Vampire (매 분마다 스폰)
+- **30분 사신(Reaper)**: 30분 생존 시 사신 출현, 처치하면 승리
+- **보물 상자**: 보스 처치 시 드롭, 무기 진화 가능
+- 레벨업 시 무기/패시브 선택 (최대 4개 옵션)
+- 시간 경과에 따른 난이도 상승, 웨이브 시스템
 - 최고 생존 시간 저장, 사운드
 
 ## 공통 기능
@@ -81,7 +96,10 @@ python -m http.server 8000
 - localStorage로 설정/점수 저장
 
 ## 다음 iteration에서 고려할 개선사항
-1. **Pixel Survivor 개선** - 더 많은 무기 타입, 보스 몬스터 추가
+1. **Pixel Survivor 추가 개선**
+   - 캐릭터 선택 (다른 시작 무기)
+   - 더 많은 무기/패시브 추가
+   - 맵 이벤트 시스템
 2. **새 게임 추가** - Flappy Bird, Pong, Sudoku 등
 3. **PWA 지원** - 오프라인 플레이
 4. **통계 페이지** - 전체 게임 통계 대시보드

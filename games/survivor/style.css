@@ -261,16 +261,41 @@ h1 {
     transform: scale(1.02);
 }
 
-.upgrade-btn .upgrade-name {
-    font-size: 16px;
-    font-weight: bold;
-    color: #ffd700;
+.upgrade-btn .upgrade-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin-bottom: 4px;
 }
 
+.upgrade-btn .upgrade-icon {
+    font-size: 20px;
+}
+
+.upgrade-btn .upgrade-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: #ffd700;
+    flex: 1;
+}
+
+.upgrade-btn .upgrade-name.evolved {
+    color: #ff6600;
+    text-shadow: 0 0 8px #ff6600;
+}
+
+.upgrade-btn .upgrade-level {
+    font-size: 11px;
+    color: #88ff88;
+    background: rgba(0, 100, 0, 0.4);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
 .upgrade-btn .upgrade-desc {
-    font-size: 12px;
+    font-size: 11px;
     color: #aaa;
+    margin-left: 28px;
 }
 
 .hidden {
