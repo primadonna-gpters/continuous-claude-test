@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048 Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>2048</h1>
+            <div class="score-container">
+                <div class="score-box">
+                    <div class="score-label">SCORE</div>
+                    <div id="score">0</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-label">BEST</div>
+                    <div id="best-score">0</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-info">
+            <p>숫자 타일을 합쳐서 <strong>2048</strong>을 만들어보세요!</p>
+            <button id="new-game-btn">New Game</button>
+        </div>
+
+        <div id="game-container">
+            <div id="grid-background"></div>
+            <div id="tile-container"></div>
+            <div id="game-message" class="hidden">
+                <p></p>
+                <button id="retry-btn">Try again</button>
+                <button id="keep-playing-btn" class="hidden">Keep playing</button>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <p><strong>조작 방법:</strong> 화살표 키 또는 WASD로 타일을 이동하세요.</p>
+            <p>모바일: 스와이프로 이동하세요.</p>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
