@@ -343,7 +343,9 @@ const EVOLVED_WEAPONS = {
         icon: '🩸',
         damageMultiplier: 1.5,
         healsOnKill: 2,
-        critChance: 0.1
+        critChance: 0.1,
+        unionWith: 'ventoSacro',
+        unionResult: 'fuwalafuwaloo'
     },
     holyWand: {
         name: 'Holy Wand',
@@ -678,6 +680,21 @@ Object.assign(WEAPON_TYPES, {
         rarity: 'union',
         isUnion: true,
         critChance: 0.3
+    },
+    bloodyTear: {
+        name: 'Bloody Tear',
+        desc: 'Evolved Whip - Critical hits and heals on kill',
+        icon: '🩸',
+        damage: 18,
+        cooldown: 0.8,
+        area: 1.3,
+        speed: 1.0,
+        amount: 1,
+        pierce: -1,
+        rarity: 'evolved',
+        isEvolved: true,
+        unionWith: 'ventoSacro',
+        unionResult: 'fuwalafuwaloo'
     }
 });
 
@@ -1721,18 +1738,30 @@ function checkEvolution(weapon) {
 }
 
 function checkUnion(weapon) {
-    if (weapon.evolved || weapon.unioned || weapon.level < weapon.maxLevel) return false;
+    if (weapon.unioned || weapon.level < weapon.maxLevel) return false;
 
-    const weaponType = WEAPON_TYPES[weapon.id];
-    if (!weaponType.unionWith || !weaponType.unionResult) return false;
+    // Get the weapon type - if evolved, use evolvedId for union check
+    const weaponId = weapon.evolved ? weapon.evolvedId : weapon.id;
+    const weaponType = weapon.evolved ? EVOLVED_WEAPONS[weaponId] : WEAPON_TYPES[weapon.id];
+
+    // Check in WEAPON_TYPES for unionWith (handles both basic and evolved weapons)
+    const unionInfo = WEAPON_TYPES[weaponId] || weaponType;
+    if (!unionInfo || !unionInfo.unionWith || !unionInfo.unionResult) return false;
 
     // Check if we have the partner weapon at max level
-    const partnerWeapon = player.weapons.find(w =>
-        w.id === weaponType.unionWith &&
-        w.level >= w.maxLevel &&
-        !w.evolved &&
-        !w.unioned
-    );
+    // Partner can be either a basic weapon or an evolved weapon
+    const partnerWeapon = player.weapons.find(w => {
+        if (w.unioned) return false;
+        if (w.level < w.maxLevel) return false;
+
+        // Check if partner matches by basic id
+        if (w.id === unionInfo.unionWith && !w.evolved) return true;
+
+        // Check if partner matches by evolved id
+        if (w.evolved && w.evolvedId === unionInfo.unionWith) return true;
+
+        return false;
+    });
 
     return !!partnerWeapon;
 }
@@ -1757,23 +1786,33 @@ function checkForUnionPossibility(weapon) {
 }
 
 function performUnion(weapon) {
-    const weaponType = WEAPON_TYPES[weapon.id];
-    const unionResult = UNION_WEAPONS[weaponType.unionResult];
+    // Get the weapon type - if evolved, use evolvedId for union info
+    const weaponId = weapon.evolved ? weapon.evolvedId : weapon.id;
+    const unionInfo = WEAPON_TYPES[weaponId] || (weapon.evolved ? EVOLVED_WEAPONS[weaponId] : WEAPON_TYPES[weapon.id]);
+
+    if (!unionInfo || !unionInfo.unionResult) return false;
+    const unionResult = UNION_WEAPONS[unionInfo.unionResult];
     if (!unionResult) return false;
 
-    // Find partner weapon
-    const partnerWeapon = player.weapons.find(w =>
-        w.id === weaponType.unionWith &&
-        w.level >= w.maxLevel &&
-        !w.evolved &&
-        !w.unioned
-    );
+    // Find partner weapon (can be basic or evolved)
+    const partnerWeapon = player.weapons.find(w => {
+        if (w.unioned) return false;
+        if (w.level < w.maxLevel) return false;
+
+        // Check if partner matches by basic id
+        if (w.id === unionInfo.unionWith && !w.evolved) return true;
+
+        // Check if partner matches by evolved id
+        if (w.evolved && w.evolvedId === unionInfo.unionWith) return true;
+
+        return false;
+    });
 
     if (!partnerWeapon) return false;
 
     // Mark the main weapon as unioned with the result
     weapon.unioned = true;
-    weapon.unionId = weaponType.unionResult;
+    weapon.unionId = unionInfo.unionResult;
 
     // Remove partner weapon from player's weapons
     const partnerIndex = player.weapons.indexOf(partnerWeapon);
@@ -3436,7 +3475,7 @@ function showPauseOverlay() {
         }
 
         const canEvolve = !w.evolved && !w.unioned && w.level >= w.maxLevel && player.passives.some(p => p.id === type.requiresPassive);
-        const canUnion = !w.evolved && !w.unioned && checkUnion(w);
+        const canUnion = !w.unioned && checkUnion(w);
 
         if (canEvolve) itemClass = 'can-evolve';
         if (canUnion) itemClass = 'can-union';
@@ -4623,38 +4662,47 @@ function drawExpGems() {
         const x = Math.floor(gem.x);
         const y = Math.floor(gem.y);
 
-        // Glow effect based on gem value
-        const glowColor = gem.value >= 5 ? 'rgba(255, 68, 68, 0.6)' :
-                          gem.value >= 3 ? 'rgba(68, 255, 68, 0.6)' : 'rgba(68, 170, 255, 0.6)';
-        const glowSize = gem.value >= 5 ? 12 : gem.value >= 3 ? 10 : 8;
+        // Determine colors based on gem value
+        const isLarge = gem.value >= 5;
+        const isMedium = gem.value >= 3;
+        const baseColor = isLarge ? '#ff4444' : isMedium ? '#44ff44' : '#44aaff';
+        const highlightColor = isLarge ? '#ff8888' : isMedium ? '#88ff88' : '#88ccff';
+        const glowColor = isLarge ? 'rgba(255, 68, 68, 0.6)' : isMedium ? 'rgba(68, 255, 68, 0.6)' : 'rgba(68, 170, 255, 0.6)';
 
-        // Pulse effect
-        const pulse = Math.sin(Date.now() / 300 + gem.x * 0.1) * 0.3 + 0.7;
+        // Pulsing glow effect
+        const pulse = Math.sin(Date.now() / 300 + gem.x) * 0.3 + 0.7;
+        const glowSize = isLarge ? 12 : isMedium ? 10 : 8;
 
-        ctx.shadowColor = glowColor;
-        ctx.shadowBlur = glowSize * pulse;
+        // Draw glow
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, glowSize);
+        gradient.addColorStop(0, glowColor);
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.globalAlpha = pulse;
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, glowSize, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
 
-        // Black outline
-        ctx.fillStyle = '#000';
+        // Draw black outline
+        ctx.fillStyle = '#000000';
         drawPixelRect(x - 3, y - 5, 6, 2);
         drawPixelRect(x - 4, y - 3, 8, 2);
         drawPixelRect(x - 4, y - 1, 8, 2);
         drawPixelRect(x - 3, y + 1, 6, 2);
         drawPixelRect(x - 2, y + 3, 4, 2);
 
-        // Main gem body
-        ctx.fillStyle = gem.value >= 5 ? '#ff4444' : gem.value >= 3 ? '#44ff44' : '#44aaff';
+        // Draw main gem body
+        ctx.fillStyle = baseColor;
         drawPixelRect(x - 2, y - 4, 4, 2);
         drawPixelRect(x - 3, y - 2, 6, 2);
         drawPixelRect(x - 2, y, 4, 2);
         drawPixelRect(x - 1, y + 2, 2, 2);
 
-        // Highlight
-        ctx.fillStyle = gem.value >= 5 ? '#ff8888' : gem.value >= 3 ? '#88ff88' : '#88ccff';
+        // Draw highlight
+        ctx.fillStyle = highlightColor;
         drawPixelRect(x - 1, y - 3, 2, 1);
-        drawPixelRect(x - 2, y - 2, 1, 1);
-
-        ctx.shadowBlur = 0;
+        drawPixelRect(x - 2, y - 1, 1, 1);
     }
 }
 
@@ -4664,39 +4712,49 @@ function drawChests() {
         const y = Math.floor(chest.y);
 
         const glow = Math.sin(Date.now() / 200) * 0.3 + 0.7;
+        const pulse = Math.sin(Date.now() / 150) * 0.2 + 0.8;
 
-        // Golden glow effect
-        ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
-        ctx.shadowBlur = 15 * glow;
+        // Draw golden glow effect
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 25);
+        gradient.addColorStop(0, `rgba(255, 215, 0, ${0.5 * pulse})`);
+        gradient.addColorStop(0.5, `rgba(255, 215, 0, ${0.2 * pulse})`);
+        gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, 25, 0, Math.PI * 2);
+        ctx.fill();
 
-        // Black outline
-        ctx.fillStyle = '#000';
+        // Draw black outline
+        ctx.fillStyle = '#000000';
         drawPixelRect(x - 9, y - 7, 18, 2);
         drawPixelRect(x - 9, y - 5, 2, 12);
         drawPixelRect(x + 7, y - 5, 2, 12);
         drawPixelRect(x - 9, y + 5, 18, 2);
 
-        // Chest body (wood)
+        // Chest body - dark wood
+        ctx.fillStyle = '#5c3317';
+        drawPixelRect(x - 7, y - 3, 14, 8);
+
+        // Chest lid - lighter wood
         ctx.fillStyle = '#8B4513';
-        drawPixelRect(x - 8, y - 4, 16, 10);
+        drawPixelRect(x - 7, y - 5, 14, 3);
 
-        // Chest lid (gold trim)
+        // Golden trim
         ctx.fillStyle = `rgba(212, 175, 55, ${glow})`;
-        drawPixelRect(x - 6, y - 6, 12, 4);
+        drawPixelRect(x - 6, y - 6, 12, 2);
+        drawPixelRect(x - 7, y - 1, 14, 2);
 
-        // Gold lock
+        // Golden lock/clasp
         ctx.fillStyle = '#FFD700';
-        drawPixelRect(x - 2, y - 2, 4, 4);
+        drawPixelRect(x - 2, y - 3, 4, 5);
 
-        // Highlight on lid
-        ctx.fillStyle = '#fff';
-        drawPixelRect(x - 5, y - 5, 2, 1);
+        // Keyhole
+        ctx.fillStyle = '#2a1a0a';
+        drawPixelRect(x - 1, y - 1, 2, 2);
 
-        // Inner shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        drawPixelRect(x - 7, y + 2, 14, 2);
-
-        ctx.shadowBlur = 0;
+        // Shine effect on lid
+        ctx.fillStyle = `rgba(255, 255, 200, ${0.4 * glow})`;
+        drawPixelRect(x - 5, y - 5, 3, 1);
     }
 }
 
