@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8f7a66"/>
+      <stop offset="100%" style="stop-color:#776e65"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+  <!-- Game controller body -->
+  <path d="M96 230 Q96 180 146 180 L206 180 Q226 180 236 160 L256 120 Q266 100 286 100 L356 100 Q376 100 386 120 L406 160 Q416 180 436 180 L496 180 Q546 180 546 230 L546 310 Q546 360 496 360 L436 360 Q416 360 406 380 L386 420 Q376 440 356 440 L286 440 Q266 440 256 420 L236 380 Q226 360 206 360 L146 360 Q96 360 96 310 Z"
+        transform="translate(-30, 20) scale(0.9)"
+        fill="#f9f6f2"
+        opacity="0.95"/>
+  <!-- D-pad -->
+  <rect x="120" y="240" width="30" height="70" rx="5" fill="#8f7a66"/>
+  <rect x="100" y="260" width="70" height="30" rx="5" fill="#8f7a66"/>
+  <!-- Buttons -->
+  <circle cx="380" cy="250" r="18" fill="#edc22e"/>
+  <circle cx="420" cy="275" r="18" fill="#f65e3b"/>
+  <circle cx="340" cy="275" r="18" fill="#59b95a"/>
+  <circle cx="380" cy="300" r="18" fill="#5495d4"/>
+  <!-- Center text -->
+  <text x="256" y="380" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#f9f6f2" text-anchor="middle">GAME HUB</text>
+</svg>
