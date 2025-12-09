@@ -2,7 +2,7 @@
 
 ## Current Status
 멀티 게임 허브 완성. 2048, Snake, Minesweeper, Tetris, Breakout, Memory, Pixel Survivor 7개 게임 플레이 가능.
-**Pixel Survivor - Area Effect 가시성 대폭 개선 완료!**
+**Pixel Survivor - 게임 밸런스 대폭 조정 완료!**
 
 ## 게임 실행 방법
 ```bash
@@ -12,71 +12,55 @@ python -m http.server 8000
 
 ## Pixel Survivor - 이번 iteration 작업 내용
 
-### Area Effect 가시성 개선 (5종류)
+### 게임 밸런스 조정
 
-1. **Whip (채찍)**
-   - 외부 글로우 효과 (shadowBlur)
-   - 검은색 픽셀 외곽선 (4방향)
-   - 내부 하이라이트 (채찍 균열 효과)
-   - 모션 슬래시 라인 (3개의 수직선)
+#### Union 무기 너프
+| 무기 | 변경 전 | 변경 후 |
+|-----|--------|--------|
+| Vandalier | dmg 25, cd 2.0, amount 6 | dmg 18, cd 2.5, amount 4 |
+| Phieraggi | dmg 20, cd 0.2, amount 8 | dmg 12, cd 0.25, amount 6 |
+| Fuwalafuwaloo | dmg 30, cd 0.8, crit 30% | dmg 22, cd 1.0, crit 20% |
 
-2. **Holy Water (성수)**
-   - 펄싱 글로우 효과 (시간 기반)
-   - 검은색 타원 외곽선
-   - 내부 밝은 그라데이션
-   - 애니메이션 버블/스파클 효과 (5개 회전)
+#### 진화 무기 밸런스 조정
+- Bloody Tear: dmg 1.5x → 1.4x, heal 2 → 1
+- Thousand Edge: dmg 1.0x → 0.9x, amount +3 → +2
+- Heaven Sword: dmg 2.0x → 1.6x, area 1.5x → 1.3x
+- Hellfire: dmg 1.5x → 1.35x
+- Thunder Loop: dmg 1.3x → 1.2x, chains 3 → 2
 
-3. **Garlic (마늘)**
-   - 펄싱 외부 글로우 오라
-   - 검은색 원형 외곽선
-   - 반투명 내부 채움
-   - 회전하는 입자 효과 (6개)
-   - 내부 밝은 링
+#### 웨이브 난이도 곡선 완화
+- 중간 웨이브 추가 (150초, 420초, 540초, 720초, 840초, 1020초, 1350초, 1650초)
+- spawnRate 곡선을 더 점진적으로 변경 (기존 0.2~0.15 → 0.25~0.35)
+- 적 count 증가 속도 완화
 
-4. **Explosion (폭발)**
-   - 외부 글로우
-   - 검은색 외곽선 링
-   - 밝은 노란색 코어
-   - 흰색 핫 센터
-   - 8개의 스파크 입자
-
-5. **Lightning (번개)**
-   - 전기 글로우 (시안 색상)
-   - 검은색 외곽선
-   - 밝은 흰색 코어
-   - 4개의 지그재그 번개 볼트 (랜덤 각도)
+#### 적 스탯 밸런싱
+- Demon: health 3 → 2.5, damage 2.0 → 1.6
+- Reaper: health 4 → 3.5, damage 2.5 → 2.0
+- Death Boss: health 200 → 150, damage 10 → 6
+- Red Death: health 500 → 400, damage 999 → 15
 
 ## 기존 시스템 (유지)
 - 스테이지별 배경 그래픽 (5종)
 - 아케인 시스템 (12종)
-- 8개 캐릭터
+- 8개 캐릭터, 15개 패시브 아이템
 - 12개 기본 무기 + 12개 진화 무기 + 6개 새 무기 + 3개 Union 무기
-- 15개 패시브 아이템
 - 5개 스테이지 + Hyper Mode
-- 웨이브 기반 적 스폰 (30분 생존)
-- 플레이어/적/투사체/경험치젬/보물상자 외곽선 및 글로우 효과
-
-## Union 무기 목록 (작동 확인됨)
-| Union 무기 | 재료 1 | 재료 2 |
-|-----------|--------|--------|
-| Vandalier | Peachone (MAX) | Ebony Wings (MAX) |
-| Phieraggi | Phiera Der Tuphello (MAX) | Eight The Sparrow (MAX) |
-| Fuwalafuwaloo | Vento Sacro (MAX) | Bloody Tear (Evolved Whip) |
+- 모든 시각 효과 (Area effect 글로우/외곽선, 투사체 효과 등)
 
 ## 다음 iteration 우선순위
 
-1. **게임 밸런스 조정**
-   - 새 무기/Union 무기 데미지/쿨다운 밸런싱
-   - 후반 웨이브 난이도 조정
-
-2. **PWA 지원**
+1. **PWA 지원**
    - Service Worker 추가
    - 오프라인 플레이 가능하게
 
-3. **사운드 개선**
+2. **사운드 개선**
    - Union/Evolution 시 전용 사운드 효과
    - 보물상자 획득 사운드 개선
 
-4. **기타 효과 가시성**
+3. **추가 시각 효과**
    - Pentagram, Song of Mana 등 나머지 효과들도 개선 검토
    - Bible, Cross 등 투사체 효과 강화
+
+4. **추가 콘텐츠**
+   - 새로운 캐릭터 또는 무기 추가 고려
+   - 업적 시스템 검토

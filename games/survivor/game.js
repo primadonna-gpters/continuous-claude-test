@@ -341,8 +341,8 @@ const EVOLVED_WEAPONS = {
         name: 'Bloody Tear',
         desc: 'Evolved Whip - Critical hits and heals on kill',
         icon: '🩸',
-        damageMultiplier: 1.5,
-        healsOnKill: 2,
+        damageMultiplier: 1.4,
+        healsOnKill: 1,
         critChance: 0.1,
         unionWith: 'ventoSacro',
         unionResult: 'fuwalafuwaloo'
@@ -352,71 +352,71 @@ const EVOLVED_WEAPONS = {
         desc: 'Evolved Wand - No cooldown, fires rapidly',
         icon: '✨',
         damageMultiplier: 1.0,
-        cooldownMultiplier: 0.3
+        cooldownMultiplier: 0.35
     },
     thousandEdge: {
         name: 'Thousand Edge',
         desc: 'Evolved Knife - Fires many projectiles',
         icon: '⚔️',
-        damageMultiplier: 1.0,
-        amountBonus: 3,
+        damageMultiplier: 0.9,
+        amountBonus: 2,
         noCooldown: true
     },
     deathSpiral: {
         name: 'Death Spiral',
         desc: 'Evolved Axe - Orbits around player',
         icon: '💀',
-        damageMultiplier: 1.2,
+        damageMultiplier: 1.15,
         orbits: true
     },
     hellfire: {
         name: 'Hellfire',
         desc: 'Evolved Fire - Causes explosions',
         icon: '☄️',
-        damageMultiplier: 1.5,
+        damageMultiplier: 1.35,
         explosive: true
     },
     laBorra: {
         name: 'La Borra',
         desc: 'Evolved Water - Follows the player',
         icon: '🌊',
-        damageMultiplier: 1.2,
+        damageMultiplier: 1.15,
         followsPlayer: true
     },
     unholyVespers: {
         name: 'Unholy Vespers',
         desc: 'Evolved Bible - Never expires',
         icon: '📕',
-        damageMultiplier: 1.3,
+        damageMultiplier: 1.2,
         permanent: true,
-        amountBonus: 2
+        amountBonus: 1
     },
     heavenSword: {
         name: 'Heaven Sword',
         desc: 'Evolved Cross - Larger and deals more damage',
         icon: '🗡️',
-        damageMultiplier: 2.0,
-        areaMultiplier: 1.5
+        damageMultiplier: 1.6,
+        areaMultiplier: 1.3
     },
     soulEater: {
         name: 'Soul Eater',
         desc: 'Evolved Garlic - Steals health from enemies',
         icon: '👻',
-        damageMultiplier: 1.5,
+        damageMultiplier: 1.3,
         healsOnHit: true
     },
     thunderLoop: {
         name: 'Thunder Loop',
         desc: 'Evolved Lightning - Chains between enemies',
         icon: '🌩️',
-        damageMultiplier: 1.3,
-        chains: 3
+        damageMultiplier: 1.2,
+        chains: 2
     },
     noFuture: {
         name: 'NO FUTURE',
         desc: 'Evolved Runetracer - Explodes on expiration',
         icon: '💥',
-        damageMultiplier: 1.5,
+        damageMultiplier: 1.35,
         explodesOnEnd: true
     },
     gorgeousMoon: {
@@ -511,25 +511,25 @@ const UNION_WEAPONS = {
         desc: 'Union of Peachone and Ebony Wings. Bombards everywhere.',
         icon: '🦅',
         requires: ['peachone', 'ebonyWings'],
-        damageMultiplier: 2.0,
-        amountBonus: 2,
-        areaMultiplier: 1.5
+        damageMultiplier: 1.6,
+        amountBonus: 1,
+        areaMultiplier: 1.3
     },
     fuwalafuwaloo: {
         name: 'Fuwalafuwaloo',
         desc: 'Union of Vento Sacro and Bloody Tear. Ultimate slash.',
         icon: '🌸',
         requires: ['ventoSacro', 'bloodyTear'],
-        damageMultiplier: 2.5,
-        critChance: 0.3
+        damageMultiplier: 1.8,
+        critChance: 0.2
     },
     phieraggi: {
         name: 'Phieraggi',
         desc: 'Union of Phiera and Eight. Dual wielding mastery.',
         icon: '🔫',
         requires: ['phiera', 'eight'],
-        damageMultiplier: 1.8,
-        amountBonus: 4
+        damageMultiplier: 1.5,
+        amountBonus: 2
     }
 };
 
@@ -644,13 +644,13 @@ Object.assign(WEAPON_TYPES, {
         name: 'Vandalier',
         desc: 'Union of Peachone and Ebony Wings. Bombards everywhere.',
         icon: '🦅',
-        damage: 25,
-        cooldown: 2.0,
-        area: 1.5,
+        damage: 18,
+        cooldown: 2.5,
+        area: 1.3,
         speed: 0.5,
-        amount: 6,
+        amount: 4,
         pierce: -1,
-        duration: 3.0,
+        duration: 2.5,
         rarity: 'union',
         isUnion: true
     },
@@ -658,12 +658,12 @@ Object.assign(WEAPON_TYPES, {
         name: 'Phieraggi',
         desc: 'Union of Phiera and Eight. Dual wielding mastery.',
         icon: '🔫',
-        damage: 20,
-        cooldown: 0.2,
+        damage: 12,
+        cooldown: 0.25,
         area: 1.0,
-        speed: 3.0,
-        amount: 8,
-        pierce: 3,
+        speed: 2.8,
+        amount: 6,
+        pierce: 2,
         rarity: 'union',
         isUnion: true
     },
@@ -671,15 +671,15 @@ Object.assign(WEAPON_TYPES, {
         name: 'Fuwalafuwaloo',
         desc: 'Union of Vento Sacro and Bloody Tear. Ultimate slash.',
         icon: '🌸',
-        damage: 30,
-        cooldown: 0.8,
-        area: 1.8,
+        damage: 22,
+        cooldown: 1.0,
+        area: 1.5,
         speed: 1.0,
         amount: 1,
         pierce: -1,
         rarity: 'union',
         isUnion: true,
-        critChance: 0.3
+        critChance: 0.2
     },
     bloodyTear: {
         name: 'Bloody Tear',
@@ -867,39 +867,47 @@ let enemyBaseHealth = 20;
 let enemyBaseDamage = 10;
 let enemyBaseSpeed = 40;
 
-// Minute-based events (like Vampire Survivors)
+// Minute-based events (like Vampire Survivors) - balanced difficulty curve
 const WAVE_EVENTS = [
     { time: 0, enemies: ['zombie'], spawnRate: 2.0, count: 1 },
     { time: 30, enemies: ['zombie', 'bat'], spawnRate: 1.8, count: 2 },
-    { time: 60, enemies: ['zombie', 'bat', 'skeleton'], spawnRate: 1.5, count: 3 },
-    { time: 90, boss: 'giant', spawnRate: 1.3, count: 3 },
-    { time: 120, enemies: ['zombie', 'bat', 'skeleton', 'ghost'], spawnRate: 1.2, count: 4 },
-    { time: 180, boss: 'necromancer', spawnRate: 1.0, count: 5 },
-    { time: 240, enemies: ['skeleton', 'ghost', 'demon'], spawnRate: 0.8, count: 6 },
-    { time: 300, boss: 'vampire', spawnRate: 0.7, count: 7 },
-    { time: 360, enemies: ['demon', 'wraith'], spawnRate: 0.6, count: 8 },
-    { time: 480, boss: 'deathLord', spawnRate: 0.5, count: 10 },
-    { time: 600, enemies: ['demon', 'wraith', 'reaper'], spawnRate: 0.4, count: 12 },
-    { time: 900, boss: 'death', spawnRate: 0.3, count: 15 },
-    { time: 1200, enemies: ['reaper'], spawnRate: 0.2, count: 20 },
-    { time: 1500, boss: 'redDeath', spawnRate: 0.15, count: 25 }
+    { time: 60, enemies: ['zombie', 'bat', 'skeleton'], spawnRate: 1.6, count: 2 },
+    { time: 90, boss: 'giant', spawnRate: 1.5, count: 3 },
+    { time: 120, enemies: ['zombie', 'bat', 'skeleton', 'ghost'], spawnRate: 1.4, count: 3 },
+    { time: 150, enemies: ['bat', 'skeleton', 'ghost'], spawnRate: 1.3, count: 4 },
+    { time: 180, boss: 'necromancer', spawnRate: 1.2, count: 4 },
+    { time: 240, enemies: ['skeleton', 'ghost', 'demon'], spawnRate: 1.1, count: 5 },
+    { time: 300, boss: 'vampire', spawnRate: 1.0, count: 5 },
+    { time: 360, enemies: ['ghost', 'demon', 'wraith'], spawnRate: 0.9, count: 6 },
+    { time: 420, enemies: ['demon', 'wraith'], spawnRate: 0.85, count: 6 },
+    { time: 480, boss: 'deathLord', spawnRate: 0.8, count: 7 },
+    { time: 540, enemies: ['demon', 'wraith'], spawnRate: 0.75, count: 7 },
+    { time: 600, enemies: ['demon', 'wraith', 'reaper'], spawnRate: 0.7, count: 8 },
+    { time: 720, enemies: ['wraith', 'reaper'], spawnRate: 0.6, count: 9 },
+    { time: 840, enemies: ['reaper'], spawnRate: 0.55, count: 10 },
+    { time: 900, boss: 'death', spawnRate: 0.5, count: 10 },
+    { time: 1020, enemies: ['reaper'], spawnRate: 0.45, count: 12 },
+    { time: 1200, enemies: ['reaper'], spawnRate: 0.4, count: 14 },
+    { time: 1350, enemies: ['reaper'], spawnRate: 0.35, count: 16 },
+    { time: 1500, boss: 'redDeath', spawnRate: 0.3, count: 18 },
+    { time: 1650, enemies: ['reaper'], spawnRate: 0.25, count: 20 }
 ];
 
 const ENEMY_TYPES = {
     zombie: { healthMult: 1, speedMult: 1, damageMult: 1, expValue: 1, color: '#77aa77' },
     bat: { healthMult: 0.5, speedMult: 1.8, damageMult: 0.7, expValue: 1, color: '#44aa44' },
-    skeleton: { healthMult: 2, speedMult: 0.7, damageMult: 1.5, expValue: 3, color: '#cccccc' },
-    ghost: { healthMult: 0.8, speedMult: 1.2, damageMult: 1.2, expValue: 2, color: '#8888ff' },
-    demon: { healthMult: 3, speedMult: 0.9, damageMult: 2.0, expValue: 5, color: '#ff4444' },
-    wraith: { healthMult: 1.5, speedMult: 1.5, damageMult: 1.8, expValue: 4, color: '#aa66aa' },
-    reaper: { healthMult: 4, speedMult: 1.1, damageMult: 2.5, expValue: 8, color: '#222222' },
+    skeleton: { healthMult: 2, speedMult: 0.7, damageMult: 1.3, expValue: 3, color: '#cccccc' },
+    ghost: { healthMult: 0.8, speedMult: 1.2, damageMult: 1.1, expValue: 2, color: '#8888ff' },
+    demon: { healthMult: 2.5, speedMult: 0.9, damageMult: 1.6, expValue: 5, color: '#ff4444' },
+    wraith: { healthMult: 1.5, speedMult: 1.4, damageMult: 1.5, expValue: 4, color: '#aa66aa' },
+    reaper: { healthMult: 3.5, speedMult: 1.0, damageMult: 2.0, expValue: 8, color: '#222222' },
     // Bosses
-    giant: { healthMult: 30, speedMult: 0.4, damageMult: 3, expValue: 50, color: '#885522', isBoss: true },
-    necromancer: { healthMult: 40, speedMult: 0.5, damageMult: 2.5, expValue: 75, color: '#664488', isBoss: true },
-    vampire: { healthMult: 60, speedMult: 0.6, damageMult: 4, expValue: 100, color: '#880000', isBoss: true },
-    deathLord: { healthMult: 100, speedMult: 0.5, damageMult: 5, expValue: 150, color: '#440044', isBoss: true },
-    death: { healthMult: 200, speedMult: 0.7, damageMult: 10, expValue: 300, color: '#000000', isBoss: true },
-    redDeath: { healthMult: 500, speedMult: 1.0, damageMult: 999, expValue: 666, color: '#ff0000', isBoss: true }
+    giant: { healthMult: 25, speedMult: 0.4, damageMult: 2.5, expValue: 50, color: '#885522', isBoss: true },
+    necromancer: { healthMult: 35, speedMult: 0.5, damageMult: 2.2, expValue: 75, color: '#664488', isBoss: true },
+    vampire: { healthMult: 50, speedMult: 0.55, damageMult: 3.0, expValue: 100, color: '#880000', isBoss: true },
+    deathLord: { healthMult: 80, speedMult: 0.5, damageMult: 4.0, expValue: 150, color: '#440044', isBoss: true },
+    death: { healthMult: 150, speedMult: 0.6, damageMult: 6.0, expValue: 300, color: '#000000', isBoss: true },
+    redDeath: { healthMult: 400, speedMult: 0.8, damageMult: 15, expValue: 666, color: '#ff0000', isBoss: true }
 };
 
 // Projectiles & effects
