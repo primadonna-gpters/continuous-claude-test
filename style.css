@@ -70,7 +70,7 @@ h1 {
     line-height: 1.4;
 }
 
-#new-game-btn, #retry-btn, #keep-playing-btn {
+#new-game-btn, #retry-btn, #keep-playing-btn, #undo-btn {
     background-color: #8f7a66;
     color: #f9f6f2;
     border: none;
@@ -79,11 +79,16 @@ h1 {
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, opacity 0.2s;
 }
 
-#new-game-btn:hover, #retry-btn:hover, #keep-playing-btn:hover {
+#new-game-btn:hover, #retry-btn:hover, #keep-playing-btn:hover, #undo-btn:hover:not(.disabled) {
     background-color: #9f8b77;
+}
+
+#undo-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 #game-container {
@@ -337,15 +342,21 @@ body.dark-mode .game-info p {
 body.dark-mode #new-game-btn,
 body.dark-mode #retry-btn,
 body.dark-mode #keep-playing-btn,
-body.dark-mode #theme-toggle-btn {
+body.dark-mode #theme-toggle-btn,
+body.dark-mode #undo-btn {
     background-color: #4a4a6a;
 }
 
 body.dark-mode #new-game-btn:hover,
 body.dark-mode #retry-btn:hover,
 body.dark-mode #keep-playing-btn:hover,
-body.dark-mode #theme-toggle-btn:hover {
+body.dark-mode #theme-toggle-btn:hover,
+body.dark-mode #undo-btn:hover:not(.disabled) {
     background-color: #5a5a7a;
+}
+
+body.dark-mode #undo-btn.disabled {
+    opacity: 0.4;
 }
 
 body.dark-mode #game-container {
