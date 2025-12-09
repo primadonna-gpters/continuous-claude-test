@@ -49,7 +49,7 @@ function playSound(type) {
             oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
             oscillator.type = 'sine';
             gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-            gainNode.gain.exponentialDecayTo(0.01, audioContext.currentTime + 0.1);
+            gainNode.exponentialDecayTo(0.01, audioContext.currentTime + 0.1);
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + 0.1);
             break;
@@ -59,7 +59,7 @@ function playSound(type) {
             oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2);
             oscillator.type = 'sine';
             gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-            gainNode.gain.exponentialDecayTo(0.01, audioContext.currentTime + 0.3);
+            gainNode.exponentialDecayTo(0.01, audioContext.currentTime + 0.3);
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + 0.3);
             break;
@@ -68,7 +68,7 @@ function playSound(type) {
             oscillator.frequency.setValueAtTime(150, audioContext.currentTime + 0.1);
             oscillator.type = 'sawtooth';
             gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-            gainNode.gain.exponentialDecayTo(0.01, audioContext.currentTime + 0.2);
+            gainNode.exponentialDecayTo(0.01, audioContext.currentTime + 0.2);
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + 0.2);
             break;
@@ -81,7 +81,7 @@ function playSound(type) {
                 osc.frequency.setValueAtTime(freq, startTime);
                 osc.type = 'sine';
                 gain.gain.setValueAtTime(0.15, startTime);
-                gain.gain.exponentialDecayTo(0.01, startTime + duration);
+                gain.exponentialDecayTo(0.01, startTime + duration);
                 osc.start(startTime);
                 osc.stop(startTime + duration);
             };
