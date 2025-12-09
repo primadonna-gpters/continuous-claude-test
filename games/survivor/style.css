@@ -248,11 +248,14 @@ h1 {
     background-color: #2a2a4e;
     border: 2px solid #4a4a8e;
     border-radius: 8px;
-    padding: 15px;
+    padding: 12px 15px;
     cursor: pointer;
     transition: all 0.2s;
     color: white;
     text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .upgrade-btn:hover {
@@ -261,16 +264,67 @@ h1 {
     transform: scale(1.02);
 }
 
+.upgrade-btn .upgrade-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.upgrade-btn .upgrade-info {
+    flex: 1;
+    min-width: 0;
+}
+
 .upgrade-btn .upgrade-name {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
     color: #ffd700;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .upgrade-btn .upgrade-desc {
-    font-size: 12px;
+    font-size: 11px;
     color: #aaa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.upgrade-btn .upgrade-key {
+    width: 24px;
+    height: 24px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #888;
+    flex-shrink: 0;
+}
+
+.evolution-message {
+    text-align: center;
+    font-size: 16px;
+    color: #ffd700;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: rgba(255, 215, 0, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.continue-btn {
+    justify-content: center !important;
+}
+
+.continue-btn .upgrade-name {
+    text-align: center;
 }
 
 .hidden {

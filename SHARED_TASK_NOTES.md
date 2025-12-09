@@ -2,6 +2,7 @@
 
 ## Current Status
 멀티 게임 허브 완성. 2048, Snake, Minesweeper, Tetris, Breakout, Memory, Pixel Survivor 7개 게임 플레이 가능.
+**Pixel Survivor 대규모 업데이트 완료** - 뱀파이어 서바이벌 핵심 시스템 전체 구현.
 
 ## 게임 실행 방법
 ```bash
@@ -9,79 +10,58 @@ python -m http.server 8000
 # 브라우저에서 http://localhost:8000 접속
 ```
 
-## 프로젝트 구조
-```
-├── index.html          # Game Hub 메인 페이지
-├── style.css           # Hub 스타일
-├── hub.js              # Hub 테마 관리
-├── games/
-│   ├── 2048/
-│   ├── snake/
-│   ├── minesweeper/
-│   ├── tetris/
-│   ├── breakout/
-│   ├── memory/
-│   └── survivor/       # NEW - Pixel Survivor
-└── SHARED_TASK_NOTES.md
-```
+## Pixel Survivor - 뱀파이어 서바이벌 시스템
 
-## 구현된 게임
+### 구현된 핵심 시스템
 
-### 2048
-- 4x4 그리드, 타일 합치기 게임
-- 화살표 키/WASD + 모바일 스와이프
-- Undo 기능, 애니메이션 + 사운드
+#### 1. 무기 시스템 (10종 + 진화 무기 10종)
+**기본 무기:**
+| 무기 | 설명 | 진화 조건 | 진화 형태 |
+|------|------|----------|----------|
+| Whip | 수평 공격 + 넉백 | Hollow Heart | Bloody Tear (흡혈) |
+| Magic Wand | 가장 가까운 적 조준 | Empty Tome | Holy Wand (무쿨) |
+| Knife | 이동 방향 발사 | Bracer | Thousand Edge (관통) |
+| Axe | 위로 던지고 낙하 | Candelabrador | Death Spiral (관통) |
+| Cross | 부메랑 | Clover | Heaven Sword (크리티컬) |
+| King Bible | 플레이어 주변 회전 | Spellbinder | Unholy Vespers (영구) |
+| Garlic | 근접 데미지 | Pummarola | Soul Eater (흡혈) |
+| Fire Wand | 랜덤 적 조준 | Spinach | Hellfire (폭발) |
+| Lightning | 번개 | Duplicator | Thunder Loop (체인) |
+| Santa Water | 지면 데미지 존 | Attractorb | La Borra (따라다님) |
 
-### Snake
-- 20x20 그리드, 클래식 스네이크 게임
-- 화살표 키/WASD + 모바일 스와이프/버튼
-- 일시정지, 속도 증가, 사운드
+#### 2. 패시브 아이템 (14종)
+Spinach(데미지), Armor(방어), Hollow Heart(체력), Pummarola(회복), Empty Tome(쿨다운), Candelabrador(범위), Bracer(투사체속도), Spellbinder(지속시간), Duplicator(투사체수), Wings(이동속도), Attractorb(픽업범위), Clover(행운), Crown(경험치), Skull O'Maniac(저주)
 
-### Minesweeper
-- 3단계 난이도 (Easy/Medium/Hard)
-- 클릭: 칸 열기, 우클릭/롱프레스: 깃발
-- 타이머, 최고 기록 저장 (난이도별)
-- 첫 클릭 안전 보장 (지뢰 없음)
+#### 3. 경험치 젬 (3종)
+- Blue(1XP), Green(3XP), Red(10XP)
+- 최대 400개, 초과시 슈퍼젬 생성
 
-### Tetris
-- 10x20 그리드, 클래식 테트리스
-- 화살표 키: 이동/회전, Space: 하드 드롭
-- X/Z: 회전, C: 홀드 기능
-- Next 피스 미리보기, Hold 기능
-- 7-bag 랜덤화, 고스트 피스 표시
-- 레벨업 시스템 (10줄마다), 사운드
+#### 4. 보스 & 보물상자
+- 60초마다 보스 등장 (3종 로테이션)
+- 보스 처치 → 보물상자 → 진화 또는 업그레이드
 
-### Breakout
-- 10x5 벽돌 그리드, 클래식 벽돌 깨기 게임
-- 화살표 키/WASD/마우스로 패들 이동
-- Space/클릭으로 공 발사
-- 레벨업 시스템 (모든 벽돌 파괴 시 다음 레벨)
-- Lives 시스템 (3개), 사운드
+#### 5. 적 타입 (5종 + 보스 3종)
+Zombie, Bat(빠름), Skeleton(강함), Ghost(넉백저항), Demon(최강)
 
-### Memory
-- 카드 짝 맞추기 게임
-- 3단계 난이도 (Easy 4x3, Medium 4x4, Hard 6x4)
-- 클릭으로 카드 뒤집기
-- 이동 횟수, 타이머 표시
-- 난이도별 최고 기록 저장, 사운드
+#### 6. UI
+- 화면 하단 인벤토리 (무기 6 + 패시브 6)
+- 레벨업 시 4개 선택지 (숫자키 1-4)
+- 보스 경고 (10초 전)
 
-### Pixel Survivor (NEW)
-- 뱀파이어 서바이벌 스타일 pixel art 게임
-- WASD/화살표 키 + 모바일 조이스틱으로 이동
-- 자동 공격 (가장 가까운 적 타겟팅)
-- 3가지 적 타입: Normal(좀비), Fast(박쥐), Tank(스켈레톤)
-- 레벨업 시 업그레이드 선택 (공격력, 이동속도, 체력 등)
-- 시간 경과에 따른 난이도 상승
-- 최고 생존 시간 저장, 사운드
+### 조작법
+- WASD/화살표: 이동
+- Space: 일시정지
+- 1-4: 레벨업 선택
+
+## 기타 게임 (기존)
+- 2048, Snake, Minesweeper, Tetris, Breakout, Memory
 
 ## 공통 기능
-- 다크 모드 (테마 공유: game-hub-theme)
-- 사운드 on/off 토글
-- 반응형 디자인 + 모바일 지원
-- localStorage로 설정/점수 저장
+- 다크 모드, 사운드 토글, 반응형, localStorage
 
-## 다음 iteration에서 고려할 개선사항
-1. **Pixel Survivor 개선** - 더 많은 무기 타입, 보스 몬스터 추가
-2. **새 게임 추가** - Flappy Bird, Pong, Sudoku 등
-3. **PWA 지원** - 오프라인 플레이
-4. **통계 페이지** - 전체 게임 통계 대시보드
+## 다음 iteration 제안
+1. **Union 무기** - 두 무기 합체
+2. **캐릭터 선택** - 다른 시작 무기/스탯
+3. **맵 시스템** - 다양한 스테이지
+4. **아케인 카드** - 특수 능력
+5. **새 게임** - Flappy Bird, Pong, Sudoku
