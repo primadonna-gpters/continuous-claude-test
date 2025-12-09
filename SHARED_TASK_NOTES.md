@@ -1,7 +1,7 @@
 # Game Hub - Task Notes
 
 ## Current Status
-멀티 게임 허브 완성. 2048, Snake, Minesweeper, Tetris, Breakout 5개 게임 플레이 가능.
+멀티 게임 허브 완성. 2048, Snake, Minesweeper, Tetris, Breakout, Memory 6개 게임 플레이 가능.
 
 ## 게임 실행 방법
 ```bash
@@ -19,7 +19,8 @@ python -m http.server 8000
 │   ├── snake/
 │   ├── minesweeper/
 │   ├── tetris/
-│   └── breakout/
+│   ├── breakout/
+│   └── memory/
 └── SHARED_TASK_NOTES.md
 ```
 
@@ -49,12 +50,19 @@ python -m http.server 8000
 - 7-bag 랜덤화, 고스트 피스 표시
 - 레벨업 시스템 (10줄마다), 사운드
 
-### Breakout (NEW)
+### Breakout
 - 10x5 벽돌 그리드, 클래식 벽돌 깨기 게임
 - 화살표 키/WASD/마우스로 패들 이동
 - Space/클릭으로 공 발사
 - 레벨업 시스템 (모든 벽돌 파괴 시 다음 레벨)
 - Lives 시스템 (3개), 사운드
+
+### Memory (NEW)
+- 카드 짝 맞추기 게임
+- 3단계 난이도 (Easy 4x3, Medium 4x4, Hard 6x4)
+- 클릭으로 카드 뒤집기
+- 이동 횟수, 타이머 표시
+- 난이도별 최고 기록 저장, 사운드
 
 ## 공통 기능
 - 다크 모드 (테마 공유: game-hub-theme)
@@ -63,6 +71,6 @@ python -m http.server 8000
 - localStorage로 설정/점수 저장
 
 ## 다음 iteration에서 고려할 개선사항
-1. **새 게임 추가** - Flappy Bird, Pong, Memory 등
+1. **새 게임 추가** - Flappy Bird, Pong, Sudoku 등
 2. **PWA 지원** - 오프라인 플레이
 3. **통계 페이지** - 전체 게임 통계 대시보드
