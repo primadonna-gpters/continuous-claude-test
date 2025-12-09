@@ -636,6 +636,51 @@ Object.assign(EVOLVED_WEAPONS, {
     }
 });
 
+// Register Union weapons in WEAPON_TYPES so they can fire properly
+Object.assign(WEAPON_TYPES, {
+    vandalier: {
+        name: 'Vandalier',
+        desc: 'Union of Peachone and Ebony Wings. Bombards everywhere.',
+        icon: '🦅',
+        damage: 25,
+        cooldown: 2.0,
+        area: 1.5,
+        speed: 0.5,
+        amount: 6,
+        pierce: -1,
+        duration: 3.0,
+        rarity: 'union',
+        isUnion: true
+    },
+    phieraggi: {
+        name: 'Phieraggi',
+        desc: 'Union of Phiera and Eight. Dual wielding mastery.',
+        icon: '🔫',
+        damage: 20,
+        cooldown: 0.2,
+        area: 1.0,
+        speed: 3.0,
+        amount: 8,
+        pierce: 3,
+        rarity: 'union',
+        isUnion: true
+    },
+    fuwalafuwaloo: {
+        name: 'Fuwalafuwaloo',
+        desc: 'Union of Vento Sacro and Bloody Tear. Ultimate slash.',
+        icon: '🌸',
+        damage: 30,
+        cooldown: 0.8,
+        area: 1.8,
+        speed: 1.0,
+        amount: 1,
+        pierce: -1,
+        rarity: 'union',
+        isUnion: true,
+        critChance: 0.3
+    }
+});
+
 // Passive item definitions (matching Vampire Survivors)
 const PASSIVE_TYPES = {
     spinach: {
@@ -1939,6 +1984,33 @@ function fireWeapon(weapon) {
         case 'pentagram':
             firePentagram(damage, evolved);
             break;
+        case 'peachone':
+            firePeachone(damage, amount, area, duration);
+            break;
+        case 'ebonyWings':
+            fireEbonyWings(damage, amount, area, duration);
+            break;
+        case 'phiera':
+            firePhiera(damage, amount, projSpeed);
+            break;
+        case 'eight':
+            fireEight(damage, amount, projSpeed);
+            break;
+        case 'songOfMana':
+            fireSongOfMana(damage, amount, area, duration, evolved);
+            break;
+        case 'ventoSacro':
+            fireVentoSacro(damage, amount, area);
+            break;
+        case 'vandalier':
+            fireVandalier(damage, amount, area, duration);
+            break;
+        case 'phieraggi':
+            firePhieraggi(damage, amount, projSpeed);
+            break;
+        case 'fuwalafuwaloo':
+            fireFuwalafuwaloo(damage, amount, area);
+            break;
     }
 
     if (weapon.id !== 'garlic' && weapon.id !== 'bible') {
@@ -2310,6 +2382,237 @@ function firePentagram(damage, evolved) {
     });
 
     playSound('levelup');
+}
+
+// Peachone - Holy light bombardment in circular pattern
+function firePeachone(damage, amount, area, duration) {
+    for (let i = 0; i < amount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 80 + Math.random() * 120;
+        const targetX = player.x + Math.cos(angle) * distance;
+        const targetY = player.y + Math.sin(angle) * distance;
+
+        // Delayed impact effect (bomb falls from above)
+        setTimeout(() => {
+            areaEffects.push({
+                x: targetX - 30 * area,
+                y: targetY - 30 * area,
+                width: 60 * area,
+                height: 60 * area,
+                damage: damage,
+                lifetime: 0.4,
+                maxLifetime: 0.4,
+                tickRate: 0.1,
+                lastTick: 0,
+                type: 'peachone',
+                color: '#ffffff'
+            });
+        }, i * 150);
+    }
+}
+
+// Ebony Wings - Dark energy bombardment in circular pattern
+function fireEbonyWings(damage, amount, area, duration) {
+    for (let i = 0; i < amount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 80 + Math.random() * 120;
+        const targetX = player.x + Math.cos(angle) * distance;
+        const targetY = player.y + Math.sin(angle) * distance;
+
+        setTimeout(() => {
+            areaEffects.push({
+                x: targetX - 30 * area,
+                y: targetY - 30 * area,
+                width: 60 * area,
+                height: 60 * area,
+                damage: damage,
+                lifetime: 0.4,
+                maxLifetime: 0.4,
+                tickRate: 0.1,
+                lastTick: 0,
+                type: 'ebonywings',
+                color: '#4422aa'
+            });
+        }, i * 150);
+    }
+}
+
+// Vandalier (Union) - Combined massive bombardment
+function fireVandalier(damage, amount, area, duration) {
+    const totalAmount = amount + 4;
+    for (let i = 0; i < totalAmount; i++) {
+        const angle = (i / totalAmount) * Math.PI * 2 + Math.random() * 0.5;
+        const distance = 60 + Math.random() * 180;
+        const targetX = player.x + Math.cos(angle) * distance;
+        const targetY = player.y + Math.sin(angle) * distance;
+        const isLight = i % 2 === 0;
+
+        setTimeout(() => {
+            areaEffects.push({
+                x: targetX - 40 * area,
+                y: targetY - 40 * area,
+                width: 80 * area,
+                height: 80 * area,
+                damage: damage,
+                lifetime: 0.5,
+                maxLifetime: 0.5,
+                tickRate: 0.1,
+                lastTick: 0,
+                type: 'vandalier',
+                color: isLight ? '#ffffff' : '#6644cc'
+            });
+        }, i * 100);
+    }
+}
+
+// Phiera Der Tuphello - 4-directional rapid fire
+function firePhiera(damage, amount, speed) {
+    const directions = [
+        { x: 1, y: 0 },   // Right
+        { x: 0, y: -1 },  // Up
+        { x: -1, y: 0 },  // Left
+        { x: 0, y: 1 }    // Down
+    ];
+
+    for (let i = 0; i < Math.min(amount, 4); i++) {
+        const dir = directions[i];
+        projectiles.push({
+            x: player.x,
+            y: player.y,
+            vx: dir.x * speed,
+            vy: dir.y * speed,
+            damage: damage,
+            pierce: 1,
+            type: 'phiera',
+            color: '#ffaa44'
+        });
+    }
+}
+
+// Eight The Sparrow - 4-directional rapid fire (diagonal)
+function fireEight(damage, amount, speed) {
+    const directions = [
+        { x: 0.707, y: -0.707 },   // Up-Right
+        { x: -0.707, y: -0.707 },  // Up-Left
+        { x: -0.707, y: 0.707 },   // Down-Left
+        { x: 0.707, y: 0.707 }     // Down-Right
+    ];
+
+    for (let i = 0; i < Math.min(amount, 4); i++) {
+        const dir = directions[i];
+        projectiles.push({
+            x: player.x,
+            y: player.y,
+            vx: dir.x * speed,
+            vy: dir.y * speed,
+            damage: damage,
+            pierce: 1,
+            type: 'eight',
+            color: '#44aaff'
+        });
+    }
+}
+
+// Phieraggi (Union) - 8-directional rapid fire mastery
+function firePhieraggi(damage, amount, speed) {
+    const totalDirections = 8;
+    for (let i = 0; i < totalDirections; i++) {
+        const angle = (i / totalDirections) * Math.PI * 2;
+        projectiles.push({
+            x: player.x,
+            y: player.y,
+            vx: Math.cos(angle) * speed * 1.2,
+            vy: Math.sin(angle) * speed * 1.2,
+            damage: damage,
+            pierce: 3,
+            type: 'phieraggi',
+            color: '#ff66ff'
+        });
+    }
+}
+
+// Song of Mana - Vertical damaging beams
+function fireSongOfMana(damage, amount, area, duration, evolved) {
+    for (let i = 0; i < amount; i++) {
+        const offsetX = (Math.random() - 0.5) * 200;
+        const beamWidth = 40 * area;
+        const beamHeight = canvas.height * 0.8;
+
+        areaEffects.push({
+            x: player.x + offsetX - beamWidth / 2,
+            y: player.y - beamHeight / 2,
+            width: beamWidth,
+            height: beamHeight,
+            damage: damage,
+            lifetime: duration,
+            maxLifetime: duration,
+            tickRate: 0.3,
+            lastTick: 0,
+            type: 'songofmana',
+            color: evolved ? '#ff44ff' : '#88ffaa'
+        });
+    }
+}
+
+// Vento Sacro - Fan-shaped slash attack
+function fireVentoSacro(damage, amount, area) {
+    const baseAngle = Math.atan2(lastMoveDirection.y, lastMoveDirection.x);
+    const fanSpread = Math.PI * 0.6; // 108 degree spread
+    const slices = 5 + amount;
+
+    for (let i = 0; i < slices; i++) {
+        const sliceAngle = baseAngle - fanSpread / 2 + (i / (slices - 1)) * fanSpread;
+        const distance = 60 * area;
+
+        areaEffects.push({
+            x: player.x + Math.cos(sliceAngle) * distance * 0.5 - 20,
+            y: player.y + Math.sin(sliceAngle) * distance * 0.5 - 20,
+            width: 40 * area,
+            height: 40 * area,
+            damage: damage,
+            lifetime: 0.2,
+            maxLifetime: 0.2,
+            type: 'ventosacro',
+            angle: sliceAngle,
+            color: '#aaffaa'
+        });
+    }
+}
+
+// Fuwalafuwaloo (Union) - Ultimate slash with massive critical hits
+function fireFuwalafuwaloo(damage, amount, area) {
+    // 360 degree slash around player
+    const slices = 12;
+    for (let i = 0; i < slices; i++) {
+        const angle = (i / slices) * Math.PI * 2;
+        const distance = 80 * area;
+
+        areaEffects.push({
+            x: player.x + Math.cos(angle) * distance * 0.5 - 25,
+            y: player.y + Math.sin(angle) * distance * 0.5 - 25,
+            width: 50 * area,
+            height: 50 * area,
+            damage: damage * (Math.random() < 0.3 ? 3 : 1), // 30% crit for 3x damage
+            lifetime: 0.25,
+            maxLifetime: 0.25,
+            type: 'fuwalafuwaloo',
+            angle: angle,
+            color: '#ff88cc'
+        });
+    }
+
+    // Center explosion
+    areaEffects.push({
+        x: player.x - 40 * area,
+        y: player.y - 40 * area,
+        width: 80 * area,
+        height: 80 * area,
+        damage: damage * 0.5,
+        lifetime: 0.3,
+        maxLifetime: 0.3,
+        type: 'fuwalafuwaloo_center',
+        color: '#ffaadd'
+    });
 }
 
 function updateProjectiles() {
@@ -3265,7 +3568,14 @@ function drawMenuBackground() {
 }
 
 function drawPixelGrid() {
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+    const stage = STAGES[selectedStage];
+    const bgPattern = stage?.bgPattern || 'trees';
+
+    // Draw stage-specific background elements
+    drawStageBackground(bgPattern);
+
+    // Draw subtle grid overlay
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
     ctx.lineWidth = 1;
 
     const gridSize = 64;
@@ -3283,6 +3593,278 @@ function drawPixelGrid() {
         ctx.moveTo(camera.x, y);
         ctx.lineTo(camera.x + canvas.width, y);
         ctx.stroke();
+    }
+}
+
+function drawStageBackground(pattern) {
+    const cellSize = 128;
+    const startX = Math.floor(camera.x / cellSize) * cellSize;
+    const startY = Math.floor(camera.y / cellSize) * cellSize;
+
+    ctx.imageSmoothingEnabled = false;
+
+    for (let x = startX - cellSize; x < camera.x + canvas.width + cellSize; x += cellSize) {
+        for (let y = startY - cellSize; y < camera.y + canvas.height + cellSize; y += cellSize) {
+            const seed = ((x / cellSize) * 1000 + (y / cellSize)) % 10000;
+            const rand = seededRandom(seed);
+
+            switch (pattern) {
+                case 'trees':
+                    drawForestElement(x, y, rand);
+                    break;
+                case 'library':
+                    drawLibraryElement(x, y, rand);
+                    break;
+                case 'factory':
+                    drawFactoryElement(x, y, rand);
+                    break;
+                case 'tower':
+                    drawTowerElement(x, y, rand);
+                    break;
+                case 'cathedral':
+                    drawCathedralElement(x, y, rand);
+                    break;
+            }
+        }
+    }
+}
+
+function seededRandom(seed) {
+    const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+    return x - Math.floor(x);
+}
+
+function drawForestElement(x, y, rand) {
+    // Draw grass patches
+    ctx.fillStyle = `rgba(30, 60, 30, ${0.2 + rand * 0.2})`;
+    const grassX = x + rand * 60;
+    const grassY = y + rand * 60;
+    ctx.fillRect(grassX, grassY, 4, 8);
+    ctx.fillRect(grassX + 6, grassY + 2, 3, 6);
+
+    // Random trees (sparse)
+    if (rand > 0.7) {
+        const treeX = x + 40 + rand * 40;
+        const treeY = y + 40 + rand * 40;
+        // Tree trunk
+        ctx.fillStyle = 'rgba(60, 40, 30, 0.4)';
+        ctx.fillRect(treeX - 3, treeY, 6, 16);
+        // Tree foliage (pixel style)
+        ctx.fillStyle = 'rgba(30, 80, 30, 0.5)';
+        ctx.fillRect(treeX - 12, treeY - 20, 24, 8);
+        ctx.fillRect(treeX - 10, treeY - 28, 20, 10);
+        ctx.fillRect(treeX - 6, treeY - 34, 12, 8);
+    }
+
+    // Occasional mushroom
+    if (rand > 0.9) {
+        const mushX = x + 20 + rand * 80;
+        const mushY = y + 80 + rand * 30;
+        ctx.fillStyle = 'rgba(180, 50, 50, 0.4)';
+        ctx.fillRect(mushX - 4, mushY - 4, 8, 4);
+        ctx.fillStyle = 'rgba(200, 180, 160, 0.4)';
+        ctx.fillRect(mushX - 2, mushY, 4, 4);
+    }
+}
+
+function drawLibraryElement(x, y, rand) {
+    // Bookshelves
+    if (rand > 0.3) {
+        const shelfX = x + rand * 30;
+        const shelfY = y + rand * 20;
+        // Shelf frame
+        ctx.fillStyle = 'rgba(80, 50, 30, 0.4)';
+        ctx.fillRect(shelfX, shelfY, 48, 4);
+        ctx.fillRect(shelfX, shelfY + 20, 48, 4);
+        ctx.fillRect(shelfX, shelfY + 40, 48, 4);
+        // Books (varying colors)
+        const bookColors = ['rgba(150, 50, 50, 0.5)', 'rgba(50, 80, 150, 0.5)',
+                           'rgba(50, 120, 50, 0.5)', 'rgba(120, 80, 50, 0.5)'];
+        for (let i = 0; i < 6; i++) {
+            const bookX = shelfX + 2 + i * 7;
+            ctx.fillStyle = bookColors[Math.floor(rand * 4 + i) % 4];
+            ctx.fillRect(bookX, shelfY + 5, 6, 14);
+            ctx.fillRect(bookX, shelfY + 25, 6, 14);
+        }
+    }
+
+    // Candles
+    if (rand > 0.85) {
+        const candleX = x + 80 + rand * 30;
+        const candleY = y + 60;
+        ctx.fillStyle = 'rgba(200, 180, 150, 0.5)';
+        ctx.fillRect(candleX - 2, candleY, 4, 10);
+        // Flame glow
+        ctx.fillStyle = `rgba(255, 200, 100, ${0.3 + Math.sin(Date.now() / 200 + rand * 10) * 0.1})`;
+        ctx.fillRect(candleX - 2, candleY - 4, 4, 4);
+    }
+
+    // Floor tiles
+    ctx.strokeStyle = 'rgba(60, 50, 70, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, 64, 64);
+}
+
+function drawFactoryElement(x, y, rand) {
+    // Metal floor plates
+    ctx.fillStyle = 'rgba(80, 80, 90, 0.15)';
+    ctx.fillRect(x, y, 62, 62);
+    ctx.strokeStyle = 'rgba(100, 100, 110, 0.2)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + 2, y + 2, 58, 58);
+
+    // Bolts/rivets
+    ctx.fillStyle = 'rgba(60, 60, 70, 0.3)';
+    ctx.fillRect(x + 4, y + 4, 4, 4);
+    ctx.fillRect(x + 54, y + 4, 4, 4);
+    ctx.fillRect(x + 4, y + 54, 4, 4);
+    ctx.fillRect(x + 54, y + 54, 4, 4);
+
+    // Pipes
+    if (rand > 0.6) {
+        ctx.fillStyle = 'rgba(100, 90, 80, 0.4)';
+        const pipeY = y + 30 + rand * 30;
+        ctx.fillRect(x, pipeY, 64, 8);
+        ctx.fillStyle = 'rgba(120, 110, 100, 0.3)';
+        ctx.fillRect(x, pipeY + 2, 64, 2);
+    }
+
+    // Machinery/gears
+    if (rand > 0.8) {
+        const gearX = x + 40 + rand * 40;
+        const gearY = y + 20 + rand * 60;
+        ctx.strokeStyle = 'rgba(100, 100, 110, 0.4)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(gearX, gearY, 12, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(80, 80, 90, 0.3)';
+        ctx.beginPath();
+        ctx.arc(gearX, gearY, 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Caution stripes (occasional)
+    if (rand > 0.9) {
+        ctx.fillStyle = 'rgba(200, 180, 50, 0.2)';
+        for (let i = 0; i < 8; i++) {
+            ctx.fillRect(x + i * 8, y + 110, 4, 8);
+        }
+    }
+}
+
+function drawTowerElement(x, y, rand) {
+    // Stone brick pattern
+    const brickW = 32;
+    const brickH = 16;
+    const offsetRow = Math.floor(y / brickH) % 2;
+    const brickX = x + (offsetRow * brickW / 2);
+
+    ctx.fillStyle = 'rgba(70, 60, 80, 0.2)';
+    ctx.fillRect(brickX, y, brickW - 2, brickH - 2);
+    ctx.strokeStyle = 'rgba(50, 40, 60, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(brickX, y, brickW - 2, brickH - 2);
+
+    // Torches on walls
+    if (rand > 0.85) {
+        const torchX = x + 50 + rand * 50;
+        const torchY = y + 30 + rand * 40;
+        // Bracket
+        ctx.fillStyle = 'rgba(60, 50, 40, 0.5)';
+        ctx.fillRect(torchX - 2, torchY, 4, 12);
+        // Flame
+        ctx.fillStyle = `rgba(255, 150, 50, ${0.4 + Math.sin(Date.now() / 150 + rand * 10) * 0.15})`;
+        ctx.fillRect(torchX - 3, torchY - 8, 6, 8);
+        ctx.fillStyle = `rgba(255, 220, 100, ${0.3 + Math.sin(Date.now() / 100 + rand * 10) * 0.1})`;
+        ctx.fillRect(torchX - 2, torchY - 10, 4, 6);
+    }
+
+    // Chains
+    if (rand > 0.75 && rand < 0.85) {
+        const chainX = x + 80 + rand * 30;
+        ctx.fillStyle = 'rgba(100, 100, 110, 0.3)';
+        for (let i = 0; i < 6; i++) {
+            ctx.fillRect(chainX, y + i * 20, 4, 12);
+        }
+    }
+
+    // Cobwebs (corner decoration)
+    if (rand > 0.92) {
+        ctx.strokeStyle = 'rgba(200, 200, 200, 0.15)';
+        ctx.lineWidth = 1;
+        const webX = x + 10;
+        const webY = y + 10;
+        ctx.beginPath();
+        ctx.moveTo(webX, webY);
+        ctx.lineTo(webX + 30, webY);
+        ctx.lineTo(webX, webY + 30);
+        ctx.closePath();
+        ctx.stroke();
+    }
+}
+
+function drawCathedralElement(x, y, rand) {
+    // Ornate floor tiles (checkerboard with decoration)
+    const tileX = Math.floor(x / 64);
+    const tileY = Math.floor(y / 64);
+    const isDark = (tileX + tileY) % 2 === 0;
+
+    ctx.fillStyle = isDark ? 'rgba(30, 20, 40, 0.25)' : 'rgba(50, 35, 60, 0.2)';
+    ctx.fillRect(x, y, 62, 62);
+
+    // Tile border
+    ctx.strokeStyle = 'rgba(80, 60, 100, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 2, y + 2, 58, 58);
+
+    // Central ornament on some tiles
+    if (rand > 0.7) {
+        ctx.fillStyle = 'rgba(100, 70, 120, 0.2)';
+        ctx.fillRect(x + 26, y + 26, 12, 12);
+        ctx.fillRect(x + 22, y + 30, 20, 4);
+        ctx.fillRect(x + 30, y + 22, 4, 20);
+    }
+
+    // Stained glass light beams (from above)
+    if (rand > 0.88) {
+        const beamX = x + 20 + rand * 60;
+        const colors = [
+            `rgba(255, 100, 100, ${0.08 + Math.sin(Date.now() / 500 + rand * 10) * 0.03})`,
+            `rgba(100, 100, 255, ${0.08 + Math.sin(Date.now() / 600 + rand * 10) * 0.03})`,
+            `rgba(255, 200, 100, ${0.08 + Math.sin(Date.now() / 400 + rand * 10) * 0.03})`
+        ];
+        ctx.fillStyle = colors[Math.floor(rand * 3)];
+        ctx.fillRect(beamX - 15, y, 30, 128);
+    }
+
+    // Pillars
+    if (rand > 0.82 && rand < 0.88) {
+        const pillarX = x + 50 + rand * 50;
+        ctx.fillStyle = 'rgba(80, 70, 90, 0.4)';
+        ctx.fillRect(pillarX - 8, y, 16, 128);
+        // Pillar detail
+        ctx.fillStyle = 'rgba(100, 90, 110, 0.3)';
+        ctx.fillRect(pillarX - 10, y, 20, 8);
+        ctx.fillRect(pillarX - 10, y + 120, 20, 8);
+    }
+
+    // Candelabras
+    if (rand > 0.93) {
+        const candX = x + 30 + rand * 50;
+        const candY = y + 50;
+        // Base
+        ctx.fillStyle = 'rgba(150, 130, 80, 0.4)';
+        ctx.fillRect(candX - 8, candY + 10, 16, 4);
+        ctx.fillRect(candX - 2, candY, 4, 12);
+        // Candles
+        ctx.fillStyle = 'rgba(200, 180, 150, 0.5)';
+        ctx.fillRect(candX - 8, candY - 8, 4, 8);
+        ctx.fillRect(candX + 4, candY - 8, 4, 8);
+        // Flames
+        ctx.fillStyle = `rgba(255, 200, 100, ${0.4 + Math.sin(Date.now() / 200 + rand * 5) * 0.1})`;
+        ctx.fillRect(candX - 7, candY - 12, 2, 4);
+        ctx.fillRect(candX + 5, candY - 12, 2, 4);
     }
 }
 
@@ -3527,6 +4109,36 @@ function drawProjectiles() {
             ctx.closePath();
             ctx.fill();
             ctx.restore();
+        } else if (proj.type === 'phiera' || proj.type === 'eight') {
+            // Directional bullets with trail
+            const angle = Math.atan2(proj.vy, proj.vx);
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.fillStyle = proj.color;
+            // Bullet shape
+            ctx.fillRect(-4, -2, 8, 4);
+            // Tip
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(2, -1, 4, 2);
+            ctx.restore();
+        } else if (proj.type === 'phieraggi') {
+            // Dual-colored union projectile
+            const angle = Math.atan2(proj.vy, proj.vx);
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.fillStyle = proj.color;
+            ctx.fillRect(-6, -3, 12, 6);
+            // Glowing core
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(-2, -1, 4, 2);
+            // Trail effect
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = proj.color;
+            ctx.fillRect(-12, -2, 6, 4);
+            ctx.globalAlpha = 1;
+            ctx.restore();
         } else {
             drawPixelRect(x - 2, y - 2, 4, 4);
             ctx.fillStyle = '#ffffff';
@@ -3603,6 +4215,98 @@ function drawAreaEffects() {
                 ctx.beginPath();
                 ctx.arc(effect.x, effect.y, effect.radius * ringAlpha, 0, Math.PI * 2);
                 ctx.stroke();
+            }
+            ctx.globalAlpha = 1;
+        } else if (effect.type === 'peachone') {
+            // Holy light bombardment - white/gold expanding circle
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = alpha * 0.6;
+            const radius = (effect.width / 2) * (2 - alpha);
+            ctx.beginPath();
+            ctx.arc(effect.x + effect.width / 2, effect.y + effect.height / 2, radius, 0, Math.PI * 2);
+            ctx.fill();
+            // Inner glow
+            ctx.fillStyle = '#ffffaa';
+            ctx.globalAlpha = alpha * 0.8;
+            ctx.beginPath();
+            ctx.arc(effect.x + effect.width / 2, effect.y + effect.height / 2, radius * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        } else if (effect.type === 'ebonywings') {
+            // Dark energy bombardment - purple/black expanding circle
+            ctx.fillStyle = '#220044';
+            ctx.globalAlpha = alpha * 0.7;
+            const radius = (effect.width / 2) * (2 - alpha);
+            ctx.beginPath();
+            ctx.arc(effect.x + effect.width / 2, effect.y + effect.height / 2, radius, 0, Math.PI * 2);
+            ctx.fill();
+            // Inner void
+            ctx.fillStyle = '#6644aa';
+            ctx.globalAlpha = alpha * 0.9;
+            ctx.beginPath();
+            ctx.arc(effect.x + effect.width / 2, effect.y + effect.height / 2, radius * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        } else if (effect.type === 'vandalier') {
+            // Combined light and dark bombardment
+            const radius = (effect.width / 2) * (2 - alpha);
+            // Outer ring
+            ctx.strokeStyle = effect.color;
+            ctx.globalAlpha = alpha;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(effect.x + effect.width / 2, effect.y + effect.height / 2, radius, 0, Math.PI * 2);
+            ctx.stroke();
+            // Inner fill
+            ctx.fillStyle = effect.color;
+            ctx.globalAlpha = alpha * 0.5;
+            ctx.beginPath();
+            ctx.arc(effect.x + effect.width / 2, effect.y + effect.height / 2, radius * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        } else if (effect.type === 'songofmana') {
+            // Vertical beam effect
+            ctx.fillStyle = effect.color;
+            ctx.globalAlpha = alpha * 0.4;
+            ctx.fillRect(effect.x, effect.y, effect.width, effect.height);
+            // Brighter center line
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = alpha * 0.6;
+            ctx.fillRect(effect.x + effect.width * 0.3, effect.y, effect.width * 0.4, effect.height);
+            ctx.globalAlpha = 1;
+        } else if (effect.type === 'ventosacro') {
+            // Fan slash effect
+            ctx.fillStyle = effect.color;
+            ctx.globalAlpha = alpha * 0.7;
+            ctx.save();
+            ctx.translate(effect.x + effect.width / 2, effect.y + effect.height / 2);
+            ctx.rotate(effect.angle || 0);
+            // Slash arc
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.arc(0, 0, effect.width * (1.5 - alpha * 0.5), -0.3, 0.3);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+            ctx.globalAlpha = 1;
+        } else if (effect.type === 'fuwalafuwaloo' || effect.type === 'fuwalafuwaloo_center') {
+            // Ultimate slash effect with sakura-like visuals
+            ctx.fillStyle = effect.color;
+            ctx.globalAlpha = alpha * 0.8;
+            const radius = (effect.width / 2) * (1.5 - alpha * 0.3);
+            ctx.beginPath();
+            ctx.arc(effect.x + effect.width / 2, effect.y + effect.height / 2, radius, 0, Math.PI * 2);
+            ctx.fill();
+            // Petal-like sparkles
+            if (effect.type === 'fuwalafuwaloo') {
+                ctx.fillStyle = '#ffffff';
+                ctx.globalAlpha = alpha;
+                for (let i = 0; i < 4; i++) {
+                    const angle = (i / 4) * Math.PI * 2 + Date.now() / 500;
+                    const sparkleX = effect.x + effect.width / 2 + Math.cos(angle) * radius * 0.6;
+                    const sparkleY = effect.y + effect.height / 2 + Math.sin(angle) * radius * 0.6;
+                    ctx.fillRect(sparkleX - 2, sparkleY - 2, 4, 4);
+                }
             }
             ctx.globalAlpha = 1;
         }
