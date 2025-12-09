@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Survivor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <a href="../../index.html" class="back-btn" aria-label="Back to Game Hub">← Hub</a>
+                <h1>Pixel Survivor</h1>
+            </div>
+            <div class="score-container">
+                <div class="score-box">
+                    <div class="score-label">TIME</div>
+                    <div id="time">0:00</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-label">KILLS</div>
+                    <div id="kills">0</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-label">BEST</div>
+                    <div id="best-time">0:00</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-info">
+            <p>적을 처치하고 최대한 오래 살아남으세요!</p>
+            <div class="game-buttons">
+                <button id="new-game-btn">New Game</button>
+                <button id="pause-btn" aria-label="Pause game">⏸️</button>
+                <button id="sound-toggle-btn" aria-label="Toggle sound">
+                    <span class="sound-on-icon">🔊</span>
+                    <span class="sound-off-icon">🔇</span>
+                </button>
+                <button id="theme-toggle-btn" aria-label="Toggle dark mode">
+                    <span class="theme-icon light-icon">🌙</span>
+                    <span class="theme-icon dark-icon">☀️</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="game-container">
+            <canvas id="game-canvas"></canvas>
+            <div id="hud">
+                <div id="health-bar">
+                    <div id="health-fill"></div>
+                    <span id="health-text">100/100</span>
+                </div>
+                <div id="exp-bar">
+                    <div id="exp-fill"></div>
+                    <span id="exp-text">LV 1</span>
+                </div>
+            </div>
+            <div id="game-message" class="hidden">
+                <h2></h2>
+                <p></p>
+                <button id="retry-btn">Try Again</button>
+            </div>
+            <div id="start-message">
+                <p>Press Space or Tap to Start</p>
+            </div>
+            <div id="level-up-modal" class="hidden">
+                <h2>LEVEL UP!</h2>
+                <div id="upgrade-options"></div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <p><strong>조작:</strong> WASD 또는 화살표 키로 이동 | 공격은 자동!</p>
+            <p>모바일: 조이스틱으로 이동 | <strong>Space</strong>: 일시정지</p>
+        </div>
+
+        <div class="mobile-controls">
+            <div id="joystick-zone">
+                <div id="joystick-base">
+                    <div id="joystick-stick"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
