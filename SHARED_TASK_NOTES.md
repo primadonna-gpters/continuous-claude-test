@@ -2,7 +2,7 @@
 
 ## Current Status
 멀티 게임 허브 완성. 2048, Snake, Minesweeper, Tetris, Breakout, Memory, Pixel Survivor 7개 게임 플레이 가능.
-**Pixel Survivor가 뱀파이어 서바이벌과 동일한 시스템으로 대규모 업데이트 완료!**
+**Pixel Survivor UI 대규모 개선 완료! 뱀파이어 서바이벌 스타일로 전면 리뉴얼.**
 
 ## 게임 실행 방법
 ```bash
@@ -10,69 +10,56 @@ python -m http.server 8000
 # 브라우저에서 http://localhost:8000 접속
 ```
 
-## Pixel Survivor - 뱀파이어 서바이벌 클론 (대규모 업데이트)
-
-### 캐릭터 선택 시스템 (8명)
-| 캐릭터 | 시작 무기 | 특수 효과 |
-|--------|----------|----------|
-| Antonio | Whip | +10% 데미지, 레벨당 +1 HP |
-| Imelda | Magic Wand | +10% 경험치 |
-| Gennaro | Knife | +1 투사체 |
-| Pasqualina | Runetracer | +10% 이동속도 |
-| Poe | Garlic | -30% HP, +25% 픽업범위 |
-| Arca | Fire Wand | -5% 쿨다운 |
-| Porta | Lightning Ring | +30% 공격범위 |
-| Dommario | King Bible | +40% 지속시간 |
-
-### 무기 시스템 (12개, 6슬롯)
-| 무기 | 설명 | 진화 | 필요 패시브 |
-|------|------|------|------------|
-| Whip 🔪 | 수평 관통 공격 | Bloody Tear 🩸 | Hollow Heart |
-| Magic Wand 🪄 | 가장 가까운 적 타겟팅 | Holy Wand ✨ | Empty Tome |
-| Knife 🗡️ | 이동 방향 빠른 발사 | Thousand Edge ⚔️ | Bracer |
-| Axe 🪓 | 포물선 궤적 | Death Spiral 💀 | Candelabrador |
-| Fire Wand 🔥 | 랜덤 적 화염구 | Hellfire ☄️ | Spinach |
-| Santa Water 💧 | 데미지 존 생성 | La Borra 🌊 | Attractorb |
-| King Bible 📖 | 플레이어 주위 회전 | Unholy Vespers 📕 | Spellbinder |
-| Cross ✝️ | 부메랑 (돌아옴) | Heaven Sword 🗡️ | Clover |
-| Garlic 🧄 | 주변 지속 데미지 | Soul Eater 👻 | Pummarola |
-| Lightning Ring ⚡ | 랜덤 적 번개 | Thunder Loop 🌩️ | Duplicator |
-| Runetracer 💠 | 화면 내 바운스 | NO FUTURE 💥 | Armor |
-| Pentagram ⭐ | 화면 전체 공격 | Gorgeous Moon 🌙 | Crown |
-
-### 패시브 아이템 (15개, 6슬롯)
-Spinach, Armor, Hollow Heart, Pummarola, Empty Tome, Candelabrador, Bracer, Spellbinder, Duplicator, Wings, Attractorb, Clover, Crown, Stone Mask, Tiragisu
-
-### 적 웨이브 시스템 (분 기반)
-- 0~30초: Zombie
-- 30초~1분: +Bat
-- 1분~: +Skeleton, BOSS: Giant
-- 2분~: +Ghost
-- 3분~: BOSS: Necromancer
-- 4분~: +Demon
-- 5분~: BOSS: Vampire
-- 10분~: +Reaper
-- 15분~: BOSS: Death
-- 25분~: BOSS: Red Death (즉사 공격)
-
-### 게임 메카닉
-- **승리 조건**: 30분 생존
-- 무기 진화: 레벨 8 + 해당 패시브 + 보물상자
-- 미니맵, 무기/패시브 슬롯 UI
-- 월드 크기: 2000x2000, 카메라 추적
+## Pixel Survivor - UI 대규모 업데이트 (이번 iteration)
 
 ### UI 개선사항
-- 캐릭터 선택 화면 (8캐릭터 그리드)
-- 희귀도별 컬러 (common/uncommon/rare/legendary)
-- 레벨업/타이틀 애니메이션
-- 진화 가능 무기 골드 테두리
+1. **전체 스타일 리뉴얼**
+   - Press Start 2P + VT323 폰트 적용 (레트로 게임 스타일)
+   - 다크 테마 기본, CSS 변수 기반 컬러 시스템
+   - 그라디언트 배경, 글로우 효과 추가
+
+2. **게임 내 HUD 개선**
+   - 무기/패시브 슬롯: 쿨다운 표시, 희귀도별 테두리 색상
+   - 진화 가능 무기: 골드 펄스 애니메이션
+   - 진화된 무기: 퍼플 글로우 효과
+
+3. **미니맵 개선**
+   - 그리드 라인 추가
+   - 현재 뷰포트 영역 표시
+   - 보스 위치 펄스 효과
+   - 보물 상자 위치 표시
+
+4. **타이머/상태 UI**
+   - 중앙 타이머 + 진행률 바
+   - 킬 카운터/코인 카운터 좌우 배치
+   - 웨이브 번호 표시
+   - 시간대별 테두리 색상 변경 (파랑→골드→빨강)
+
+5. **캐릭터 선택 화면**
+   - 시작 무기 표시 추가
+   - 선택 시 사운드 효과
+   - 호버/선택 상태 애니메이션
+
+### 기존 게임 시스템 (유지)
+- 8개 캐릭터 (Antonio, Imelda, Gennaro, Pasqualina, Poe, Arca, Porta, Dommario)
+- 12개 무기 + 12개 진화 무기
+- 15개 패시브 아이템
+- 웨이브 기반 적 스폰 시스템 (30분 생존)
+- 무기 진화: Lv8 + 패시브 + 보물상자
 
 ## 다음 iteration에서 고려할 개선사항
 1. **Pixel Survivor 추가 콘텐츠**
    - 언락 시스템 (캐릭터/무기)
-   - 아케인 (조합 진화)
+   - 아케인 시스템 (조합 진화)
    - 스테이지 선택
-   - 실적 시스템
-2. **새 게임 추가** - Flappy Bird, Pong, Sudoku 등
-3. **PWA 지원** - 오프라인 플레이
-4. **통계 페이지** - 전체 게임 통계 대시보드
+   - 실적/도전과제 시스템
+   - 포즈 메뉴에서 현재 장비 상세 보기
+
+2. **게임플레이 개선**
+   - 더 다양한 적 패턴
+   - 보스 체력바 UI
+   - 데미지 타입 시스템
+
+3. **새 게임 추가** - Flappy Bird, Pong, Sudoku 등
+
+4. **PWA 지원** - 오프라인 플레이
