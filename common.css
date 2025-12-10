@@ -643,3 +643,425 @@ body.dark-mode .glow-effect {
         transform: none;
     }
 }
+
+/* ===========================================
+   Performance Optimization Utilities
+   =========================================== */
+
+/* GPU Acceleration hints for animated elements */
+.gpu-accelerate {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Use sparingly - for elements that animate frequently */
+.gpu-accelerate-heavy {
+    will-change: transform, opacity, box-shadow, filter;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+/* Clean up will-change after animation completes */
+.gpu-cleanup {
+    will-change: auto;
+}
+
+/* Contain layout/paint for performance */
+.contain-layout {
+    contain: layout;
+}
+
+.contain-paint {
+    contain: paint;
+}
+
+.contain-strict {
+    contain: strict;
+}
+
+/* Optimize large lists of animated items */
+.optimize-scrolling {
+    overflow-anchor: none;
+    scroll-behavior: auto;
+}
+
+/* Content-visibility for off-screen elements */
+.content-visibility-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 300px;
+}
+
+/* Optimized transform origin for 3D transforms */
+.transform-gpu {
+    transform: translate3d(0, 0, 0);
+}
+
+/* Disable pointer events during animations */
+.animating {
+    pointer-events: none !important;
+}
+
+/* Smooth scrolling container */
+.smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* High performance canvas rendering */
+canvas.performance-canvas {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+/* Reduce paint complexity for static elements */
+.static-element {
+    will-change: auto;
+    transform: none;
+}
+
+/* Animation timing optimization classes */
+.anim-fast {
+    animation-duration: 0.15s !important;
+}
+
+.anim-normal {
+    animation-duration: 0.3s !important;
+}
+
+.anim-slow {
+    animation-duration: 0.5s !important;
+}
+
+/* Easing presets optimized for 60fps */
+.ease-smooth {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.ease-bounce {
+    transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.ease-sharp {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1) !important;
+}
+
+/* Composite layer promotion for specific animations */
+@supports (will-change: transform) {
+    .layer-promote {
+        will-change: transform;
+        isolation: isolate;
+    }
+}
+
+/* Disable animations on low-power mode (if detectable) */
+@media (prefers-reduced-motion: reduce) {
+    .gpu-accelerate,
+    .gpu-accelerate-heavy {
+        will-change: auto;
+        transform: none;
+    }
+}
+
+/* Touch device optimization - disable hover states */
+@media (hover: none) {
+    .btn-3d:hover,
+    .btn-press-3d:hover,
+    .btn-elastic:hover,
+    .tilt-hover:hover,
+    .icon-bounce:hover {
+        transform: none;
+    }
+
+    /* Active states only on touch */
+    .btn-3d:active,
+    .btn-press-3d:active,
+    .btn-elastic:active {
+        transform: scale(0.95);
+    }
+}
+
+/* ===========================================
+   Accessibility Utilities
+   =========================================== */
+
+/* Screen reader only - visually hidden but accessible */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Skip to main content link */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #000;
+    color: #fff;
+    padding: 8px 16px;
+    z-index: 10000;
+    text-decoration: none;
+    font-weight: bold;
+    transition: top 0.3s ease;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* Focus visible enhancement */
+.focus-visible-enhanced:focus-visible {
+    outline: 3px solid #4a90d9;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .btn-3d,
+    .btn-press-3d,
+    .btn-enhanced,
+    .btn-elastic {
+        border: 2px solid currentColor !important;
+    }
+
+    .game-container-3d,
+    .game-container-glass {
+        border: 2px solid currentColor !important;
+    }
+
+    .score-box,
+    .score-box-glass {
+        border: 2px solid currentColor !important;
+    }
+}
+
+/* Forced colors mode (Windows High Contrast) */
+@media (forced-colors: active) {
+    .btn-3d,
+    .btn-press-3d,
+    .btn-enhanced {
+        border: 2px solid ButtonText;
+        background: ButtonFace;
+        color: ButtonText;
+    }
+
+    .btn-3d:hover,
+    .btn-press-3d:hover,
+    .btn-enhanced:hover {
+        background: Highlight;
+        color: HighlightText;
+    }
+
+    .game-card,
+    .game-container-3d {
+        border: 2px solid CanvasText;
+    }
+}
+
+/* Animation toggle - can be controlled via JS */
+.motion-disabled * {
+    animation: none !important;
+    transition: none !important;
+}
+
+.motion-disabled .particle,
+.motion-disabled .shape-particle {
+    display: none !important;
+}
+
+/* Reduce transparency for better readability */
+@media (prefers-reduced-transparency: reduce) {
+    .glass,
+    .score-box-glass,
+    .game-container-glass,
+    .header-glass {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: rgba(255, 255, 255, 0.95);
+    }
+
+    body.dark-mode .glass,
+    body.dark-mode .score-box-glass,
+    body.dark-mode .game-container-glass,
+    body.dark-mode .header-glass {
+        background: rgba(30, 30, 50, 0.95);
+    }
+}
+
+/* Focus trap indicator for modals/overlays */
+.focus-trap-active {
+    outline: 2px dashed #4a90d9;
+    outline-offset: 4px;
+}
+
+/* Announce live region for screen readers */
+.announce-region {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+/* Increased tap target for touch accessibility */
+.tap-target-large {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+/* Text scaling support */
+@media (min-resolution: 2dppx) {
+    .icon-bounce,
+    .icon-spin {
+        transform-origin: center center;
+    }
+}
+
+/* ===========================================
+   Dark/Light Mode Theme Integration
+   =========================================== */
+
+/* CSS Custom Properties for theming */
+:root {
+    /* Light mode colors */
+    --color-bg-primary: #faf8ef;
+    --color-bg-secondary: #f5e6d3;
+    --color-text-primary: #776e65;
+    --color-text-secondary: #8f7a66;
+    --color-accent: #8f7a66;
+    --color-accent-hover: #9f8b77;
+    --color-card-bg: rgba(255, 255, 255, 0.9);
+    --color-shadow: rgba(0, 0, 0, 0.15);
+    --color-shadow-heavy: rgba(0, 0, 0, 0.25);
+    --color-glow: rgba(143, 122, 102, 0.3);
+    --color-border: rgba(255, 255, 255, 0.3);
+
+    /* Animation timing */
+    --transition-fast: 0.15s;
+    --transition-normal: 0.3s;
+    --transition-slow: 0.5s;
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+    /* Border radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+}
+
+/* Dark mode custom properties */
+body.dark-mode {
+    --color-bg-primary: #1a1a2e;
+    --color-bg-secondary: #16213e;
+    --color-text-primary: #eee4da;
+    --color-text-secondary: #b8b8d1;
+    --color-accent: #8a8ad1;
+    --color-accent-hover: #9a9ae1;
+    --color-card-bg: rgba(40, 40, 60, 0.9);
+    --color-shadow: rgba(0, 0, 0, 0.3);
+    --color-shadow-heavy: rgba(0, 0, 0, 0.45);
+    --color-glow: rgba(138, 138, 209, 0.3);
+    --color-border: rgba(255, 255, 255, 0.1);
+}
+
+/* System preference detection */
+@media (prefers-color-scheme: dark) {
+    :root:not(.light-mode-forced) {
+        --color-bg-primary: #1a1a2e;
+        --color-bg-secondary: #16213e;
+        --color-text-primary: #eee4da;
+        --color-text-secondary: #b8b8d1;
+        --color-accent: #8a8ad1;
+        --color-accent-hover: #9a9ae1;
+        --color-card-bg: rgba(40, 40, 60, 0.9);
+        --color-shadow: rgba(0, 0, 0, 0.3);
+        --color-shadow-heavy: rgba(0, 0, 0, 0.45);
+        --color-glow: rgba(138, 138, 209, 0.3);
+        --color-border: rgba(255, 255, 255, 0.1);
+    }
+}
+
+/* Theme transition for smooth switching */
+.theme-transitioning,
+.theme-transitioning * {
+    transition: background-color 0.3s ease,
+                color 0.3s ease,
+                border-color 0.3s ease,
+                box-shadow 0.3s ease !important;
+}
+
+/* Theme-aware utility classes */
+.bg-theme-primary {
+    background-color: var(--color-bg-primary);
+}
+
+.bg-theme-secondary {
+    background-color: var(--color-bg-secondary);
+}
+
+.text-theme-primary {
+    color: var(--color-text-primary);
+}
+
+.text-theme-secondary {
+    color: var(--color-text-secondary);
+}
+
+.border-theme {
+    border-color: var(--color-border);
+}
+
+.shadow-theme {
+    box-shadow: 0 4px 15px var(--color-shadow);
+}
+
+.shadow-theme-heavy {
+    box-shadow: 0 8px 30px var(--color-shadow-heavy);
+}
+
+.glow-theme {
+    box-shadow: 0 0 20px var(--color-glow);
+}
+
+/* Theme toggle animation */
+.theme-toggle-spin {
+    animation: themeToggleSpin 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes themeToggleSpin {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.2); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+/* Dark mode glow adjustments */
+body.dark-mode .glow-effect {
+    --glow-color: rgba(138, 138, 209, 0.5);
+}
+
+body.dark-mode .win-effect {
+    filter: brightness(1.1) saturate(1.2);
+}
+
+/* Smooth color transitions for interactive elements */
+.theme-aware-transition {
+    transition: background-color var(--transition-normal) ease,
+                color var(--transition-normal) ease,
+                border-color var(--transition-normal) ease,
+                box-shadow var(--transition-normal) ease;
+}
