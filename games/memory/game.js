@@ -355,6 +355,11 @@ function initGame() {
     // Hide message and render board
     gameMessage.classList.add('hidden');
     renderBoard();
+
+    // Record this game as recently played
+    if (typeof recordRecentPlay === 'function') {
+        recordRecentPlay('memory');
+    }
 }
 
 // Event listeners

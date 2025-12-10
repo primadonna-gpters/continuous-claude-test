@@ -160,6 +160,53 @@ class RecentGamesManager {
     }
 }
 
+// 3D Tilt Effect Manager for game cards
+class TiltEffectManager {
+    constructor() {
+        this.cards = document.querySelectorAll('.game-card');
+        this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        // Skip tilt effect for reduced motion or touch devices
+        if (this.prefersReducedMotion || this.isTouchDevice) {
+            return;
+        }
+
+        this.bindEvents();
+    }
+
+    bindEvents() {
+        this.cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => this.handleTilt(e, card));
+            card.addEventListener('mouseleave', () => this.resetTilt(card));
+            card.addEventListener('mouseenter', () => this.activateTilt(card));
+        });
+    }
+
+    activateTilt(card) {
+        card.style.transition = 'none';
+    }
+
+    handleTilt(e, card) {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+
+        // Calculate rotation (max 8 degrees)
+        const rotateX = ((y - centerY) / centerY) * -8;
+        const rotateY = ((x - centerX) / centerX) * 8;
+
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+    }
+
+    resetTilt(card) {
+        card.style.transition = 'transform 0.3s ease';
+        card.style.transform = '';
+    }
+}
+
 // Service Worker registration for PWA
 function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
@@ -180,6 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
     new ScrollAnimationManager();
     new StatsManager();
     new RecentGamesManager();
+    new TiltEffectManager();
     registerServiceWorker();
 });
 
@@ -190,6 +238,7 @@ if (typeof module !== 'undefined' && module.exports) {
         ScrollAnimationManager,
         StatsManager,
         RecentGamesManager,
+        TiltEffectManager,
         registerServiceWorker
     };
 }

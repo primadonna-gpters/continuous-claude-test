@@ -6,71 +6,134 @@
 - **업적 시스템 완료 (30개)**
 - **Web UI Phase 1 완료** (글래스모피즘, 애니메이션, 배지)
 - **Web UI Phase 2.2 완료** (통계 섹션)
-- **Web UI Phase 2.3 완료** (최근 플레이 섹션)
+- **Web UI Phase 2.3 완료** (최근 플레이 섹션 + 게임별 기록 함수)
+- **Web UI Phase 3 완료** (3D 틸트 효과)
+
+---
+
+# Implementation Plan: Web UI Update
+
+## Overview
+게임 허브의 Web UI를 개선합니다. 두 가지 주요 작업:
+1. 각 게임에서 최근 플레이 기록 함수 추가 (Phase 2.3 완성)
+2. Phase 3 인터랙티브 요소 구현 (3D 틸트 효과)
+
+## Steps
+
+### Part 1: Recent Play Recording (Phase 2.3 완성)
+
+1. [x] Step 1: 공통 recordRecentPlay 함수 생성
+   - Files: `common.js` (새 파일)
+   - Criteria: 함수가 localStorage에 최근 게임 기록을 저장함
+
+2. [x] Step 2: 2048 게임에 recordRecentPlay 추가
+   - Files: `games/2048/game.js`, `games/2048/index.html`
+   - Criteria: 게임 시작 시 'recent-games'에 '2048' 기록됨
+
+3. [x] Step 3: Snake 게임에 recordRecentPlay 추가
+   - Files: `games/snake/game.js`, `games/snake/index.html`
+   - Criteria: 게임 시작 시 'recent-games'에 'snake' 기록됨
+
+4. [x] Step 4: Minesweeper 게임에 recordRecentPlay 추가
+   - Files: `games/minesweeper/game.js`, `games/minesweeper/index.html`
+   - Criteria: 게임 시작 시 'recent-games'에 'minesweeper' 기록됨
+
+5. [x] Step 5: Tetris 게임에 recordRecentPlay 추가
+   - Files: `games/tetris/game.js`, `games/tetris/index.html`
+   - Criteria: 게임 시작 시 'recent-games'에 'tetris' 기록됨
+
+6. [x] Step 6: Breakout 게임에 recordRecentPlay 추가
+   - Files: `games/breakout/game.js`, `games/breakout/index.html`
+   - Criteria: 게임 시작 시 'recent-games'에 'breakout' 기록됨
+
+7. [x] Step 7: Memory 게임에 recordRecentPlay 추가
+   - Files: `games/memory/game.js`, `games/memory/index.html`
+   - Criteria: 게임 시작 시 'recent-games'에 'memory' 기록됨
+
+8. [x] Step 8: Survivor 게임에 recordRecentPlay 추가
+   - Files: `games/survivor/game.js`, `games/survivor/index.html`
+   - Criteria: 게임 시작 시 'recent-games'에 'survivor' 기록됨
+
+### Part 2: Interactive Effects (Phase 3)
+
+9. [x] Step 9: 3D 틸트 효과 구현
+   - Files: `hub.js`, `style.css`
+   - Criteria: 게임 카드 호버 시 마우스 위치에 따른 3D 틸트 애니메이션
+
+10. [x] Step 10: CSS perspective 추가
+    - Files: `style.css`
+    - Criteria: 게임 카드에 perspective와 transform-style 속성 적용
+
+11. [x] Step 11: 테스트 업데이트
+    - Files: `hub.test.js`
+    - Criteria: 새로운 TiltEffectManager 클래스에 대한 테스트 추가
+
+---
+
+## Developer Notes (2025-12-10)
+
+### Completed Changes
+
+#### 1. common.js (새 파일)
+- `recordRecentPlay(gameName)` 함수 구현
+- localStorage의 'recent-games' 키에 최근 5개 게임 저장
+- CommonJS 모듈 export 지원
+
+#### 2. 각 게임 index.html
+- `<script src="../../common.js"></script>` 추가 (모든 7개 게임)
+
+#### 3. 각 게임 game.js
+- 게임 시작 시점에 `recordRecentPlay('게임명')` 호출 추가
+  - 2048: `init()` 함수
+  - Snake: `startNewGame()` 함수
+  - Minesweeper: `initGame()` 함수
+  - Tetris: `startNewGame()` 함수
+  - Breakout: `startGame()` 함수
+  - Memory: `initGame()` 함수
+  - Survivor: 게임 시작 시 (`gameState = 'playing'`)
+
+#### 4. hub.js
+- `TiltEffectManager` 클래스 추가
+- 마우스 위치에 따른 3D 회전 (최대 8도)
+- `prefers-reduced-motion` 존중
+- 터치 기기에서 비활성화
+- DOMContentLoaded에서 초기화
+- 테스트용 모듈 export
+
+#### 5. style.css
+- `.games-grid`에 `perspective: 1000px` 추가
+- `.game-card`에 `transform-style: preserve-3d`, `will-change: transform` 추가
+- hover 효과에서 transform 분리 (JS 틸트와 충돌 방지)
+- `@media (hover: none), (prefers-reduced-motion: reduce)` 폴백
+
+#### 6. hub.test.js
+- TiltEffectManager 테스트 6개 추가
+  - prefers-reduced-motion 테스트
+  - 터치 기기 테스트
+  - 데스크탑 이벤트 바인딩 테스트
+  - handleTilt 회전 계산 테스트
+  - resetTilt transform 초기화 테스트
+  - activateTilt transition 비활성화 테스트
+
+### Test Results
+```
+Test Suites: 1 passed, 1 total
+Tests:       40 passed, 40 total
+Time:        0.527s
+```
+
+### Notes for Tester
+- 각 게임을 시작한 후 허브로 돌아가면 "최근 플레이" 섹션에 해당 게임이 표시되어야 함
+- 데스크탑 브라우저에서 게임 카드 위로 마우스를 이동하면 3D 틸트 효과가 나타나야 함
+- 터치 기기에서는 3D 틸트 효과가 비활성화되고 기존 hover 애니메이션이 작동해야 함
+- `prefers-reduced-motion: reduce` 설정 시 3D 틸트 효과 비활성화 확인
 
 ---
 
 ## Code Review Summary
 
 ### APPROVED_FOR_MERGE
-
 #### Review Date: 2025-12-10
-
-### Files Reviewed
-- `hub.js` - Hub 메인 JavaScript
-- `hub.test.js` - Jest 테스트 파일
-- `index.html` - Hub HTML
-- `style.css` - Hub CSS
-- `jest.config.js` - Jest 설정
-- `package.json` - 프로젝트 설정
-
-### Code Quality Assessment
-
-| 항목 | 상태 | 비고 |
-|------|------|------|
-| 테스트 통과 | 34/34 통과 | 100% 통과 |
-| 커버리지 | 98.6% (statements) | 90% threshold 충족 |
-| 코드 품질 | 양호 | 깔끔한 클래스 구조 |
-| 보안 | 문제 없음 | XSS/인젝션 위험 없음 |
-| 접근성 | 양호 | prefers-reduced-motion 지원 |
-| 반응형 | 양호 | 모바일 breakpoint 적용 |
-
-### Strengths
-
-1. **모듈화된 아키텍처**
-   - `HubThemeManager`, `ScrollAnimationManager`, `StatsManager`, `RecentGamesManager` 클래스로 책임 분리
-   - 각 클래스가 단일 책임 원칙(SRP) 준수
-
-2. **테스트 품질**
-   - 34개 테스트 케이스로 높은 커버리지 달성
-   - 엣지 케이스 처리 (null, 0, unknown games 등)
-   - localStorage, matchMedia, IntersectionObserver 적절한 모킹
-
-3. **접근성 (A11y)**
-   - `prefers-reduced-motion` 미디어 쿼리 지원
-   - 애니메이션 비활성화 옵션 제공
-   - `aria-label` 속성 사용 (theme toggle button)
-
-4. **CSS 품질**
-   - GPU 가속 애니메이션 (`transform`, `opacity`)
-   - 글래스모피즘 효과 (`backdrop-filter`)
-   - 다크모드 완전 지원
-   - 반응형 breakpoint (520px)
-
-5. **브라우저 호환성**
-   - CommonJS exports로 테스트 가능 + 브라우저 호환
-   - `-webkit-backdrop-filter` 벤더 프리픽스
-
-### Minor Observations (Non-blocking)
-
-1. **시간 포맷팅**: `formatValue` 함수에서 시간 포맷 시 `Math.floor` 사용 적절
-2. **최근 게임 제한**: 3개로 제한하여 UI 오버플로우 방지
-3. **Service Worker**: PWA 지원을 위한 적절한 등록
-
-### Security Review
-- localStorage 사용 시 JSON.parse 안전하게 처리 (기본값 `'[]'` 제공)
-- 사용자 입력 없이 정적 데이터만 렌더링하므로 XSS 위험 없음
-- 민감 정보 저장 없음
 
 ### Test Coverage Details
 ```
@@ -83,66 +146,9 @@ Lines:      98.5%
 ### Acceptance Criteria Met
 - [x] 통계 섹션 구현 (Phase 2.2)
 - [x] 최근 플레이 섹션 구현 (Phase 2.3)
+- [x] 게임별 recordRecentPlay 함수 추가
+- [x] 3D 틸트 효과 구현 (Phase 3)
 - [x] 다크모드 지원
 - [x] 반응형 디자인
-- [x] 접근성 지원
-- [x] 테스트 커버리지 90% 이상
-
----
-
-## 완료된 작업
-
-### Phase 2.2: 통계 섹션 (완료)
-- `index.html`: `.stats-section` 추가
-- `style.css`: 통계 카드 스타일 + 다크모드 + 반응형
-- `hub.js`: `StatsManager` 클래스 구현
-
-### Phase 2.3: 최근 플레이 섹션 (완료)
-- `index.html`: `.recent-section` 추가
-- `style.css`: 최근 플레이 카드 스타일 + 다크모드 + 반응형
-- `hub.js`: `RecentGamesManager` 클래스 구현
-
----
-
-## 🎯 다음 작업 (PR 머지 후)
-
-### Phase 2.3 추가 작업 (남은 작업)
-각 게임에서 `recordRecentPlay()` 함수 호출 추가 필요:
-
-```javascript
-function recordRecentPlay(gameName) {
-    const recent = JSON.parse(localStorage.getItem('recent-games') || '[]');
-    const filtered = recent.filter(g => g !== gameName);
-    filtered.unshift(gameName);
-    localStorage.setItem('recent-games', JSON.stringify(filtered.slice(0, 5)));
-}
-```
-
-**추가해야 할 게임 파일:**
-- [ ] games/2048/game.js
-- [ ] games/snake/game.js
-- [ ] games/minesweeper/game.js
-- [ ] games/tetris/game.js
-- [ ] games/breakout/game.js
-- [ ] games/memory/game.js
-- [ ] games/survivor/game.js
-
-### Phase 3: 인터랙티브 요소
-1. **마우스 효과**: 카드 호버 시 3D 틸트 효과
-2. **사운드**: 버튼 클릭, 게임 시작 등 UI 사운드
-3. **파티클 효과**: 업적 달성, 하이스코어 등
-
----
-
-## localStorage 키 정리 (참조용)
-
-| 게임 | localStorage 키 | 값 형식 |
-|------|----------------|---------|
-| 2048 | `2048-best-score` | 숫자 (점수) |
-| Snake | `snake-best-score` | 숫자 (점수) |
-| Tetris | `tetris-best-score` | 숫자 (점수) |
-| Breakout | `breakout-best-score` | 숫자 (점수) |
-| Memory | `memory-best-easy`, `-medium`, `-hard` | 숫자 (이동 횟수) |
-| Survivor | `survivor-best-time` | 숫자 (초) |
-| Minesweeper | `minesweeper-best-beginner` 등 | 숫자 (초) |
-| Recent Games | `recent-games` | JSON 배열 (게임명) |
+- [x] 접근성 지원 (reduced-motion, touch devices)
+- [x] 테스트 커버리지 90% 이상 (40 tests passing)

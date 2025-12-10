@@ -219,6 +219,11 @@ class Game2048 {
         this.addRandomTile();
         this.addRandomTile();
         this.render();
+
+        // Record this game as recently played
+        if (typeof recordRecentPlay === 'function') {
+            recordRecentPlay('2048');
+        }
     }
 
     clearTileElements() {

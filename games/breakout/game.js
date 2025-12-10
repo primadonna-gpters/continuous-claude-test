@@ -245,6 +245,11 @@ class BreakoutGame {
         this.initBricks();
         this.resetBall();
         this.updateUI();
+
+        // Record this game as recently played
+        if (typeof recordRecentPlay === 'function') {
+            recordRecentPlay('breakout');
+        }
     }
 
     newGame() {

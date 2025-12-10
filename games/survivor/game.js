@@ -2051,6 +2051,11 @@ function startNewGame() {
     checkArcanaAchievement();
 
     playSound('start');
+
+    // Record this game as recently played
+    if (typeof recordRecentPlay === 'function') {
+        recordRecentPlay('survivor');
+    }
 }
 
 function applyArcanaEffects() {
