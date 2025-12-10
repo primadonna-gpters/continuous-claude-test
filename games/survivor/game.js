@@ -3387,6 +3387,21 @@ function updateProjectiles() {
             }
         }
 
+        // Spawn trail effects for specific weapon types
+        if (proj.type === 'fireball' && Math.random() < 0.5) {
+            spawnFireTrail(proj.x, proj.y);
+        }
+        if (proj.type === 'magicWand' && Math.random() < 0.4) {
+            spawnMagicTrail(proj.x, proj.y, proj.color);
+        }
+        if (proj.type === 'knife' && Math.random() < 0.5) {
+            const angle = Math.atan2(proj.vy, proj.vx);
+            spawnKnifeTrail(proj.x, proj.y, angle);
+        }
+        if (proj.type === 'axe' && Math.random() < 0.6) {
+            spawnAxeTrail(proj.x, proj.y, proj.rotation || 0);
+        }
+
         proj.x += proj.vx * deltaTime;
         proj.y += proj.vy * deltaTime;
 
@@ -3695,6 +3710,82 @@ function addLightningChain(x1, y1, x2, y2, color) {
         maxLifetime: 0.15,
         alpha: 1,
         segments: generateLightningSegments(x1, y1, x2, y2)
+    });
+}
+
+function spawnFireTrail(x, y) {
+    // Spawn multiple fire particles creating a trail effect
+    for (let i = 0; i < 2; i++) {
+        effectParticles.push({
+            x: x + (Math.random() - 0.5) * 6,
+            y: y + (Math.random() - 0.5) * 6,
+            vx: (Math.random() - 0.5) * 30,
+            vy: -20 - Math.random() * 40, // Rise upward
+            size: 4 + Math.random() * 4,
+            color: Math.random() < 0.5 ? '#ff6622' : '#ffaa33',
+            lifetime: 0.3 + Math.random() * 0.2,
+            maxLifetime: 0.5,
+            alpha: 0.9,
+            gravity: -50, // Float upward
+            shrink: true,
+            type: 'fire'
+        });
+    }
+}
+
+function spawnMagicTrail(x, y, color) {
+    // Spawn magic sparkle particles
+    effectParticles.push({
+        x: x,
+        y: y,
+        vx: (Math.random() - 0.5) * 40,
+        vy: (Math.random() - 0.5) * 40,
+        size: 3 + Math.random() * 3,
+        color: color || '#9966ff',
+        lifetime: 0.25 + Math.random() * 0.15,
+        maxLifetime: 0.4,
+        alpha: 1,
+        gravity: 0,
+        shrink: true,
+        type: 'magic'
+    });
+}
+
+function spawnKnifeTrail(x, y, angle) {
+    // Metallic shine trail for knives
+    effectParticles.push({
+        x: x,
+        y: y,
+        vx: 0,
+        vy: 0,
+        size: 6,
+        color: '#cccccc',
+        lifetime: 0.15,
+        maxLifetime: 0.15,
+        alpha: 0.6,
+        gravity: 0,
+        shrink: true,
+        type: 'blade',
+        angle: angle
+    });
+}
+
+function spawnAxeTrail(x, y, rotation) {
+    // Afterimage trail for spinning axes
+    effectParticles.push({
+        x: x,
+        y: y,
+        vx: 0,
+        vy: 0,
+        size: 10,
+        color: '#cc8844',
+        lifetime: 0.12,
+        maxLifetime: 0.12,
+        alpha: 0.5,
+        gravity: 0,
+        shrink: false,
+        type: 'axeTrail',
+        rotation: rotation
     });
 }
 
@@ -5109,18 +5200,34 @@ function drawProjectiles() {
         const size = proj.size || PROJECTILE_SIZE;
 
         if (proj.type === 'axe') {
-            // Glow effect
-            const axeGlow = ctx.createRadialGradient(x, y, 0, x, y, size);
-            axeGlow.addColorStop(0, 'rgba(200, 100, 50, 0.3)');
+            // Enhanced motion blur glow
+            const speed = Math.hypot(proj.vx, proj.vy);
+            const glowIntensity = Math.min(1, speed / 200);
+            const axeGlow = ctx.createRadialGradient(x, y, 0, x, y, size * 1.5);
+            axeGlow.addColorStop(0, `rgba(255, 150, 50, ${0.4 * glowIntensity})`);
+            axeGlow.addColorStop(0.5, `rgba(200, 100, 50, ${0.2 * glowIntensity})`);
             axeGlow.addColorStop(1, 'rgba(200, 100, 50, 0)');
             ctx.fillStyle = axeGlow;
             ctx.beginPath();
-            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.arc(x, y, size * 1.5, 0, Math.PI * 2);
             ctx.fill();
-            // Axe
+
+            // Spinning motion blur effect
             ctx.save();
             ctx.translate(x, y);
-            ctx.rotate(proj.rotation || 0);
+            const rotation = proj.rotation || 0;
+
+            // Draw afterimages for spinning effect
+            for (let i = 3; i > 0; i--) {
+                ctx.globalAlpha = 0.15 * (4 - i) / 3;
+                ctx.rotate(-0.3 * i);
+                ctx.fillStyle = '#cc8844';
+                ctx.fillRect(-size / 2, -size / 2, size, size);
+            }
+            ctx.globalAlpha = 1;
+
+            // Main axe
+            ctx.rotate(rotation + 0.9); // Reset plus current rotation
             // Outline
             ctx.fillStyle = '#000000';
             ctx.fillRect(-size / 2 - 1, -size / 2 - 1, size + 2, size + 2);
@@ -5130,49 +5237,163 @@ function drawProjectiles() {
             // Blade highlight
             ctx.fillStyle = '#ddaa66';
             ctx.fillRect(-size / 4, -size / 2, size / 2, size / 2);
+            // Metallic edge shine
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = 0.6;
+            ctx.fillRect(-size / 4 + 1, -size / 2, 2, size / 2 - 2);
+            ctx.globalAlpha = 1;
             ctx.restore();
         } else if (proj.type === 'fireball') {
-            // Enhanced glow
-            const fireGlow = ctx.createRadialGradient(x, y, 0, x, y, size);
-            fireGlow.addColorStop(0, 'rgba(255, 200, 100, 0.5)');
-            fireGlow.addColorStop(0.5, 'rgba(255, 100, 50, 0.3)');
+            // Animated flickering glow
+            const flicker = 1 + Math.sin(Date.now() / 50) * 0.15;
+            const fireGlow = ctx.createRadialGradient(x, y, 0, x, y, size * 1.5 * flicker);
+            fireGlow.addColorStop(0, 'rgba(255, 255, 150, 0.6)');
+            fireGlow.addColorStop(0.3, 'rgba(255, 150, 50, 0.4)');
+            fireGlow.addColorStop(0.6, 'rgba(255, 80, 20, 0.2)');
             fireGlow.addColorStop(1, 'rgba(255, 50, 0, 0)');
             ctx.fillStyle = fireGlow;
             ctx.beginPath();
-            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.arc(x, y, size * 1.5 * flicker, 0, Math.PI * 2);
             ctx.fill();
-            // Fire core
-            ctx.fillStyle = '#ff6622';
+
+            // Outer flame with shadow
+            ctx.shadowColor = '#ff6600';
+            ctx.shadowBlur = 15;
+
+            // Flame shape (teardrop)
+            const angle = Math.atan2(proj.vy, proj.vx);
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle + Math.PI / 2);
+
+            // Outer flame
+            ctx.fillStyle = '#ff4400';
             ctx.beginPath();
-            ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+            ctx.moveTo(0, -size * 0.8);
+            ctx.quadraticCurveTo(size * 0.6, -size * 0.2, size * 0.4, size * 0.4);
+            ctx.quadraticCurveTo(0, size * 0.7, -size * 0.4, size * 0.4);
+            ctx.quadraticCurveTo(-size * 0.6, -size * 0.2, 0, -size * 0.8);
             ctx.fill();
-            // Bright center
+
+            // Inner flame (brighter)
+            ctx.fillStyle = '#ff8833';
+            ctx.beginPath();
+            ctx.moveTo(0, -size * 0.5);
+            ctx.quadraticCurveTo(size * 0.3, 0, size * 0.2, size * 0.3);
+            ctx.quadraticCurveTo(0, size * 0.45, -size * 0.2, size * 0.3);
+            ctx.quadraticCurveTo(-size * 0.3, 0, 0, -size * 0.5);
+            ctx.fill();
+
+            // Core (brightest)
             ctx.fillStyle = '#ffff88';
             ctx.beginPath();
-            ctx.arc(x, y, size / 4, 0, Math.PI * 2);
+            ctx.arc(0, size * 0.1, size * 0.2, 0, Math.PI * 2);
             ctx.fill();
+
+            ctx.shadowBlur = 0;
+            ctx.restore();
+        } else if (proj.type === 'magicWand') {
+            // Magic projectile with sparkle aura
+            const pulse = 1 + Math.sin(Date.now() / 80) * 0.2;
+
+            // Outer magic glow
+            ctx.shadowColor = proj.color || '#9966ff';
+            ctx.shadowBlur = 12;
+
+            const magicGlow = ctx.createRadialGradient(x, y, 0, x, y, size * 1.3 * pulse);
+            magicGlow.addColorStop(0, 'rgba(180, 130, 255, 0.5)');
+            magicGlow.addColorStop(0.5, 'rgba(130, 80, 220, 0.25)');
+            magicGlow.addColorStop(1, 'rgba(100, 50, 200, 0)');
+            ctx.fillStyle = magicGlow;
+            ctx.beginPath();
+            ctx.arc(x, y, size * 1.3 * pulse, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Orbiting sparkles
+            const orbitTime = Date.now() / 150;
+            for (let i = 0; i < 3; i++) {
+                const sparkAngle = orbitTime + (i * Math.PI * 2 / 3);
+                const sparkDist = size * 0.7;
+                const sx = x + Math.cos(sparkAngle) * sparkDist;
+                const sy = y + Math.sin(sparkAngle) * sparkDist;
+                ctx.fillStyle = '#ffffff';
+                ctx.globalAlpha = 0.7;
+                ctx.beginPath();
+                ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+
+            // Main magic orb
+            ctx.fillStyle = proj.color || '#9966ff';
+            ctx.beginPath();
+            ctx.arc(x, y, size * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Inner bright core
+            ctx.fillStyle = '#ddbbff';
+            ctx.beginPath();
+            ctx.arc(x, y, size * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Highlight
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(x - size * 0.15, y - size * 0.15, size * 0.12, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
         } else if (proj.type === 'knife') {
             const angle = Math.atan2(proj.vy, proj.vx);
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(angle);
-            // Trail
-            ctx.globalAlpha = 0.3;
-            ctx.fillStyle = '#aaaaaa';
-            ctx.fillRect(-12, -1, 8, 2);
-            ctx.globalAlpha = 1;
+
+            // Motion blur trail
+            const gradient = ctx.createLinearGradient(-20, 0, 0, 0);
+            gradient.addColorStop(0, 'rgba(200, 200, 200, 0)');
+            gradient.addColorStop(0.5, 'rgba(200, 200, 200, 0.2)');
+            gradient.addColorStop(1, 'rgba(200, 200, 200, 0.4)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(-20, -1.5, 16, 3);
+
+            // Metallic shine line
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(-18, 0);
+            ctx.lineTo(-4, 0);
+            ctx.stroke();
+
             // Outline
             ctx.fillStyle = '#000000';
             ctx.fillRect(-7, -3, 14, 6);
-            // Blade
+
+            // Blade body
             ctx.fillStyle = '#cccccc';
             ctx.fillRect(-6, -2, 12, 4);
+
+            // Blade edge (sharp highlight)
+            const edgeGradient = ctx.createLinearGradient(-6, 0, 6, 0);
+            edgeGradient.addColorStop(0, '#aaaaaa');
+            edgeGradient.addColorStop(0.5, '#ffffff');
+            edgeGradient.addColorStop(1, '#dddddd');
+            ctx.fillStyle = edgeGradient;
+            ctx.fillRect(0, -2, 6, 1);
+
             // Handle
             ctx.fillStyle = '#886644';
             ctx.fillRect(-6, -1, 4, 2);
-            // Highlight
+
+            // Handle wrap
+            ctx.fillStyle = '#664422';
+            ctx.fillRect(-5, -1, 1, 2);
+            ctx.fillRect(-3, -1, 1, 2);
+
+            // Tip highlight
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(2, -1, 4, 1);
+            ctx.fillRect(4, -1, 2, 1);
+
             ctx.restore();
         } else if (proj.type === 'cross') {
             const rotation = Date.now() / 100;
@@ -6097,6 +6318,77 @@ function drawEffectParticles() {
             ctx.lineTo(p.x, p.y + (Math.random() - 0.5) * p.size);
             ctx.lineTo(p.x + p.size, p.y);
             ctx.stroke();
+        } else if (p.type === 'fire') {
+            // Fire particle - flickering flame shape
+            ctx.shadowColor = '#ff6600';
+            ctx.shadowBlur = 10;
+            // Outer flame
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y - p.size);
+            ctx.quadraticCurveTo(p.x + p.size, p.y, p.x, p.y + p.size * 0.5);
+            ctx.quadraticCurveTo(p.x - p.size, p.y, p.x, p.y - p.size);
+            ctx.fill();
+            // Inner bright core
+            ctx.fillStyle = '#ffff66';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (p.type === 'magic') {
+            // Magic sparkle - star shape
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 8;
+            ctx.fillStyle = p.color;
+            const spikes = 4;
+            const outerRadius = p.size;
+            const innerRadius = p.size * 0.4;
+            ctx.beginPath();
+            for (let i = 0; i < spikes * 2; i++) {
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                const angle = (i * Math.PI / spikes) - Math.PI / 2;
+                const px = p.x + Math.cos(angle) * radius;
+                const py = p.y + Math.sin(angle) * radius;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.fill();
+            // Bright center
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * 0.2, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (p.type === 'blade') {
+            // Blade trail - metallic slash
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.angle || 0);
+            // Motion blur line
+            const gradient = ctx.createLinearGradient(-p.size, 0, p.size, 0);
+            gradient.addColorStop(0, 'rgba(200, 200, 200, 0)');
+            gradient.addColorStop(0.5, p.color);
+            gradient.addColorStop(1, 'rgba(200, 200, 200, 0)');
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 2;
+            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 3;
+            ctx.beginPath();
+            ctx.moveTo(-p.size, 0);
+            ctx.lineTo(p.size, 0);
+            ctx.stroke();
+            ctx.restore();
+        } else if (p.type === 'axeTrail') {
+            // Axe afterimage - ghostly spinning blade
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rotation || 0);
+            // Ghostly axe shape
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+            // Blade highlight ghost
+            ctx.fillStyle = 'rgba(221, 170, 102, 0.5)';
+            ctx.fillRect(-p.size / 4, -p.size / 2, p.size / 2, p.size / 2);
+            ctx.restore();
         } else {
             // Default circle particle
             ctx.fillStyle = p.color;
