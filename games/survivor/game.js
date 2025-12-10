@@ -924,6 +924,18 @@ let floorItems = [];
 // Damage numbers
 let damageNumbers = [];
 
+// Visual effects particles (for enhanced weapon effects)
+let effectParticles = [];
+
+// Screen shake effect
+let screenShake = { intensity: 0, duration: 0, offsetX: 0, offsetY: 0 };
+
+// Player hit flash overlay
+let playerHitFlash = 0;
+
+// Chain lightning visual lines
+let lightningChains = [];
+
 // Input
 let keys = {};
 let joystickVector = { x: 0, y: 0 };
@@ -2004,6 +2016,10 @@ function startNewGame() {
     chests = [];
     floorItems = [];
     damageNumbers = [];
+    effectParticles = [];
+    lightningChains = [];
+    screenShake = { intensity: 0, duration: 0, offsetX: 0, offsetY: 0 };
+    playerHitFlash = 0;
     gameTime = 0;
     kills = 0;
     coins = 0;
@@ -2474,6 +2490,9 @@ function update(currentTime) {
     updateExpGems();
     updateChests();
     updateDamageNumbers();
+    updateEffectParticles();
+    updateLightningChains();
+    updateScreenShake();
     checkCollisions();
     updateCamera();
     updateUI();
@@ -2929,32 +2948,62 @@ function fireLightning(damage, amount, area, evolved) {
 
         spawnDamageNumber(target.x, target.y, damage);
 
+        // Lightning bolt from sky effect
+        addLightningChain(target.x, target.y - 200, target.x, target.y, '#88ffff');
+
+        // Hit particles
+        spawnHitParticles(target.x, target.y, 6, '#ffff00', { spread: 0.8, lifetime: 0.2, type: 'spark' });
+
         // Lightning visual
         areaEffects.push({
             x: target.x,
             y: target.y,
             radius: 20 * area,
             damage: 0,
-            lifetime: 0.15,
-            maxLifetime: 0.15,
+            lifetime: 0.2,
+            maxLifetime: 0.2,
             type: 'lightning',
-            color: '#ffff00'
+            color: evolved ? '#88ffff' : '#ffff00'
         });
 
         // Chain lightning for evolved
         if (evolved?.chains) {
             let chainTarget = target;
+            const chainedEnemies = [target];
             for (let c = 0; c < evolved.chains; c++) {
                 const nearby = enemies.find(e =>
                     e !== chainTarget &&
                     !targets.includes(e) &&
-                    Math.hypot(e.x - chainTarget.x, e.y - chainTarget.y) < 100
+                    !chainedEnemies.includes(e) &&
+                    Math.hypot(e.x - chainTarget.x, e.y - chainTarget.y) < 120
                 );
                 if (nearby) {
+                    // Add chain lightning visual
+                    addLightningChain(chainTarget.x, chainTarget.y, nearby.x, nearby.y, '#00ffff');
+
                     nearby.health -= damage * 0.5;
                     nearby.hitFlash = 0.1;
                     spawnDamageNumber(nearby.x, nearby.y, Math.floor(damage * 0.5));
+                    spawnHitParticles(nearby.x, nearby.y, 4, '#00ffff', { spread: 0.5, lifetime: 0.15 });
+
+                    // Small lightning effect on chained enemy
+                    areaEffects.push({
+                        x: nearby.x,
+                        y: nearby.y,
+                        radius: 12 * area,
+                        damage: 0,
+                        lifetime: 0.12,
+                        maxLifetime: 0.12,
+                        type: 'lightning',
+                        color: '#00ffff'
+                    });
+
+                    chainedEnemies.push(nearby);
                     chainTarget = nearby;
+
+                    if (nearby.health <= 0) {
+                        handleEnemyDeath(nearby, enemies.indexOf(nearby));
+                    }
                 }
             }
         }
@@ -2962,6 +3011,11 @@ function fireLightning(damage, amount, area, evolved) {
         if (target.health <= 0) {
             handleEnemyDeath(target, enemies.indexOf(target));
         }
+    }
+
+    // Screen shake for multiple lightning strikes
+    if (targets.length > 0) {
+        triggerScreenShake(2 + targets.length, 0.08);
     }
 }
 
@@ -3298,22 +3352,38 @@ function updateProjectiles() {
         // Runetracer bouncing
         if (proj.bounces) {
             proj.lifetime -= deltaTime;
+
+            // Spawn trail particles for runetracer
+            if (proj.type === 'runetracer' && Math.random() < 0.3) {
+                spawnRunetracerTrail(proj.x, proj.y, proj.color);
+            }
+
             if (proj.lifetime <= 0) {
                 if (proj.explodesOnEnd) {
                     createExplosion(proj.x, proj.y, proj.explosionRadius, proj.damage);
+                    spawnHitParticles(proj.x, proj.y, 12, proj.color, { spread: 1.5, lifetime: 0.5 });
+                    triggerScreenShake(4, 0.1);
                 }
                 projectiles.splice(i, 1);
                 continue;
             }
 
             // Bounce off screen edges (world-relative)
+            let bounced = false;
             if (proj.x < camera.x + 10 || proj.x > camera.x + canvas.width - 10) {
                 proj.vx *= -1;
                 proj.x = Math.max(camera.x + 10, Math.min(camera.x + canvas.width - 10, proj.x));
+                bounced = true;
             }
             if (proj.y < camera.y + 10 || proj.y > camera.y + canvas.height - 10) {
                 proj.vy *= -1;
                 proj.y = Math.max(camera.y + 10, Math.min(camera.y + canvas.height - 10, proj.y));
+                bounced = true;
+            }
+
+            // Spawn bounce particles
+            if (bounced && proj.type === 'runetracer') {
+                spawnHitParticles(proj.x, proj.y, 5, proj.color, { spread: 0.5, lifetime: 0.3, size: 3 });
             }
         }
 
@@ -3517,8 +3587,139 @@ function spawnDamageNumber(x, y, damage, isCrit = false) {
         lifetime: 0.8,
         maxLifetime: 0.8,
         alpha: 1,
-        isCrit: isCrit
+        isCrit: isCrit,
+        scale: isCrit ? 1.5 : 1,
+        vx: (Math.random() - 0.5) * 20,
+        vy: -50 - Math.random() * 30
     });
+}
+
+// Enhanced visual effects system
+function updateEffectParticles() {
+    for (let i = effectParticles.length - 1; i >= 0; i--) {
+        const p = effectParticles[i];
+        p.lifetime -= deltaTime;
+        p.x += p.vx * deltaTime;
+        p.y += p.vy * deltaTime;
+        if (p.gravity) p.vy += p.gravity * deltaTime;
+        p.alpha = Math.max(0, p.lifetime / p.maxLifetime);
+        if (p.shrink) p.size *= (1 - deltaTime * 2);
+
+        if (p.lifetime <= 0 || p.size < 0.5) {
+            effectParticles.splice(i, 1);
+        }
+    }
+}
+
+function updateLightningChains() {
+    for (let i = lightningChains.length - 1; i >= 0; i--) {
+        const chain = lightningChains[i];
+        chain.lifetime -= deltaTime;
+        chain.alpha = chain.lifetime / chain.maxLifetime;
+
+        if (chain.lifetime <= 0) {
+            lightningChains.splice(i, 1);
+        }
+    }
+}
+
+function updateScreenShake() {
+    if (screenShake.duration > 0) {
+        screenShake.duration -= deltaTime;
+        const progress = screenShake.duration > 0 ? 1 : 0;
+        screenShake.offsetX = (Math.random() - 0.5) * screenShake.intensity * progress;
+        screenShake.offsetY = (Math.random() - 0.5) * screenShake.intensity * progress;
+    } else {
+        screenShake.offsetX = 0;
+        screenShake.offsetY = 0;
+    }
+
+    // Update player hit flash
+    if (playerHitFlash > 0) {
+        playerHitFlash -= deltaTime * 2;
+        if (playerHitFlash < 0) playerHitFlash = 0;
+    }
+}
+
+function triggerScreenShake(intensity, duration) {
+    if (intensity > screenShake.intensity) {
+        screenShake.intensity = intensity;
+        screenShake.duration = duration;
+    }
+}
+
+function spawnHitParticles(x, y, count, color, options = {}) {
+    for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 50 + Math.random() * 100;
+        effectParticles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed * (options.spread || 1),
+            vy: Math.sin(angle) * speed * (options.spread || 1),
+            size: options.size || (3 + Math.random() * 3),
+            color: color,
+            lifetime: options.lifetime || (0.3 + Math.random() * 0.3),
+            maxLifetime: options.lifetime || 0.5,
+            alpha: 1,
+            gravity: options.gravity || 0,
+            shrink: options.shrink !== false,
+            type: options.type || 'circle'
+        });
+    }
+}
+
+function spawnRunetracerTrail(x, y, color) {
+    effectParticles.push({
+        x: x,
+        y: y,
+        vx: (Math.random() - 0.5) * 20,
+        vy: (Math.random() - 0.5) * 20,
+        size: 4 + Math.random() * 4,
+        color: color,
+        lifetime: 0.4,
+        maxLifetime: 0.4,
+        alpha: 0.8,
+        gravity: 0,
+        shrink: true,
+        type: 'rune'
+    });
+}
+
+function addLightningChain(x1, y1, x2, y2, color) {
+    lightningChains.push({
+        x1: x1, y1: y1,
+        x2: x2, y2: y2,
+        color: color,
+        lifetime: 0.15,
+        maxLifetime: 0.15,
+        alpha: 1,
+        segments: generateLightningSegments(x1, y1, x2, y2)
+    });
+}
+
+function generateLightningSegments(x1, y1, x2, y2) {
+    const segments = [];
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const dist = Math.hypot(dx, dy);
+    const steps = Math.max(3, Math.floor(dist / 15));
+
+    let px = x1, py = y1;
+    for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        let nx = x1 + dx * t;
+        let ny = y1 + dy * t;
+        if (i < steps) {
+            const offset = (1 - t) * 15;
+            nx += (Math.random() - 0.5) * offset;
+            ny += (Math.random() - 0.5) * offset;
+        }
+        segments.push({ x1: px, y1: py, x2: nx, y2: ny });
+        px = nx;
+        py = ny;
+    }
+    return segments;
 }
 
 function checkCollisions() {
@@ -3536,8 +3737,13 @@ function checkCollisions() {
                 enemy.hitFlash = 0.1;
                 spawnDamageNumber(enemy.x, enemy.y, proj.damage);
 
+                // Spawn hit particles based on projectile type
+                const particleColor = proj.color || '#ffffff';
+                spawnHitParticles(enemy.x, enemy.y, 3, particleColor, { spread: 0.6, lifetime: 0.2, size: 2 });
+
                 if (proj.explosive) {
                     createExplosion(proj.x, proj.y, proj.explosionRadius, proj.damage * 0.5);
+                    triggerScreenShake(5, 0.12);
                 }
 
                 if (proj.pierce <= 0) {
@@ -3633,11 +3839,21 @@ function checkCollisions() {
                 damage = Math.max(0, damage - player.armor * deltaTime * 0.5);
                 player.health -= damage;
 
+                // Player hit feedback
+                if (damage > 0) {
+                    playerHitFlash = Math.min(playerHitFlash + damage * 0.02, 0.4);
+                    if (damage > 5) {
+                        triggerScreenShake(3, 0.05);
+                    }
+                }
+
                 if (player.health <= 0) {
                     if (player.revivals > 0) {
                         player.revivals--;
                         player.health = player.maxHealth * 0.5;
                         player.invincibleTimer = 3;
+                        triggerScreenShake(10, 0.3);
+                        spawnHitParticles(player.x, player.y, 20, '#ffff00', { spread: 2, lifetime: 0.6, size: 4 });
                         playSound('levelup');
                     } else {
                         gameOver();
@@ -3677,6 +3893,22 @@ function checkCollisions() {
 }
 
 function handleEnemyDeath(enemy, index) {
+    // Death particles - more for bosses
+    const enemyType = ENEMY_TYPES[enemy.type];
+    const particleColor = enemyType?.color || '#77aa77';
+    const particleCount = enemy.isBoss ? 15 : 5;
+    spawnHitParticles(enemy.x, enemy.y, particleCount, particleColor, {
+        spread: enemy.isBoss ? 1.5 : 1,
+        lifetime: enemy.isBoss ? 0.5 : 0.3,
+        size: enemy.isBoss ? 5 : 3,
+        gravity: 100
+    });
+
+    // Screen shake for boss death
+    if (enemy.isBoss) {
+        triggerScreenShake(8, 0.25);
+    }
+
     expGems.push({
         x: enemy.x,
         y: enemy.y,
@@ -4191,16 +4423,19 @@ function render() {
     }
 
     ctx.save();
-    ctx.translate(-camera.x, -camera.y);
+    // Apply screen shake
+    ctx.translate(-camera.x + screenShake.offsetX, -camera.y + screenShake.offsetY);
 
     drawPixelGrid();
     drawAreaEffects();
+    drawLightningChains();
     drawExpGems();
     drawChests();
     drawProjectiles();
     drawOrbitingWeapons();
     drawBibleOrbits();
     drawEnemies();
+    drawEffectParticles();
     drawPlayer();
     drawDamageNumbers();
 
@@ -4211,6 +4446,18 @@ function render() {
     drawKillCounter();
     drawBossHealthBar();
     drawArcanaIndicator();
+
+    // Player hit flash overlay (red vignette)
+    if (playerHitFlash > 0) {
+        const gradient = ctx.createRadialGradient(
+            canvas.width / 2, canvas.height / 2, canvas.width * 0.3,
+            canvas.width / 2, canvas.height / 2, canvas.width * 0.7
+        );
+        gradient.addColorStop(0, 'rgba(255, 0, 0, 0)');
+        gradient.addColorStop(1, `rgba(255, 0, 0, ${playerHitFlash})`);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 }
 
 function drawMenuBackground() {
@@ -4991,36 +5238,78 @@ function drawProjectiles() {
 
             ctx.restore();
         } else if (proj.type === 'runetracer') {
-            // Magic glow
-            const runeGlow = ctx.createRadialGradient(x, y, 0, x, y, size);
-            runeGlow.addColorStop(0, 'rgba(100, 200, 255, 0.4)');
-            runeGlow.addColorStop(1, 'rgba(100, 200, 255, 0)');
+            const evolved = proj.explodesOnEnd;
+            const baseColor = evolved ? '#ff00ff' : '#00ffff';
+            const glowColor = evolved ? 'rgba(255, 0, 255, 0.5)' : 'rgba(0, 255, 255, 0.5)';
+
+            // Outer magic glow with pulsing
+            const pulseScale = 1 + Math.sin(Date.now() / 100) * 0.15;
+            ctx.shadowColor = baseColor;
+            ctx.shadowBlur = 15 * pulseScale;
+
+            const runeGlow = ctx.createRadialGradient(x, y, 0, x, y, size * 1.5);
+            runeGlow.addColorStop(0, glowColor);
+            runeGlow.addColorStop(0.5, evolved ? 'rgba(255, 100, 255, 0.2)' : 'rgba(100, 200, 255, 0.2)');
+            runeGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = runeGlow;
             ctx.beginPath();
-            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.arc(x, y, size * 1.5, 0, Math.PI * 2);
             ctx.fill();
-            // Rune
+
+            // Orbiting rune symbols
+            ctx.save();
+            ctx.translate(x, y);
+            const orbitRadius = size * 0.8;
+            for (let r = 0; r < 3; r++) {
+                const orbitAngle = Date.now() / 200 + (r * Math.PI * 2 / 3);
+                const ox = Math.cos(orbitAngle) * orbitRadius;
+                const oy = Math.sin(orbitAngle) * orbitRadius;
+                ctx.fillStyle = baseColor;
+                ctx.globalAlpha = 0.6;
+                ctx.beginPath();
+                ctx.arc(ox, oy, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+            ctx.restore();
+
+            // Main rune symbol
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(Date.now() / 80);
             const s = size / 2;
-            // Outline
+
+            // Outer triangle outline (black)
             ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.moveTo(0, -s);
-            ctx.lineTo(s * 0.6, s * 0.8);
-            ctx.lineTo(-s * 0.6, s * 0.8);
+            ctx.lineTo(s * 0.7, s * 0.8);
+            ctx.lineTo(-s * 0.7, s * 0.8);
             ctx.closePath();
             ctx.stroke();
-            // Fill
-            ctx.fillStyle = '#66ddff';
+
+            // Main triangle fill
+            ctx.fillStyle = evolved ? '#ff66ff' : '#66ddff';
             ctx.fill();
-            // Center
+
+            // Inner inverted triangle
+            ctx.strokeStyle = baseColor;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(0, s * 0.4);
+            ctx.lineTo(s * 0.3, -s * 0.1);
+            ctx.lineTo(-s * 0.3, -s * 0.1);
+            ctx.closePath();
+            ctx.stroke();
+
+            // Bright center core
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
-            ctx.arc(0, 0, 2, 0, Math.PI * 2);
+            ctx.arc(0, 0, 3, 0, Math.PI * 2);
             ctx.fill();
+
+            ctx.shadowBlur = 0;
             ctx.restore();
         } else if (proj.type === 'phiera' || proj.type === 'eight') {
             // Directional bullets with trail
@@ -5752,18 +6041,106 @@ function drawChests() {
 
 function drawDamageNumbers() {
     for (const num of damageNumbers) {
-        const screenX = num.x - camera.x;
-        const screenY = num.y - camera.y;
-
+        ctx.save();
         ctx.globalAlpha = num.alpha;
-        ctx.font = num.isCrit ? 'bold 16px sans-serif' : '12px sans-serif';
+
+        // Enhanced damage number with scale and bounce effect
+        const bounceScale = num.scale * (1 + (1 - num.alpha) * 0.3);
+        const fontSize = num.isCrit ? 16 * bounceScale : 12 * bounceScale;
+
+        ctx.font = `bold ${Math.floor(fontSize)}px sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillStyle = num.isCrit ? '#ff0000' : '#ffffff';
+
+        // Shadow/glow for better visibility
+        if (num.isCrit) {
+            ctx.shadowColor = '#ff0000';
+            ctx.shadowBlur = 8;
+        }
+
+        // Outline
         ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 2;
-        ctx.strokeText(num.damage, screenX + camera.x, screenY + camera.y);
-        ctx.fillText(num.damage, screenX + camera.x, screenY + camera.y);
-        ctx.globalAlpha = 1;
+        ctx.lineWidth = 3;
+        ctx.strokeText(num.damage, num.x, num.y);
+
+        // Fill with color based on type
+        ctx.fillStyle = num.isCrit ? '#ff4444' : '#ffffff';
+        ctx.fillText(num.damage, num.x, num.y);
+
+        ctx.restore();
+    }
+}
+
+function drawEffectParticles() {
+    for (const p of effectParticles) {
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+
+        if (p.type === 'rune') {
+            // Rune trail - magic symbol particles
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 8;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y - p.size);
+            ctx.lineTo(p.x + p.size * 0.5, p.y + p.size * 0.5);
+            ctx.lineTo(p.x - p.size * 0.5, p.y + p.size * 0.5);
+            ctx.closePath();
+            ctx.fill();
+        } else if (p.type === 'spark') {
+            // Electric spark - jagged lines
+            ctx.strokeStyle = p.color;
+            ctx.lineWidth = 2;
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 6;
+            ctx.beginPath();
+            ctx.moveTo(p.x - p.size, p.y);
+            ctx.lineTo(p.x, p.y + (Math.random() - 0.5) * p.size);
+            ctx.lineTo(p.x + p.size, p.y);
+            ctx.stroke();
+        } else {
+            // Default circle particle
+            ctx.fillStyle = p.color;
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 4;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.restore();
+    }
+}
+
+function drawLightningChains() {
+    for (const chain of lightningChains) {
+        ctx.save();
+        ctx.globalAlpha = chain.alpha;
+
+        // Outer glow
+        ctx.shadowColor = chain.color;
+        ctx.shadowBlur = 15;
+
+        // Draw chain segments
+        ctx.strokeStyle = chain.color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        for (const seg of chain.segments) {
+            ctx.moveTo(seg.x1, seg.y1);
+            ctx.lineTo(seg.x2, seg.y2);
+        }
+        ctx.stroke();
+
+        // Inner bright core
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (const seg of chain.segments) {
+            ctx.moveTo(seg.x1, seg.y1);
+            ctx.lineTo(seg.x2, seg.y2);
+        }
+        ctx.stroke();
+
+        ctx.restore();
     }
 }
 
