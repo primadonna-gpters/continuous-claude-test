@@ -1,5 +1,5 @@
 .continuous-claude
-
+coverage
 # Python
 .venv/
 __pycache__/
