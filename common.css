@@ -1,0 +1,223 @@
+/**
+ * Common styles for all game pages
+ * Provides consistent animated backgrounds, glassmorphism, and shared UI elements
+ */
+
+/* Animated gradient background */
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Apply animated background to body - games override with their accent colors */
+body.animated-bg {
+    background: linear-gradient(-45deg, #faf8ef, #f5e6d3, #e8d5c4, #faf8ef);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+}
+
+/* Dark mode animated background */
+body.dark-mode.animated-bg {
+    background: linear-gradient(-45deg, #1a1a2e, #16213e, #0f3460, #1a1a2e);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+}
+
+/* Glassmorphism base styles */
+.glass {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+body.dark-mode .glass {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Enhanced back button with hover animation */
+.back-btn-enhanced {
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s;
+}
+
+.back-btn-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.4s ease;
+}
+
+.back-btn-enhanced:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.back-btn-enhanced:hover::before {
+    left: 100%;
+}
+
+body.dark-mode .back-btn-enhanced:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced button hover effects */
+.btn-enhanced {
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s;
+}
+
+.btn-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.4s ease;
+}
+
+.btn-enhanced:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.btn-enhanced:hover::before {
+    left: 100%;
+}
+
+body.dark-mode .btn-enhanced:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Score box glassmorphism */
+.score-box-glass {
+    background: linear-gradient(135deg, rgba(187, 173, 160, 0.9) 0%, rgba(187, 173, 160, 0.7) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.score-box-glass:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+body.dark-mode .score-box-glass {
+    background: linear-gradient(135deg, rgba(61, 61, 92, 0.9) 0%, rgba(61, 61, 92, 0.7) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .score-box-glass:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Game container glassmorphism effect */
+.game-container-glass {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+.game-container-glass:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+body.dark-mode .game-container-glass {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .game-container-glass:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Header glassmorphism */
+.header-glass {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode .header-glass {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Title animation */
+.title-glow {
+    text-shadow: 0 2px 10px rgba(119, 110, 101, 0.3);
+    animation: titleGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+    0% { text-shadow: 0 2px 10px rgba(119, 110, 101, 0.3); }
+    100% { text-shadow: 0 2px 20px rgba(143, 122, 102, 0.5), 0 0 30px rgba(143, 122, 102, 0.2); }
+}
+
+body.dark-mode .title-glow {
+    text-shadow: 0 2px 10px rgba(238, 228, 218, 0.3);
+    animation: titleGlowDark 3s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlowDark {
+    0% { text-shadow: 0 2px 10px rgba(238, 228, 218, 0.3); }
+    100% { text-shadow: 0 2px 20px rgba(138, 138, 209, 0.5), 0 0 30px rgba(138, 138, 209, 0.3); }
+}
+
+/* Fade in animation */
+.fade-in {
+    animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    body.animated-bg,
+    body.dark-mode.animated-bg {
+        animation: none !important;
+    }
+
+    .title-glow,
+    body.dark-mode .title-glow {
+        animation: none !important;
+    }
+
+    .back-btn-enhanced::before,
+    .btn-enhanced::before {
+        display: none;
+    }
+
+    .back-btn-enhanced:hover,
+    .btn-enhanced:hover {
+        transform: none;
+    }
+
+    .fade-in {
+        animation: none !important;
+        opacity: 1;
+        transform: none;
+    }
+}

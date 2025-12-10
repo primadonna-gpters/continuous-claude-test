@@ -14,6 +14,12 @@ body {
     align-items: center;
 }
 
+/* Animated background override - Memory purple theme */
+body.animated-bg {
+    background: linear-gradient(-45deg, #f5f0fa, #e8d5f5, #e0d0f5, #f5f0fa);
+    background-size: 400% 400%;
+}
+
 .container {
     max-width: 600px;
     padding: 20px;
@@ -60,12 +66,21 @@ h1 {
 }
 
 .score-box {
-    background-color: #9b59b6;
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.95) 0%, rgba(155, 89, 182, 0.8) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
     padding: 10px 25px;
     border-radius: 6px;
     text-align: center;
     min-width: 80px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.score-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .score-label {
@@ -131,10 +146,19 @@ h1 {
 #game-container {
     position: relative;
     width: 100%;
-    background-color: #e8dfd8;
-    border-radius: 6px;
+    background: linear-gradient(135deg, rgba(232, 223, 216, 0.95) 0%, rgba(232, 223, 216, 0.85) 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
     padding: 15px;
     min-height: 300px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+#game-container:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 #game-board {
@@ -324,6 +348,11 @@ body.dark-mode {
     background-color: #1a1a2e;
 }
 
+body.dark-mode.animated-bg {
+    background: linear-gradient(-45deg, #1a1a2e, #2a1a3e, #1a2a3e, #1a1a2e);
+    background-size: 400% 400%;
+}
+
 body.dark-mode .container {
     color: #eee4da;
 }
@@ -341,7 +370,12 @@ body.dark-mode .back-btn:hover {
 }
 
 body.dark-mode .score-box {
-    background-color: #6a3a8a;
+    background: linear-gradient(135deg, rgba(106, 58, 138, 0.95) 0%, rgba(106, 58, 138, 0.8) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .score-box:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 body.dark-mode .game-info p {
@@ -369,7 +403,13 @@ body.dark-mode #difficulty-select option {
 }
 
 body.dark-mode #game-container {
-    background-color: #2a2a4a;
+    background: linear-gradient(135deg, rgba(42, 42, 74, 0.95) 0%, rgba(42, 42, 74, 0.85) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode #game-container:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 body.dark-mode .card {
