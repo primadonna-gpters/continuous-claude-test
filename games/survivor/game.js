@@ -5455,55 +5455,158 @@ function drawProjectiles() {
 
             ctx.shadowBlur = 0;
             ctx.restore();
-        } else if (proj.type === 'magicWand') {
+        } else if (proj.type === 'wand' || proj.type === 'magicWand') {
             // Magic projectile with sparkle aura
-            const pulse = 1 + Math.sin(Date.now() / 80) * 0.2;
+            const animTime = Date.now() / 1000;
+            const pulse = 1 + Math.sin(animTime * 8) * 0.25;
+            const isEvolved = proj.color === '#ffffff';
 
-            // Outer magic glow
-            ctx.shadowColor = proj.color || '#9966ff';
-            ctx.shadowBlur = 12;
+            if (isEvolved) {
+                // Holy Wand - Enhanced divine effects
+                // Divine aura rings
+                for (let ring = 0; ring < 2; ring++) {
+                    const ringProgress = ((animTime * 2 + ring * 0.5) % 1);
+                    const ringRadius = size * (0.8 + ringProgress * 0.8);
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.globalAlpha = (1 - ringProgress) * 0.4;
+                    ctx.lineWidth = 2;
+                    ctx.shadowColor = '#ffff88';
+                    ctx.shadowBlur = 10;
+                    ctx.beginPath();
+                    ctx.arc(x, y, ringRadius, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1;
 
-            const magicGlow = ctx.createRadialGradient(x, y, 0, x, y, size * 1.3 * pulse);
-            magicGlow.addColorStop(0, 'rgba(180, 130, 255, 0.5)');
-            magicGlow.addColorStop(0.5, 'rgba(130, 80, 220, 0.25)');
-            magicGlow.addColorStop(1, 'rgba(100, 50, 200, 0)');
-            ctx.fillStyle = magicGlow;
-            ctx.beginPath();
-            ctx.arc(x, y, size * 1.3 * pulse, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Orbiting sparkles
-            const orbitTime = Date.now() / 150;
-            for (let i = 0; i < 3; i++) {
-                const sparkAngle = orbitTime + (i * Math.PI * 2 / 3);
-                const sparkDist = size * 0.7;
-                const sx = x + Math.cos(sparkAngle) * sparkDist;
-                const sy = y + Math.sin(sparkAngle) * sparkDist;
-                ctx.fillStyle = '#ffffff';
-                ctx.globalAlpha = 0.7;
+                // Brilliant outer glow
+                ctx.shadowColor = '#ffffff';
+                ctx.shadowBlur = 20 * pulse;
+                const holyGlow = ctx.createRadialGradient(x, y, 0, x, y, size * 1.5 * pulse);
+                holyGlow.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
+                holyGlow.addColorStop(0.4, 'rgba(255, 255, 200, 0.4)');
+                holyGlow.addColorStop(0.7, 'rgba(255, 255, 136, 0.2)');
+                holyGlow.addColorStop(1, 'rgba(255, 255, 100, 0)');
+                ctx.fillStyle = holyGlow;
                 ctx.beginPath();
-                ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+                ctx.arc(x, y, size * 1.5 * pulse, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Light rays emanating
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(animTime * 3);
+                for (let ray = 0; ray < 6; ray++) {
+                    const rayAngle = ray * Math.PI / 3;
+                    const rayLength = size * 1.2 + Math.sin(animTime * 6 + ray) * size * 0.3;
+                    const rayGradient = ctx.createLinearGradient(0, 0, Math.cos(rayAngle) * rayLength, Math.sin(rayAngle) * rayLength);
+                    rayGradient.addColorStop(0, 'rgba(255, 255, 200, 0.6)');
+                    rayGradient.addColorStop(1, 'rgba(255, 255, 100, 0)');
+                    ctx.strokeStyle = rayGradient;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(rayAngle) * rayLength, Math.sin(rayAngle) * rayLength);
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                // Orbiting holy sparkles (more and faster)
+                const orbitTime = animTime * 6;
+                for (let i = 0; i < 5; i++) {
+                    const sparkAngle = orbitTime + (i * Math.PI * 2 / 5);
+                    const sparkDist = size * 0.8 + Math.sin(orbitTime * 2 + i) * 2;
+                    const sx = x + Math.cos(sparkAngle) * sparkDist;
+                    const sy = y + Math.sin(sparkAngle) * sparkDist;
+                    const sparkSize = 2 + Math.sin(orbitTime * 3 + i) * 0.5;
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.shadowColor = '#ffff88';
+                    ctx.shadowBlur = 6;
+                    ctx.globalAlpha = 0.8 + 0.2 * Math.sin(orbitTime * 4 + i);
+                    ctx.beginPath();
+                    // 4-pointed star
+                    ctx.save();
+                    ctx.translate(sx, sy);
+                    ctx.rotate(orbitTime + i);
+                    ctx.moveTo(0, -sparkSize);
+                    ctx.lineTo(sparkSize * 0.3, 0);
+                    ctx.lineTo(0, sparkSize);
+                    ctx.lineTo(-sparkSize * 0.3, 0);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                }
+                ctx.globalAlpha = 1;
+                ctx.shadowBlur = 0;
+
+                // Main orb (white with golden core)
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(x, y, size * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Golden inner core
+                ctx.fillStyle = '#ffd700';
+                ctx.beginPath();
+                ctx.arc(x, y, size * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Bright center highlight
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(x, y, size * 0.15, 0, Math.PI * 2);
+                ctx.fill();
+
+            } else {
+                // Normal Magic Wand
+                // Outer magic glow
+                ctx.shadowColor = proj.color || '#9966ff';
+                ctx.shadowBlur = 12;
+
+                const magicGlow = ctx.createRadialGradient(x, y, 0, x, y, size * 1.3 * pulse);
+                magicGlow.addColorStop(0, 'rgba(180, 130, 255, 0.5)');
+                magicGlow.addColorStop(0.5, 'rgba(130, 80, 220, 0.25)');
+                magicGlow.addColorStop(1, 'rgba(100, 50, 200, 0)');
+                ctx.fillStyle = magicGlow;
+                ctx.beginPath();
+                ctx.arc(x, y, size * 1.3 * pulse, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Orbiting sparkles
+                const orbitTime = animTime * 4;
+                for (let i = 0; i < 3; i++) {
+                    const sparkAngle = orbitTime + (i * Math.PI * 2 / 3);
+                    const sparkDist = size * 0.7;
+                    const sx = x + Math.cos(sparkAngle) * sparkDist;
+                    const sy = y + Math.sin(sparkAngle) * sparkDist;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.globalAlpha = 0.7;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+
+                // Main magic orb
+                ctx.fillStyle = proj.color || '#9966ff';
+                ctx.beginPath();
+                ctx.arc(x, y, size * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Inner bright core
+                ctx.fillStyle = '#ddbbff';
+                ctx.beginPath();
+                ctx.arc(x, y, size * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Highlight
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(x - size * 0.15, y - size * 0.15, size * 0.12, 0, Math.PI * 2);
                 ctx.fill();
             }
-            ctx.globalAlpha = 1;
-
-            // Main magic orb
-            ctx.fillStyle = proj.color || '#9966ff';
-            ctx.beginPath();
-            ctx.arc(x, y, size * 0.5, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Inner bright core
-            ctx.fillStyle = '#ddbbff';
-            ctx.beginPath();
-            ctx.arc(x, y, size * 0.3, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Highlight
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(x - size * 0.15, y - size * 0.15, size * 0.12, 0, Math.PI * 2);
-            ctx.fill();
 
             ctx.shadowBlur = 0;
         } else if (proj.type === 'knife') {
@@ -5895,6 +5998,73 @@ function drawAreaEffects() {
             ctx.closePath();
             ctx.fill();
 
+            // Bloody Tear special effects
+            if (isEvolved) {
+                const animTime = Date.now() / 1000;
+
+                // Blood drip particles along the whip
+                for (let drop = 0; drop < 5; drop++) {
+                    const dropT = (drop + 0.5) / 5;
+                    const dropPhase = (animTime * 2 + drop * 0.4) % 1.5;
+                    if (dropPhase < 1) {
+                        const dropX = startX + (endX - startX) * dropT;
+                        const dropWaveY = Math.sin(dropT * Math.PI * waveFrequency + animProgress * 5) * waveAmplitude * dropT;
+                        const dropY = effect.y + effect.height / 2 + dropWaveY + dropPhase * 15;
+                        const dropAlpha = alpha * (1 - dropPhase) * 0.8;
+
+                        ctx.globalAlpha = dropAlpha;
+                        ctx.fillStyle = '#aa0000';
+                        ctx.shadowColor = '#ff0000';
+                        ctx.shadowBlur = 4;
+                        // Blood drop shape (teardrop)
+                        ctx.beginPath();
+                        ctx.moveTo(dropX, dropY - 3);
+                        ctx.quadraticCurveTo(dropX + 2, dropY, dropX, dropY + 3);
+                        ctx.quadraticCurveTo(dropX - 2, dropY, dropX, dropY - 3);
+                        ctx.fill();
+                    }
+                }
+                ctx.shadowBlur = 0;
+
+                // Blood absorption effect (particles going towards player)
+                const playerDir = facingRight ? -1 : 1;
+                for (let absorb = 0; absorb < 3; absorb++) {
+                    const absorbPhase = (animTime * 3 + absorb * 0.3) % 1;
+                    const absorbT = 0.5 + absorb * 0.15;
+                    const absorbStartX = startX + (endX - startX) * absorbT;
+                    const absorbX = absorbStartX + playerDir * absorbPhase * 60;
+                    const absorbY = centerY + Math.sin(absorbPhase * Math.PI * 2) * 8 - absorbPhase * 10;
+                    const absorbAlpha = alpha * (1 - absorbPhase) * 0.6;
+                    const absorbSize = 3 * (1 - absorbPhase * 0.5);
+
+                    ctx.globalAlpha = absorbAlpha;
+                    ctx.fillStyle = '#ff4444';
+                    ctx.shadowColor = '#ff0000';
+                    ctx.shadowBlur = 6;
+                    ctx.beginPath();
+                    ctx.arc(absorbX, absorbY, absorbSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.shadowBlur = 0;
+
+                // Crimson aura around the whole whip
+                ctx.globalAlpha = alpha * 0.2 * (0.8 + 0.2 * Math.sin(animTime * 6));
+                ctx.strokeStyle = '#ff0000';
+                ctx.lineWidth = 8;
+                ctx.shadowColor = '#ff0000';
+                ctx.shadowBlur = 15;
+                ctx.beginPath();
+                ctx.moveTo(startX, centerY);
+                for (let i = 0; i <= 10; i++) {
+                    const t = i / 10;
+                    const x = startX + (endX - startX) * t;
+                    const waveY = Math.sin(t * Math.PI * waveFrequency + animProgress * 5) * waveAmplitude * t;
+                    ctx.lineTo(x, centerY + waveY);
+                }
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+
             ctx.shadowBlur = 0;
             ctx.globalAlpha = 1;
         } else if (effect.type === 'holywater') {
@@ -5902,50 +6072,121 @@ function drawAreaEffects() {
             const centerY = effect.y + effect.height / 2;
             const radiusX = effect.width / 2;
             const radiusY = effect.height / 2;
+            const animTime = Date.now() / 1000;
+            const isEvolved = effect.color === '#4444ff';
 
-            // Outer glow pulsing effect
-            const pulse = 1 + 0.2 * Math.sin(Date.now() / 100);
-            ctx.shadowColor = effect.color;
-            ctx.shadowBlur = 20 * alpha * pulse;
+            // Multiple expanding holy rings (blessing aura)
+            for (let ring = 0; ring < 3; ring++) {
+                const ringProgress = ((animTime * 0.8 + ring * 0.33) % 1);
+                const ringRadius = radiusX * (0.6 + ringProgress * 0.5);
+                const ringAlpha = alpha * (1 - ringProgress) * 0.4;
+
+                ctx.strokeStyle = isEvolved ? '#6666ff' : '#66ccff';
+                ctx.globalAlpha = ringAlpha;
+                ctx.lineWidth = 2;
+                ctx.shadowColor = effect.color;
+                ctx.shadowBlur = 10 * (1 - ringProgress);
+                ctx.beginPath();
+                ctx.ellipse(centerX, centerY, ringRadius, ringRadius * 0.6, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            ctx.shadowBlur = 0;
+
+            // Outer divine glow pulsing effect
+            const pulse = 1 + 0.25 * Math.sin(animTime * 6);
+            ctx.shadowColor = isEvolved ? '#8888ff' : '#88ddff';
+            ctx.shadowBlur = 25 * alpha * pulse;
             ctx.fillStyle = effect.color;
-            ctx.globalAlpha = alpha * 0.2;
+            ctx.globalAlpha = alpha * 0.15;
             ctx.beginPath();
-            ctx.ellipse(centerX, centerY, radiusX * 1.3, radiusY * 1.3, 0, 0, Math.PI * 2);
+            ctx.ellipse(centerX, centerY, radiusX * 1.4, radiusY * 1.4, 0, 0, Math.PI * 2);
             ctx.fill();
             ctx.shadowBlur = 0;
 
-            // Black outline (pixelated ellipse border)
+            // Black outline
             ctx.fillStyle = '#000000';
             ctx.globalAlpha = alpha * 0.8;
             ctx.beginPath();
             ctx.ellipse(centerX, centerY, radiusX + 3, radiusY + 3, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Main holy water pool
-            ctx.fillStyle = effect.color;
-            ctx.globalAlpha = alpha * 0.6;
+            // Main holy water pool with gradient
+            const poolGradient = ctx.createRadialGradient(
+                centerX, centerY - radiusY * 0.2, 0,
+                centerX, centerY, radiusX
+            );
+            if (isEvolved) {
+                poolGradient.addColorStop(0, 'rgba(136, 136, 255, 0.9)');
+                poolGradient.addColorStop(0.5, 'rgba(68, 68, 255, 0.7)');
+                poolGradient.addColorStop(1, 'rgba(34, 34, 170, 0.5)');
+            } else {
+                poolGradient.addColorStop(0, 'rgba(170, 221, 255, 0.9)');
+                poolGradient.addColorStop(0.5, 'rgba(68, 170, 255, 0.7)');
+                poolGradient.addColorStop(1, 'rgba(34, 136, 204, 0.5)');
+            }
+            ctx.fillStyle = poolGradient;
+            ctx.globalAlpha = alpha * 0.7;
             ctx.beginPath();
             ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Inner lighter gradient
-            ctx.fillStyle = '#aaddff';
-            ctx.globalAlpha = alpha * 0.4;
-            ctx.beginPath();
-            ctx.ellipse(centerX, centerY - radiusY * 0.2, radiusX * 0.6, radiusY * 0.5, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Bubble/sparkle effects
-            ctx.fillStyle = '#ffffff';
-            ctx.globalAlpha = alpha * 0.8;
-            const bubbleTime = Date.now() / 200;
-            for (let i = 0; i < 5; i++) {
-                const bubbleAngle = (i / 5) * Math.PI * 2 + bubbleTime;
-                const bubbleR = radiusX * 0.4 * (0.5 + 0.5 * Math.sin(bubbleTime + i));
-                const bx = centerX + Math.cos(bubbleAngle) * bubbleR;
-                const by = centerY + Math.sin(bubbleAngle) * bubbleR * 0.6;
-                ctx.fillRect(bx - 1, by - 1, 3, 3);
+            // Water surface ripples
+            ctx.strokeStyle = isEvolved ? '#aaaaff' : '#aaddff';
+            ctx.lineWidth = 1;
+            for (let ripple = 0; ripple < 3; ripple++) {
+                const rippleProgress = ((animTime * 1.5 + ripple * 0.33) % 1);
+                const rippleRadius = radiusX * rippleProgress * 0.8;
+                ctx.globalAlpha = alpha * (1 - rippleProgress) * 0.4;
+                ctx.beginPath();
+                ctx.ellipse(centerX, centerY, rippleRadius, rippleRadius * 0.5, 0, 0, Math.PI * 2);
+                ctx.stroke();
             }
+
+            // Glowing cross symbol in center
+            ctx.shadowColor = isEvolved ? '#ffffff' : '#ffff88';
+            ctx.shadowBlur = 12 * alpha;
+            ctx.fillStyle = isEvolved ? '#ddddff' : '#ffffff';
+            ctx.globalAlpha = alpha * (0.5 + 0.2 * Math.sin(animTime * 4));
+            const crossSize = radiusX * 0.3;
+            ctx.fillRect(centerX - 1.5, centerY - crossSize, 3, crossSize * 2);
+            ctx.fillRect(centerX - crossSize * 0.6, centerY - 1.5, crossSize * 1.2, 3);
+            ctx.shadowBlur = 0;
+
+            // Rising holy light particles
+            ctx.fillStyle = '#ffffff';
+            for (let i = 0; i < 8; i++) {
+                const particlePhase = (animTime * 2 + i * 0.4) % 2;
+                if (particlePhase < 1.2) {
+                    const px = centerX + Math.cos(i * Math.PI * 2 / 8 + animTime * 0.5) * radiusX * 0.5;
+                    const py = centerY - particlePhase * radiusY * 1.2;
+                    const pAlpha = alpha * (1 - particlePhase / 1.2) * 0.8;
+                    ctx.globalAlpha = pAlpha;
+                    ctx.shadowColor = effect.color;
+                    ctx.shadowBlur = 6;
+                    ctx.beginPath();
+                    ctx.arc(px, py, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            ctx.shadowBlur = 0;
+
+            // Orbiting sparkle bubbles
+            ctx.fillStyle = '#ffffff';
+            const bubbleTime = animTime * 3;
+            for (let i = 0; i < 6; i++) {
+                const bubbleAngle = (i / 6) * Math.PI * 2 + bubbleTime;
+                const bubbleR = radiusX * 0.6 * (0.6 + 0.3 * Math.sin(bubbleTime * 0.5 + i));
+                const bx = centerX + Math.cos(bubbleAngle) * bubbleR;
+                const by = centerY + Math.sin(bubbleAngle) * bubbleR * 0.5;
+                const bobble = Math.sin(bubbleTime * 2 + i) * 2;
+                ctx.globalAlpha = alpha * (0.5 + 0.3 * Math.sin(bubbleTime + i));
+                ctx.shadowColor = '#ffffff';
+                ctx.shadowBlur = 4;
+                ctx.beginPath();
+                ctx.arc(bx, by + bobble, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.shadowBlur = 0;
             ctx.globalAlpha = 1;
         } else if (effect.type === 'explosion') {
             const centerX = effect.x + effect.width / 2;
@@ -6411,64 +6652,204 @@ function drawOrbitingWeapons() {
 }
 
 function drawBibleOrbits() {
+    const animTime = Date.now() / 1000;
+
+    // Draw orbit trail ring around player
+    if (bibleOrbits.length > 0) {
+        const orbitDistance = bibleOrbits[0].distance;
+        const isEvolved = bibleOrbits[0].color === '#ffaa00';
+
+        // Outer orbit ring glow
+        ctx.save();
+        ctx.translate(player.x, player.y);
+
+        // Pulsing orbit path
+        const orbitPulse = 1 + 0.1 * Math.sin(animTime * 4);
+        ctx.strokeStyle = isEvolved ? 'rgba(255, 200, 100, 0.2)' : 'rgba(255, 255, 200, 0.15)';
+        ctx.lineWidth = 8 * orbitPulse;
+        ctx.shadowColor = isEvolved ? '#ffaa00' : '#ffff88';
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        ctx.arc(0, 0, orbitDistance, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Inner dashed orbit ring
+        ctx.strokeStyle = isEvolved ? 'rgba(255, 170, 0, 0.4)' : 'rgba(255, 255, 136, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 10]);
+        ctx.lineDashOffset = -animTime * 30;
+        ctx.beginPath();
+        ctx.arc(0, 0, orbitDistance, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.restore();
+    }
+
     for (const bible of bibleOrbits) {
         const x = player.x + Math.cos(bible.angle) * bible.distance;
         const y = player.y + Math.sin(bible.angle) * bible.distance;
-        const rotation = bible.angle * 0.5 + Date.now() / 200;
+        const rotation = bible.angle * 0.5 + animTime * 5;
+        const isEvolved = bible.color === '#ffaa00';
+
+        // Draw motion trail behind bible
+        for (let trail = 3; trail > 0; trail--) {
+            const trailAngle = bible.angle - trail * 0.15;
+            const tx = player.x + Math.cos(trailAngle) * bible.distance;
+            const ty = player.y + Math.sin(trailAngle) * bible.distance;
+            ctx.globalAlpha = 0.15 * (4 - trail) / 3;
+            ctx.fillStyle = bible.color;
+            ctx.shadowColor = bible.color;
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(tx, ty, 8 - trail, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
 
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(rotation);
 
-        // Holy glow effect
-        ctx.shadowColor = bible.color;
-        ctx.shadowBlur = 15;
-
-        // Outer glow ring
-        const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 18);
-        glowGradient.addColorStop(0, 'rgba(255, 255, 200, 0.4)');
-        glowGradient.addColorStop(1, 'rgba(255, 255, 100, 0)');
-        ctx.fillStyle = glowGradient;
-        ctx.beginPath();
-        ctx.arc(0, 0, 18, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Black outline
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(-7, -9, 14, 18);
-
-        // Book cover
-        ctx.fillStyle = bible.color;
-        ctx.fillRect(-6, -8, 12, 16);
-
-        // Pages (white)
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(-5, -7, 10, 14);
-
-        // Spine
-        ctx.fillStyle = bible.color;
-        ctx.fillRect(-1, -7, 2, 14);
-
-        // Cross on cover
-        ctx.fillStyle = '#ffd700';
-        ctx.fillRect(-0.5, -5, 1, 6);
-        ctx.fillRect(-2, -3.5, 4, 1);
-
-        // Sparkle particles orbiting the bible
-        ctx.fillStyle = '#ffffff';
-        const sparkleTime = Date.now() / 300;
-        for (let i = 0; i < 3; i++) {
-            const sparkAngle = sparkleTime + i * (Math.PI * 2 / 3);
-            const sparkR = 12 + Math.sin(sparkleTime * 2 + i) * 3;
-            const sx = Math.cos(sparkAngle) * sparkR;
-            const sy = Math.sin(sparkAngle) * sparkR;
-            ctx.globalAlpha = 0.8;
-            ctx.fillRect(sx - 1, sy - 1, 2, 2);
+        // Divine light rays emanating from bible
+        if (isEvolved) {
+            ctx.save();
+            for (let ray = 0; ray < 6; ray++) {
+                const rayAngle = ray * Math.PI / 3 + animTime * 2;
+                const rayLength = 20 + Math.sin(animTime * 4 + ray) * 5;
+                const rayGradient = ctx.createLinearGradient(0, 0, Math.cos(rayAngle) * rayLength, Math.sin(rayAngle) * rayLength);
+                rayGradient.addColorStop(0, 'rgba(255, 215, 0, 0.5)');
+                rayGradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+                ctx.strokeStyle = rayGradient;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(Math.cos(rayAngle) * rayLength, Math.sin(rayAngle) * rayLength);
+                ctx.stroke();
+            }
+            ctx.restore();
         }
 
-        ctx.globalAlpha = 1;
+        // Enhanced holy glow effect
+        const glowPulse = 1 + 0.3 * Math.sin(animTime * 6);
+        ctx.shadowColor = isEvolved ? '#ffd700' : bible.color;
+        ctx.shadowBlur = 20 * glowPulse;
+
+        // Multi-layer outer glow
+        const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 22);
+        if (isEvolved) {
+            glowGradient.addColorStop(0, 'rgba(255, 215, 0, 0.6)');
+            glowGradient.addColorStop(0.5, 'rgba(255, 170, 0, 0.3)');
+            glowGradient.addColorStop(1, 'rgba(255, 136, 0, 0)');
+        } else {
+            glowGradient.addColorStop(0, 'rgba(255, 255, 200, 0.5)');
+            glowGradient.addColorStop(0.5, 'rgba(255, 255, 136, 0.25)');
+            glowGradient.addColorStop(1, 'rgba(255, 255, 100, 0)');
+        }
+        ctx.fillStyle = glowGradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, 22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Black outline
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(-8, -10, 16, 20);
+
+        // Book cover with gradient
+        const coverGradient = ctx.createLinearGradient(-6, 0, 6, 0);
+        if (isEvolved) {
+            coverGradient.addColorStop(0, '#cc8800');
+            coverGradient.addColorStop(0.5, '#ffaa00');
+            coverGradient.addColorStop(1, '#cc8800');
+        } else {
+            coverGradient.addColorStop(0, '#dddd66');
+            coverGradient.addColorStop(0.5, '#ffff88');
+            coverGradient.addColorStop(1, '#dddd66');
+        }
+        ctx.fillStyle = coverGradient;
+        ctx.fillRect(-7, -9, 14, 18);
+
+        // Pages with slight animation (flipping effect)
+        const pageOffset = Math.sin(animTime * 8) * 0.5;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-5 + pageOffset, -8, 10, 16);
+
+        // Page lines
+        ctx.strokeStyle = '#dddddd';
+        ctx.lineWidth = 0.5;
+        for (let line = 0; line < 4; line++) {
+            ctx.beginPath();
+            ctx.moveTo(-4 + pageOffset, -6 + line * 4);
+            ctx.lineTo(4 + pageOffset, -6 + line * 4);
+            ctx.stroke();
+        }
+
+        // Spine with gold trim
+        ctx.fillStyle = isEvolved ? '#cc6600' : '#cccc44';
+        ctx.fillRect(-1.5, -8, 3, 16);
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(-0.5, -8, 1, 16);
+
+        // Ornate cross on cover
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 6;
+        ctx.fillStyle = '#ffd700';
+        // Vertical bar
+        ctx.fillRect(-1, -6, 2, 8);
+        // Horizontal bar
+        ctx.fillRect(-3, -4, 6, 2);
+        // Cross gem center
+        ctx.fillStyle = isEvolved ? '#ff4444' : '#ffffff';
+        ctx.beginPath();
+        ctx.arc(0, -3, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Corner ornaments
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(-6, -8, 2, 2);
+        ctx.fillRect(4, -8, 2, 2);
+        ctx.fillRect(-6, 6, 2, 2);
+        ctx.fillRect(4, 6, 2, 2);
+
         ctx.restore();
+
+        // Orbiting holy sparkles with varied sizes
+        const sparkleTime = animTime * 3;
+        for (let i = 0; i < 5; i++) {
+            const sparkAngle = sparkleTime + i * (Math.PI * 2 / 5);
+            const sparkR = 14 + Math.sin(sparkleTime * 2 + i * 1.5) * 4;
+            const sx = x + Math.cos(sparkAngle) * sparkR;
+            const sy = y + Math.sin(sparkAngle) * sparkR;
+            const sparkSize = 1.5 + Math.sin(sparkleTime * 3 + i) * 0.5;
+
+            ctx.save();
+            ctx.translate(sx, sy);
+            ctx.rotate(sparkleTime * 2 + i);
+
+            // Star-shaped sparkle
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = '#ffd700';
+            ctx.shadowBlur = 4;
+            ctx.globalAlpha = 0.7 + 0.3 * Math.sin(sparkleTime * 4 + i);
+            ctx.beginPath();
+            for (let point = 0; point < 4; point++) {
+                const angle = point * Math.PI / 2;
+                const outerR = sparkSize * 2;
+                const innerR = sparkSize * 0.5;
+                ctx.lineTo(Math.cos(angle) * outerR, Math.sin(angle) * outerR);
+                ctx.lineTo(Math.cos(angle + Math.PI / 4) * innerR, Math.sin(angle + Math.PI / 4) * innerR);
+            }
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+        }
+        ctx.globalAlpha = 1;
+        ctx.shadowBlur = 0;
     }
 }
 
