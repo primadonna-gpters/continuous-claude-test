@@ -115,11 +115,35 @@ h1 {
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.2s, opacity 0.2s;
+    transition: background-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+#new-game-btn::before, #retry-btn::before, #keep-playing-btn::before, #undo-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.4s ease;
 }
 
 #new-game-btn:hover, #retry-btn:hover, #keep-playing-btn:hover, #undo-btn:hover:not(.disabled) {
     background-color: #9f8b77;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+#new-game-btn:hover::before, #retry-btn:hover::before, #keep-playing-btn:hover::before, #undo-btn:hover:not(.disabled)::before {
+    left: 100%;
+}
+
+#new-game-btn:active, #retry-btn:active, #keep-playing-btn:active, #undo-btn:active:not(.disabled) {
+    transform: translateY(0);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
 #undo-btn.disabled {
@@ -138,11 +162,13 @@ h1 {
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.3s ease;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    transform-style: preserve-3d;
+    perspective: 1000px;
 }
 
 #game-container:hover {
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
 }
 
 #grid-background {
@@ -192,36 +218,39 @@ h1 {
     font-weight: bold;
     border-radius: 6px;
     transition: top 0.15s ease-in-out, left 0.15s ease-in-out;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
 }
 
 .tile-new {
-    animation: appear 0.2s ease-in-out;
+    animation: appear3d 0.25s ease-out;
 }
 
 .tile-merged {
-    animation: pop 0.2s ease-in-out;
+    animation: pop3d 0.25s ease-out;
 }
 
-@keyframes appear {
+@keyframes appear3d {
     0% {
         opacity: 0;
-        transform: scale(0);
+        transform: scale(0) rotateY(-180deg) translateZ(20px);
     }
     100% {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(1) rotateY(0) translateZ(0);
     }
 }
 
-@keyframes pop {
+@keyframes pop3d {
     0% {
-        transform: scale(1);
+        transform: scale(1) translateZ(0);
     }
     50% {
-        transform: scale(1.2);
+        transform: scale(1.15) translateZ(15px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     }
     100% {
-        transform: scale(1);
+        transform: scale(1) translateZ(0);
     }
 }
 
@@ -300,12 +329,41 @@ h1 {
     gap: 20px;
     border-radius: 6px;
     z-index: 100;
+    animation: messageAppear 0.4s ease-out;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+@keyframes messageAppear {
+    0% {
+        opacity: 0;
+        transform: perspective(1000px) translateZ(-50px);
+    }
+    100% {
+        opacity: 1;
+        transform: perspective(1000px) translateZ(0);
+    }
 }
 
 #game-message p {
     font-size: 48px;
     font-weight: bold;
     color: #776e65;
+    animation: messageTextPop 0.5s ease-out 0.2s both;
+}
+
+@keyframes messageTextPop {
+    0% {
+        opacity: 0;
+        transform: scale(0.5) translateY(20px);
+    }
+    60% {
+        transform: scale(1.1) translateY(-5px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 #game-message.game-won {
@@ -634,5 +692,29 @@ body.dark-mode .dark-icon {
 
     #game-message p {
         font-size: 32px;
+    }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .tile-new,
+    .tile-merged,
+    #game-message,
+    #game-message p {
+        animation: none !important;
+    }
+
+    #new-game-btn:hover,
+    #retry-btn:hover,
+    #keep-playing-btn:hover,
+    #undo-btn:hover:not(.disabled) {
+        transform: none;
+    }
+
+    #new-game-btn::before,
+    #retry-btn::before,
+    #keep-playing-btn::before,
+    #undo-btn::before {
+        display: none;
     }
 }

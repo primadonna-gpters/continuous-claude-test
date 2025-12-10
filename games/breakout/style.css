@@ -120,11 +120,35 @@ h1 {
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.2s, opacity 0.2s;
+    transition: background-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+#new-game-btn::before, #retry-btn::before, #pause-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.4s ease;
 }
 
 #new-game-btn:hover, #retry-btn:hover, #pause-btn:hover {
     background-color: #f39c12;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+#new-game-btn:hover::before, #retry-btn:hover::before, #pause-btn:hover::before {
+    left: 100%;
+}
+
+#new-game-btn:active, #retry-btn:active, #pause-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
 #pause-btn {
@@ -183,6 +207,20 @@ h1 {
     gap: 20px;
     border-radius: 6px;
     z-index: 100;
+    animation: messageAppear 0.4s ease-out;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+@keyframes messageAppear {
+    0% {
+        opacity: 0;
+        transform: perspective(1000px) translateZ(-50px);
+    }
+    100% {
+        opacity: 1;
+        transform: perspective(1000px) translateZ(0);
+    }
 }
 
 #game-message p, #start-message p {
@@ -191,6 +229,21 @@ h1 {
     color: #f9f6f2;
     text-align: center;
     white-space: pre-line;
+    animation: messageTextPop 0.5s ease-out 0.2s both;
+}
+
+@keyframes messageTextPop {
+    0% {
+        opacity: 0;
+        transform: scale(0.5) translateY(20px);
+    }
+    60% {
+        transform: scale(1.1) translateY(-5px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 .hidden {
@@ -479,5 +532,27 @@ body.dark-mode .dark-icon {
 @media (hover: none) and (pointer: coarse) {
     .mobile-controls {
         display: flex;
+    }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    #game-message,
+    #start-message,
+    #game-message p,
+    #start-message p {
+        animation: none !important;
+    }
+
+    #new-game-btn:hover,
+    #retry-btn:hover,
+    #pause-btn:hover {
+        transform: none;
+    }
+
+    #new-game-btn::before,
+    #retry-btn::before,
+    #pause-btn::before {
+        display: none;
     }
 }

@@ -289,6 +289,20 @@ h1 {
     gap: 20px;
     border-radius: 6px;
     z-index: 100;
+    animation: messageAppear 0.5s ease-out;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+@keyframes messageAppear {
+    0% {
+        opacity: 0;
+        transform: perspective(1000px) translateZ(-100px) scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: perspective(1000px) translateZ(0) scale(1);
+    }
 }
 
 #game-message h2 {
@@ -1841,5 +1855,31 @@ body.light-mode .dark-icon {
     .achievement-item .ach-icon {
         font-size: 26px;
         min-width: 36px;
+    }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    body.animated-bg {
+        animation: none !important;
+    }
+
+    #game-message,
+    #start-message,
+    #game-message h2,
+    .title-logo {
+        animation: none !important;
+    }
+
+    #new-game-btn:hover,
+    #retry-btn:hover,
+    #pause-btn:hover {
+        transform: none;
+    }
+
+    .level-up-popup,
+    .damage-popup,
+    .xp-text {
+        animation: none !important;
     }
 }
