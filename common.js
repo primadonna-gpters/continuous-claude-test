@@ -143,7 +143,140 @@ class GameAnimations {
 // Create a singleton instance
 const gameAnimations = new GameAnimations();
 
+/**
+ * Page Transition Manager for 3D page transitions
+ */
+class TransitionManager {
+    constructor() {
+        this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        this.transitionContainer = null;
+    }
+
+    /**
+     * Navigate to a new page with 3D transition
+     * @param {string} url - The URL to navigate to
+     * @param {string} transitionType - Type of transition ('zoom', 'slide', 'default')
+     * @param {HTMLElement} sourceElement - The element that triggered the navigation (for zoom effect)
+     */
+    navigateTo(url, transitionType = 'default', sourceElement = null) {
+        if (this.prefersReducedMotion) {
+            window.location.href = url;
+            return;
+        }
+
+        // Create transition overlay
+        this.createTransitionOverlay(transitionType, sourceElement);
+
+        // Animate current page out
+        const pageContainer = document.querySelector('.game-container, .hub-container, main, body > div');
+        if (pageContainer) {
+            const exitClass = transitionType === 'zoom' ? 'page-zoom-exit' : 'page-exit';
+            pageContainer.classList.add(exitClass);
+        }
+
+        // Navigate after animation completes
+        setTimeout(() => {
+            window.location.href = url;
+        }, 350);
+    }
+
+    /**
+     * Create transition overlay for card-to-page zoom effect
+     */
+    createTransitionOverlay(transitionType, sourceElement) {
+        if (transitionType !== 'zoom' || !sourceElement) return;
+
+        const rect = sourceElement.getBoundingClientRect();
+        const overlay = document.createElement('div');
+        overlay.className = 'transition-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: ${rect.top}px;
+            left: ${rect.left}px;
+            width: ${rect.width}px;
+            height: ${rect.height}px;
+            background: ${window.getComputedStyle(sourceElement).background};
+            border-radius: ${window.getComputedStyle(sourceElement).borderRadius};
+            z-index: 9999;
+            pointer-events: none;
+            animation: cardToPage 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        `;
+
+        // Add keyframes dynamically if not already present
+        if (!document.getElementById('transition-keyframes')) {
+            const style = document.createElement('style');
+            style.id = 'transition-keyframes';
+            style.textContent = `
+                @keyframes cardToPage {
+                    from {
+                        top: ${rect.top}px;
+                        left: ${rect.left}px;
+                        width: ${rect.width}px;
+                        height: ${rect.height}px;
+                        opacity: 1;
+                    }
+                    to {
+                        top: 0;
+                        left: 0;
+                        width: 100vw;
+                        height: 100vh;
+                        opacity: 0.8;
+                        border-radius: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(overlay);
+        this.transitionContainer = overlay;
+    }
+
+    /**
+     * Apply page enter animation
+     * @param {HTMLElement} element - The page container element
+     * @param {string} transitionType - Type of transition
+     */
+    applyEnterAnimation(element, transitionType = 'default') {
+        if (this.prefersReducedMotion || !element) return;
+
+        const enterClass = transitionType === 'zoom' ? 'page-zoom-enter' : 'page-enter';
+        element.classList.add(enterClass);
+
+        element.addEventListener('animationend', () => {
+            element.classList.remove(enterClass);
+        }, { once: true });
+    }
+
+    /**
+     * Initialize page enter animation on load
+     */
+    initPageEnter() {
+        if (this.prefersReducedMotion) return;
+
+        const pageContainer = document.querySelector('.game-container, .hub-container, main');
+        if (pageContainer) {
+            // Check if coming from hub (detect referrer or sessionStorage)
+            const fromHub = sessionStorage.getItem('from-hub') === 'true';
+            const transitionType = fromHub ? 'zoom' : 'default';
+            sessionStorage.removeItem('from-hub');
+
+            this.applyEnterAnimation(pageContainer, transitionType);
+        }
+    }
+}
+
+// Create singleton instance
+const transitionManager = new TransitionManager();
+
+// Initialize page enter animation when DOM is ready
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        transitionManager.initPageEnter();
+    });
+}
+
 // Export for testing (CommonJS compatible)
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { recordRecentPlay, GameAnimations, gameAnimations };
+    module.exports = { recordRecentPlay, GameAnimations, gameAnimations, TransitionManager, transitionManager };
 }
