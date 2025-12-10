@@ -267,4 +267,178 @@ None. The implementation is solid and ready for merge.
 
 APPROVED_FOR_MERGE
 
+---
+
+# Implementation Plan: Game Page UI Update (Phase 4)
+
+## Overview
+허브 페이지에 적용된 현대적 UI 요소(글래스모피즘, 애니메이션, 다크모드 개선)를 개별 게임 페이지에도 일관되게 적용합니다.
+
+## Current Analysis
+- 허브 페이지: 글래스모피즘, 3D 틸트, 애니메이션 그라데이션 배경 적용됨
+- 게임 페이지들: 기본 스타일만 적용, 현대적 UI 요소 부재
+
+## Steps
+
+### Part 1: 공통 스타일 개선
+
+1. [x] Step 1: 게임 페이지용 공통 CSS 파일 생성
+   - Files: `common.css` (새 파일)
+   - Criteria: 모든 게임에서 재사용 가능한 스타일 정의
+   - Contents:
+     - 애니메이션 그라데이션 배경
+     - 글래스모피즘 스타일 컴포넌트
+     - 버튼 호버 효과
+     - 다크모드 공통 스타일
+
+2. [x] Step 2: 각 게임 HTML에 common.css 링크 추가
+   - Files: 7개 게임의 index.html 파일
+   - Criteria: `<link rel="stylesheet" href="../../common.css">`
+
+### Part 2: 개별 게임 UI 개선
+
+3. [x] Step 3: 2048 게임 UI 개선
+   - Files: `games/2048/style.css`
+   - Criteria: 애니메이션 배경, 글래스모피즘 카드, 개선된 버튼 스타일
+
+4. [x] Step 4: Snake 게임 UI 개선
+   - Files: `games/snake/style.css`
+   - Criteria: 일관된 스타일 적용
+
+5. [x] Step 5: Minesweeper 게임 UI 개선
+   - Files: `games/minesweeper/style.css`
+   - Criteria: 일관된 스타일 적용
+
+6. [x] Step 6: Tetris 게임 UI 개선
+   - Files: `games/tetris/style.css`
+   - Criteria: 일관된 스타일 적용
+
+7. [x] Step 7: Breakout 게임 UI 개선
+   - Files: `games/breakout/style.css`
+   - Criteria: 일관된 스타일 적용
+
+8. [x] Step 8: Memory 게임 UI 개선
+   - Files: `games/memory/style.css`
+   - Criteria: 일관된 스타일 적용
+
+9. [x] Step 9: Survivor 게임 UI 개선
+   - Files: `games/survivor/style.css`
+   - Criteria: 일관된 스타일 적용
+
+### Part 3: 추가 개선
+
+10. [x] Step 10: 뒤로가기 버튼 개선
+    - Files: 모든 게임 index.html
+    - Criteria: back-btn-enhanced 클래스 추가, 호버 애니메이션
+
+11. [x] Step 11: 반응형 디자인 검증
+    - Files: 모든 게임 style.css
+    - Criteria: 모바일/태블릿/데스크탑 일관된 경험
+
+12. [x] Step 12: 접근성 검증
+    - Files: common.css
+    - Criteria: prefers-reduced-motion 존중, 충분한 색상 대비
+
+## Design Specifications
+
+### 1. 애니메이션 배경 (Animation Background)
+```css
+background: linear-gradient(-45deg, #faf8ef, #f5e6d3, #e8d5c4, #faf8ef);
+background-size: 400% 400%;
+animation: gradientShift 15s ease infinite;
+```
+
+### 2. 글래스모피즘 (Glassmorphism)
+```css
+background: linear-gradient(135deg, rgba(187, 173, 160, 0.9) 0%, rgba(187, 173, 160, 0.7) 100%);
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+border: 1px solid rgba(255, 255, 255, 0.3);
+```
+
+### 3. 버튼 호버 효과
+```css
+transition: transform 0.2s ease, box-shadow 0.2s ease;
+&:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+```
+
+### 4. 다크모드 배경
+```css
+background: linear-gradient(-45deg, #1a1a2e, #16213e, #0f3460, #1a1a2e);
+background-size: 400% 400%;
+animation: gradientShift 15s ease infinite;
+```
+
+## Notes for Developer
+- 허브 페이지(style.css)와 일관된 디자인 언어 유지
+- 게임 플레이에 방해가 되지 않도록 적절한 애니메이션 사용
+- 성능 최적화: will-change 속성 적절히 사용
+- prefers-reduced-motion 미디어 쿼리 존중
+
+## Acceptance Criteria
+- [x] 모든 게임 페이지에 애니메이션 그라데이션 배경 적용
+- [x] 헤더, 점수 박스, 버튼에 글래스모피즘 스타일 적용
+- [x] 다크모드에서 일관된 스타일 유지
+- [x] 반응형 디자인 정상 작동
+- [x] 접근성 요구사항 충족 (reduced-motion)
+- [x] 기존 테스트 통과
+
+---
+
+## Developer Notes (2025-12-10) - Phase 4 Implementation
+
+### Completed Changes
+
+#### 1. common.css (새 파일)
+- `@keyframes gradientShift` 애니메이션 정의
+- `body.animated-bg` 클래스로 애니메이션 배경 적용
+- `body.dark-mode.animated-bg` 다크모드 배경
+- `.glass`, `.back-btn-enhanced`, `.btn-enhanced` 글래스모피즘 클래스
+- `.score-box-glass`, `.game-container-glass`, `.header-glass` 컴포넌트 스타일
+- `.title-glow`, `.fade-in` 애니메이션
+- `@media (prefers-reduced-motion: reduce)` 접근성 지원
+
+#### 2. 각 게임 index.html 업데이트
+- `<link rel="stylesheet" href="../../common.css">` 추가
+- `<body class="animated-bg">` 클래스 추가
+- `<div class="container fade-in">` 클래스 추가
+- `class="back-btn back-btn-enhanced"` 클래스 추가
+
+#### 3. 각 게임 style.css 업데이트
+- **2048**: 베이지/갈색 테마 그라데이션 배경
+- **Snake**: 녹색 테마 그라데이션 배경
+- **Minesweeper**: 블루그레이 테마 그라데이션 배경
+- **Tetris**: 보라색 테마 그라데이션 배경
+- **Breakout**: 오렌지 테마 그라데이션 배경
+- **Memory**: 보라색 테마 그라데이션 배경
+- **Survivor**: 다크레드 테마 그라데이션 배경
+
+각 게임에 적용된 스타일:
+- `.score-box`에 글래스모피즘 + 호버 효과
+- `#game-container`에 글래스모피즘 + 호버 효과
+- 다크모드 변형 스타일
+- 게임별 고유 색상 테마 유지
+
+### Test Results
+```
+Test Suites: 1 passed, 1 total
+Tests:       46 passed, 46 total
+Time:        0.445s
+```
+
+모든 기존 테스트 통과 확인.
+
+### Notes for Tester
+- 각 게임 페이지에서 애니메이션 그라데이션 배경이 부드럽게 움직이는지 확인
+- 점수 박스, 게임 컨테이너 호버 시 미묘한 lift 효과 확인
+- 다크모드 토글 시 배경 색상이 적절히 변경되는지 확인
+- 뒤로가기 버튼 호버 시 슬라이드 효과 확인
+- `prefers-reduced-motion: reduce` 설정 시 모든 애니메이션 비활성화 확인
+- 모바일에서 터치 시 호버 효과가 적절히 동작하는지 확인
+
+---
+
 AGENT_TASK_COMPLETE

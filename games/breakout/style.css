@@ -14,6 +14,12 @@ body {
     align-items: center;
 }
 
+/* Animated background override - Breakout orange theme */
+body.animated-bg {
+    background: linear-gradient(-45deg, #fef5e7, #fdebd0, #fadbd8, #fef5e7);
+    background-size: 400% 400%;
+}
+
 .container {
     max-width: 600px;
     padding: 20px;
@@ -60,12 +66,21 @@ h1 {
 }
 
 .score-box {
-    background-color: #e67e22;
+    background: linear-gradient(135deg, rgba(230, 126, 34, 0.95) 0%, rgba(230, 126, 34, 0.8) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
     padding: 10px 25px;
     border-radius: 6px;
     text-align: center;
     min-width: 80px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.score-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .score-label {
@@ -132,9 +147,18 @@ h1 {
     position: relative;
     width: 480px;
     height: 400px;
-    background-color: #1a1a2e;
-    border-radius: 6px;
+    background: linear-gradient(135deg, rgba(26, 26, 46, 0.98) 0%, rgba(26, 26, 46, 0.92) 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(230, 126, 34, 0.3);
+    border-radius: 12px;
     overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    transition: box-shadow 0.3s ease;
+}
+
+#game-container:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
 }
 
 #game-canvas {
@@ -290,6 +314,11 @@ body.dark-mode {
     background-color: #1a1a2e;
 }
 
+body.dark-mode.animated-bg {
+    background: linear-gradient(-45deg, #1a1a2e, #2e1a0a, #1a2a1a, #1a1a2e);
+    background-size: 400% 400%;
+}
+
 body.dark-mode .container {
     color: #eee4da;
 }
@@ -307,7 +336,12 @@ body.dark-mode .back-btn:hover {
 }
 
 body.dark-mode .score-box {
-    background-color: #b35a1a;
+    background: linear-gradient(135deg, rgba(179, 90, 26, 0.95) 0%, rgba(179, 90, 26, 0.8) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .score-box:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 body.dark-mode .level-info {
