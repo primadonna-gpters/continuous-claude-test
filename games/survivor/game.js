@@ -2693,10 +2693,13 @@ function fireWhip(damage, area, evolved) {
     const width = 100 * area;
     const height = 40 * area;
     const offsetX = player.facingRight ? 20 : -20 - width;
+    const whipX = player.x + offsetX;
+    const whipY = player.y - height / 2;
+    const isEvolved = !!evolved;
 
     areaEffects.push({
-        x: player.x + offsetX,
-        y: player.y - height / 2,
+        x: whipX,
+        y: whipY,
         width: width,
         height: height,
         damage: damage,
@@ -2705,7 +2708,86 @@ function fireWhip(damage, area, evolved) {
         type: 'whip',
         healsOnKill: evolved?.healsOnKill || 0,
         critChance: evolved?.critChance || 0,
-        color: evolved ? '#ff4444' : '#ffcc00'
+        color: evolved ? '#ff4444' : '#ffcc00',
+        facingRight: player.facingRight,
+        evolved: isEvolved
+    });
+
+    // Spawn whip crack particles at the tip
+    const tipX = player.facingRight ? whipX + width : whipX;
+    const tipY = whipY + height / 2;
+    spawnWhipCrackParticles(tipX, tipY, player.facingRight, isEvolved);
+
+    // Screen shake for impact feel
+    addScreenShake(isEvolved ? 4 : 2, 0.1);
+
+    // Sound crack effect particles along the whip length
+    for (let i = 0; i < 5; i++) {
+        const t = i / 4;
+        const px = player.facingRight ? whipX + width * t : whipX + width * (1 - t);
+        const py = whipY + height / 2 + (Math.random() - 0.5) * height * 0.5;
+        spawnWhipTrailParticle(px, py, player.facingRight, isEvolved);
+    }
+}
+
+function spawnWhipCrackParticles(x, y, facingRight, evolved) {
+    // Whip crack spark burst at the tip
+    const sparkCount = evolved ? 12 : 8;
+    const baseColor = evolved ? '#ff6666' : '#ffdd44';
+    const accentColor = evolved ? '#ff2222' : '#ffffff';
+
+    for (let i = 0; i < sparkCount; i++) {
+        const angle = (facingRight ? 0 : Math.PI) + (Math.random() - 0.5) * Math.PI * 0.6;
+        const speed = 100 + Math.random() * 150;
+        effectParticles.push({
+            x: x + (Math.random() - 0.5) * 10,
+            y: y + (Math.random() - 0.5) * 10,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 30,
+            size: 3 + Math.random() * 4,
+            color: Math.random() < 0.3 ? accentColor : baseColor,
+            lifetime: 0.2 + Math.random() * 0.15,
+            maxLifetime: 0.35,
+            alpha: 1,
+            gravity: 100,
+            shrink: true,
+            type: 'whipCrack'
+        });
+    }
+
+    // Impact shockwave ring
+    effectParticles.push({
+        x: x,
+        y: y,
+        vx: 0,
+        vy: 0,
+        size: 5,
+        color: baseColor,
+        lifetime: 0.15,
+        maxLifetime: 0.15,
+        alpha: 0.8,
+        gravity: 0,
+        shrink: false,
+        type: 'whipShockwave',
+        evolved: evolved
+    });
+}
+
+function spawnWhipTrailParticle(x, y, facingRight, evolved) {
+    const baseColor = evolved ? '#ff8888' : '#ffee88';
+    effectParticles.push({
+        x: x,
+        y: y,
+        vx: (facingRight ? 1 : -1) * (20 + Math.random() * 30),
+        vy: (Math.random() - 0.5) * 40,
+        size: 2 + Math.random() * 3,
+        color: baseColor,
+        lifetime: 0.12 + Math.random() * 0.08,
+        maxLifetime: 0.2,
+        alpha: 0.7,
+        gravity: 0,
+        shrink: true,
+        type: 'whipTrail'
     });
 }
 
@@ -2902,6 +2984,8 @@ function fireCross(damage, amount, speed, pierce, area, evolved) {
 
 function fireGarlic(damage, area, evolved) {
     const radius = 50 * area;
+    const isEvolved = !!evolved;
+    let hitCount = 0;
 
     for (const enemy of enemies) {
         const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
@@ -2909,9 +2993,16 @@ function fireGarlic(damage, area, evolved) {
             const actualDamage = damage;
             enemy.health -= actualDamage;
             enemy.hitFlash = 0.1;
+            hitCount++;
+
+            // Spawn repel wave effect toward enemy
+            const angle = Math.atan2(enemy.y - player.y, enemy.x - player.x);
+            spawnGarlicRepelEffect(player.x, player.y, angle, isEvolved);
 
             if (evolved?.healsOnHit && Math.random() < 0.1) {
                 player.health = Math.min(player.health + 1, player.maxHealth);
+                // Healing particle effect
+                spawnGarlicHealParticle(player.x, player.y);
             }
 
             if (enemy.health <= 0) {
@@ -2920,17 +3011,89 @@ function fireGarlic(damage, area, evolved) {
         }
     }
 
-    // Visual effect
+    // Visual effect with enhanced properties
     areaEffects.push({
         x: player.x,
         y: player.y,
         radius: radius,
         damage: 0,
-        lifetime: 0.1,
-        maxLifetime: 0.1,
+        lifetime: 0.15,
+        maxLifetime: 0.15,
         type: 'garlic',
-        color: evolved ? '#aa44aa' : '#88ff88'
+        color: evolved ? '#aa44aa' : '#88ff88',
+        evolved: isEvolved,
+        hitCount: hitCount
     });
+
+    // Spawn ambient garlic spore particles
+    spawnGarlicSporeParticles(player.x, player.y, radius, isEvolved);
+}
+
+function spawnGarlicSporeParticles(x, y, radius, evolved) {
+    const sporeCount = evolved ? 10 : 6;
+    const baseColor = evolved ? '#cc66cc' : '#aaffaa';
+    const accentColor = evolved ? '#ff88ff' : '#ddffdd';
+
+    for (let i = 0; i < sporeCount; i++) {
+        const angle = (i / sporeCount) * Math.PI * 2 + Math.random() * 0.5;
+        const dist = radius * (0.3 + Math.random() * 0.6);
+        const sporeX = x + Math.cos(angle) * dist;
+        const sporeY = y + Math.sin(angle) * dist;
+
+        effectParticles.push({
+            x: sporeX,
+            y: sporeY,
+            vx: Math.cos(angle) * (20 + Math.random() * 30),
+            vy: Math.sin(angle) * (20 + Math.random() * 30) - 15,
+            size: 2 + Math.random() * 3,
+            color: Math.random() < 0.3 ? accentColor : baseColor,
+            lifetime: 0.3 + Math.random() * 0.2,
+            maxLifetime: 0.5,
+            alpha: 0.8,
+            gravity: -20,
+            shrink: true,
+            type: 'garlicSpore'
+        });
+    }
+}
+
+function spawnGarlicRepelEffect(x, y, angle, evolved) {
+    const baseColor = evolved ? '#bb55bb' : '#99ff99';
+    effectParticles.push({
+        x: x,
+        y: y,
+        vx: 0,
+        vy: 0,
+        size: 15,
+        color: baseColor,
+        lifetime: 0.2,
+        maxLifetime: 0.2,
+        alpha: 0.7,
+        gravity: 0,
+        shrink: false,
+        type: 'garlicWave',
+        angle: angle
+    });
+}
+
+function spawnGarlicHealParticle(x, y) {
+    // Green healing sparkles rising upward
+    for (let i = 0; i < 4; i++) {
+        effectParticles.push({
+            x: x + (Math.random() - 0.5) * 20,
+            y: y + (Math.random() - 0.5) * 20,
+            vx: (Math.random() - 0.5) * 30,
+            vy: -40 - Math.random() * 30,
+            size: 3 + Math.random() * 2,
+            color: '#88ff88',
+            lifetime: 0.4 + Math.random() * 0.2,
+            maxLifetime: 0.6,
+            alpha: 1,
+            gravity: -30,
+            shrink: true,
+            type: 'magic'
+        });
+    }
 }
 
 function fireLightning(damage, amount, area, evolved) {
@@ -5615,40 +5778,124 @@ function drawAreaEffects() {
         if (effect.type === 'whip') {
             const centerX = effect.x + effect.width / 2;
             const centerY = effect.y + effect.height / 2;
+            const facingRight = effect.facingRight !== false;
+            const isEvolved = effect.evolved;
+            const animProgress = 1 - alpha; // 0 to 1 as effect progresses
 
-            // Outer glow effect
-            ctx.shadowColor = effect.color;
-            ctx.shadowBlur = 15 * alpha;
-            ctx.globalAlpha = alpha * 0.3;
-            ctx.fillStyle = effect.color;
-            ctx.fillRect(effect.x - 4, effect.y - 4, effect.width + 8, effect.height + 8);
+            // Dynamic wave amplitude for whip motion
+            const waveAmplitude = 8 * Math.sin(animProgress * Math.PI) * alpha;
+            const waveFrequency = 3;
+
+            // Outer motion blur trails (3 layers)
+            for (let trail = 2; trail >= 0; trail--) {
+                const trailAlpha = alpha * (0.15 - trail * 0.04);
+                const trailOffset = trail * 6 * (facingRight ? -1 : 1);
+                ctx.globalAlpha = trailAlpha;
+                ctx.fillStyle = effect.color;
+                ctx.shadowColor = effect.color;
+                ctx.shadowBlur = 10;
+                ctx.fillRect(effect.x + trailOffset, effect.y - trail * 2, effect.width, effect.height + trail * 4);
+            }
             ctx.shadowBlur = 0;
 
-            // Black pixel outline
-            ctx.fillStyle = '#000000';
-            ctx.globalAlpha = alpha * 0.9;
-            ctx.fillRect(effect.x - 2, effect.y - 2, effect.width + 4, 2); // Top
-            ctx.fillRect(effect.x - 2, effect.y + effect.height, effect.width + 4, 2); // Bottom
-            ctx.fillRect(effect.x - 2, effect.y, 2, effect.height); // Left
-            ctx.fillRect(effect.x + effect.width, effect.y, 2, effect.height); // Right
+            // Main whip body with curved shape
+            ctx.save();
+            ctx.beginPath();
+            const startX = facingRight ? effect.x : effect.x + effect.width;
+            const endX = facingRight ? effect.x + effect.width : effect.x;
 
-            // Main whip body with gradient effect
-            ctx.globalAlpha = alpha;
-            ctx.fillStyle = effect.color;
-            ctx.fillRect(effect.x, effect.y, effect.width, effect.height);
-
-            // Inner highlight (whip crack effect)
-            ctx.fillStyle = '#ffffff';
-            ctx.globalAlpha = alpha * 0.6;
-            ctx.fillRect(effect.x + effect.width * 0.1, effect.y + effect.height * 0.3, effect.width * 0.8, effect.height * 0.2);
-
-            // Slash lines for motion effect
-            ctx.fillStyle = '#ffffff';
-            ctx.globalAlpha = alpha * 0.4;
-            for (let i = 0; i < 3; i++) {
-                const lineX = effect.x + effect.width * (0.2 + i * 0.3);
-                ctx.fillRect(lineX, effect.y + 2, 2, effect.height - 4);
+            ctx.moveTo(startX, effect.y);
+            for (let i = 0; i <= 10; i++) {
+                const t = i / 10;
+                const x = startX + (endX - startX) * t;
+                const waveY = Math.sin(t * Math.PI * waveFrequency + animProgress * 5) * waveAmplitude * t;
+                ctx.lineTo(x, effect.y + waveY);
             }
+            for (let i = 10; i >= 0; i--) {
+                const t = i / 10;
+                const x = startX + (endX - startX) * t;
+                const waveY = Math.sin(t * Math.PI * waveFrequency + animProgress * 5) * waveAmplitude * t;
+                ctx.lineTo(x, effect.y + effect.height + waveY);
+            }
+            ctx.closePath();
+
+            // Black outline
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 4;
+            ctx.globalAlpha = alpha * 0.9;
+            ctx.stroke();
+
+            // Main fill with gradient
+            const gradient = ctx.createLinearGradient(
+                facingRight ? effect.x : effect.x + effect.width,
+                effect.y,
+                facingRight ? effect.x + effect.width : effect.x,
+                effect.y
+            );
+            if (isEvolved) {
+                gradient.addColorStop(0, '#aa2222');
+                gradient.addColorStop(0.5, effect.color);
+                gradient.addColorStop(1, '#ffaaaa');
+            } else {
+                gradient.addColorStop(0, '#aa8800');
+                gradient.addColorStop(0.5, effect.color);
+                gradient.addColorStop(1, '#ffffaa');
+            }
+            ctx.fillStyle = gradient;
+            ctx.globalAlpha = alpha;
+            ctx.fill();
+            ctx.restore();
+
+            // Whip crack spark effect at tip
+            const tipX = facingRight ? effect.x + effect.width : effect.x;
+            const tipY = centerY;
+            const sparkIntensity = Math.sin(animProgress * Math.PI);
+
+            ctx.shadowColor = isEvolved ? '#ff4444' : '#ffff00';
+            ctx.shadowBlur = 20 * sparkIntensity;
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = alpha * sparkIntensity;
+            ctx.beginPath();
+            ctx.arc(tipX, tipY, 8 + sparkIntensity * 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Speed lines radiating from tip
+            ctx.strokeStyle = isEvolved ? '#ff6666' : '#ffee66';
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = alpha * 0.7 * sparkIntensity;
+            for (let i = 0; i < 6; i++) {
+                const lineAngle = (facingRight ? 0 : Math.PI) + (i - 2.5) * 0.25;
+                const lineLength = 15 + Math.random() * 20;
+                ctx.beginPath();
+                ctx.moveTo(tipX, tipY);
+                ctx.lineTo(
+                    tipX + Math.cos(lineAngle) * lineLength,
+                    tipY + Math.sin(lineAngle) * lineLength
+                );
+                ctx.stroke();
+            }
+
+            // Inner highlight wave
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = alpha * 0.5;
+            ctx.beginPath();
+            ctx.moveTo(startX, centerY - 2);
+            for (let i = 0; i <= 10; i++) {
+                const t = i / 10;
+                const x = startX + (endX - startX) * t;
+                const waveY = Math.sin(t * Math.PI * waveFrequency + animProgress * 5) * waveAmplitude * t * 0.5;
+                ctx.lineTo(x, centerY - 2 + waveY);
+            }
+            for (let i = 10; i >= 0; i--) {
+                const t = i / 10;
+                const x = startX + (endX - startX) * t;
+                const waveY = Math.sin(t * Math.PI * waveFrequency + animProgress * 5) * waveAmplitude * t * 0.5;
+                ctx.lineTo(x, centerY + 4 + waveY);
+            }
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
             ctx.globalAlpha = 1;
         } else if (effect.type === 'holywater') {
             const centerX = effect.x + effect.width / 2;
@@ -5752,63 +5999,129 @@ function drawAreaEffects() {
 
             ctx.globalAlpha = 1;
         } else if (effect.type === 'garlic') {
-            // Outer glow pulsing aura
-            const pulse = 1 + 0.15 * Math.sin(Date.now() / 80);
-            ctx.shadowColor = effect.color;
-            ctx.shadowBlur = 25 * alpha * pulse;
+            const isEvolved = effect.evolved;
+            const animTime = Date.now() / 1000;
+            const pulse = 1 + 0.2 * Math.sin(animTime * 8);
+            const expandProgress = 1 - alpha;
 
-            // Outermost glow ring
-            ctx.strokeStyle = effect.color;
-            ctx.globalAlpha = alpha * 0.2;
-            ctx.lineWidth = 8;
-            ctx.beginPath();
-            ctx.arc(effect.x, effect.y, effect.radius * 1.15, 0, Math.PI * 2);
-            ctx.stroke();
+            // Multiple expanding rings for burst effect
+            for (let ring = 0; ring < 3; ring++) {
+                const ringProgress = (expandProgress + ring * 0.1) % 1;
+                const ringRadius = effect.radius * (0.5 + ringProgress * 0.6);
+                const ringAlpha = alpha * (1 - ringProgress) * 0.4;
 
-            // Black outline for visibility
+                ctx.strokeStyle = effect.color;
+                ctx.globalAlpha = ringAlpha;
+                ctx.lineWidth = 3 - ring;
+                ctx.shadowColor = effect.color;
+                ctx.shadowBlur = 15 * (1 - ringProgress);
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, ringRadius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
             ctx.shadowBlur = 0;
-            ctx.strokeStyle = '#000000';
-            ctx.globalAlpha = alpha * 0.7;
-            ctx.lineWidth = 5;
-            ctx.beginPath();
-            ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
-            ctx.stroke();
 
-            // Main garlic aura ring
-            ctx.strokeStyle = effect.color;
-            ctx.globalAlpha = alpha * 0.9;
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
-            ctx.stroke();
+            // Outer pulsing glow aura
+            ctx.shadowColor = effect.color;
+            ctx.shadowBlur = 30 * alpha * pulse;
 
-            // Inner fill with transparency
-            ctx.fillStyle = effect.color;
-            ctx.globalAlpha = alpha * 0.15;
+            // Gradient fill for main aura
+            const gradient = ctx.createRadialGradient(
+                effect.x, effect.y, 0,
+                effect.x, effect.y, effect.radius
+            );
+            if (isEvolved) {
+                gradient.addColorStop(0, 'rgba(170, 68, 170, 0.3)');
+                gradient.addColorStop(0.5, 'rgba(170, 68, 170, 0.15)');
+                gradient.addColorStop(0.8, 'rgba(255, 136, 255, 0.1)');
+                gradient.addColorStop(1, 'rgba(170, 68, 170, 0)');
+            } else {
+                gradient.addColorStop(0, 'rgba(136, 255, 136, 0.3)');
+                gradient.addColorStop(0.5, 'rgba(136, 255, 136, 0.15)');
+                gradient.addColorStop(0.8, 'rgba(200, 255, 200, 0.1)');
+                gradient.addColorStop(1, 'rgba(136, 255, 136, 0)');
+            }
+            ctx.fillStyle = gradient;
+            ctx.globalAlpha = alpha;
             ctx.beginPath();
             ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
             ctx.fill();
 
-            // Swirling particles around the aura
-            ctx.fillStyle = '#ffffff';
+            // Black outline for visibility
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = '#000000';
             ctx.globalAlpha = alpha * 0.6;
-            const particleTime = Date.now() / 150;
-            for (let i = 0; i < 6; i++) {
-                const particleAngle = (i / 6) * Math.PI * 2 + particleTime;
-                const particleR = effect.radius * (0.7 + 0.2 * Math.sin(particleTime * 2 + i));
-                const px = effect.x + Math.cos(particleAngle) * particleR;
-                const py = effect.y + Math.sin(particleAngle) * particleR;
-                ctx.fillRect(px - 2, py - 2, 4, 4);
-            }
-
-            // Inner bright ring
-            ctx.strokeStyle = '#ffffff';
-            ctx.globalAlpha = alpha * 0.4;
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 4;
             ctx.beginPath();
-            ctx.arc(effect.x, effect.y, effect.radius * 0.85, 0, Math.PI * 2);
+            ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
             ctx.stroke();
 
+            // Main garlic aura ring with glow
+            ctx.strokeStyle = effect.color;
+            ctx.globalAlpha = alpha * 0.9;
+            ctx.lineWidth = 3;
+            ctx.shadowColor = effect.color;
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Rotating spore particles around the aura
+            const particleTime = animTime * 2;
+            const particleCount = isEvolved ? 10 : 6;
+            for (let i = 0; i < particleCount; i++) {
+                const baseAngle = (i / particleCount) * Math.PI * 2;
+                const wobble = Math.sin(particleTime * 3 + i * 1.5) * 0.3;
+                const particleAngle = baseAngle + particleTime + wobble;
+                const particleR = effect.radius * (0.6 + 0.3 * Math.sin(particleTime * 2 + i));
+                const px = effect.x + Math.cos(particleAngle) * particleR;
+                const py = effect.y + Math.sin(particleAngle) * particleR;
+
+                // Spore glow
+                ctx.shadowColor = effect.color;
+                ctx.shadowBlur = 6;
+                ctx.fillStyle = effect.color;
+                ctx.globalAlpha = alpha * 0.7;
+                ctx.beginPath();
+                ctx.arc(px, py, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Spore highlight
+                ctx.fillStyle = '#ffffff';
+                ctx.globalAlpha = alpha * 0.5;
+                ctx.beginPath();
+                ctx.arc(px, py, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Inner pulsing rings
+            for (let r = 0; r < 2; r++) {
+                const innerRadius = effect.radius * (0.4 + r * 0.25) * pulse;
+                ctx.strokeStyle = isEvolved ? '#ff88ff' : '#aaffaa';
+                ctx.globalAlpha = alpha * (0.4 - r * 0.15);
+                ctx.lineWidth = 2 - r;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, innerRadius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+
+            // Center bright core
+            const coreGradient = ctx.createRadialGradient(
+                effect.x, effect.y, 0,
+                effect.x, effect.y, effect.radius * 0.3
+            );
+            coreGradient.addColorStop(0, isEvolved ? 'rgba(255, 200, 255, 0.5)' : 'rgba(200, 255, 200, 0.5)');
+            coreGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = coreGradient;
+            ctx.globalAlpha = alpha * pulse;
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, effect.radius * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
             ctx.globalAlpha = 1;
         } else if (effect.type === 'lightning') {
             const radius = effect.radius * (1 + (1 - alpha));
@@ -6389,6 +6702,91 @@ function drawEffectParticles() {
             ctx.fillStyle = 'rgba(221, 170, 102, 0.5)';
             ctx.fillRect(-p.size / 4, -p.size / 2, p.size / 2, p.size / 2);
             ctx.restore();
+        } else if (p.type === 'whipCrack') {
+            // Whip crack spark - elongated bright spark
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 10;
+            ctx.fillStyle = p.color;
+            // Draw elongated spark shape
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            const angle = Math.atan2(p.vy, p.vx);
+            ctx.rotate(angle);
+            // Spark body
+            ctx.beginPath();
+            ctx.ellipse(0, 0, p.size * 1.5, p.size * 0.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // Bright core
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, p.size * 0.8, p.size * 0.3, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        } else if (p.type === 'whipShockwave') {
+            // Whip impact shockwave - expanding ring
+            const progress = 1 - (p.lifetime / p.maxLifetime);
+            const radius = p.size + progress * 25;
+            ctx.strokeStyle = p.color;
+            ctx.lineWidth = 3 - progress * 2;
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 15 * (1 - progress);
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+            ctx.stroke();
+            // Inner brighter ring
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, radius * 0.7, 0, Math.PI * 2);
+            ctx.stroke();
+        } else if (p.type === 'whipTrail') {
+            // Whip motion trail - soft glowing line segment
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 6;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            // Highlight dot
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = p.alpha * 0.5;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (p.type === 'garlicSpore') {
+            // Garlic spore - floating pollen/spore particle
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 8;
+            // Outer glow
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.alpha * 0.5;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            // Main body
+            ctx.globalAlpha = p.alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            // Bright center
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = p.alpha * 0.7;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (p.type === 'garlicWave') {
+            // Garlic repelling wave - arc wave effect
+            const progress = 1 - (p.lifetime / p.maxLifetime);
+            const radius = p.size + progress * 40;
+            const arcSpread = Math.PI * 0.4;
+            ctx.strokeStyle = p.color;
+            ctx.lineWidth = 4 - progress * 3;
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 12 * (1 - progress);
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, radius, p.angle - arcSpread, p.angle + arcSpread);
+            ctx.stroke();
         } else {
             // Default circle particle
             ctx.fillStyle = p.color;
