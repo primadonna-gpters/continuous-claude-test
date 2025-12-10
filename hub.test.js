@@ -511,6 +511,31 @@ describe('registerServiceWorker', () => {
 
     expect(navigator.serviceWorker.register).toHaveBeenCalledWith('/sw.js');
   });
+
+  test('should handle service worker registration failure', async () => {
+    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+    const mockError = new Error('Registration failed');
+
+    // Mock the register method to reject
+    navigator.serviceWorker.register.mockRejectedValueOnce(mockError);
+
+    let loadCallback;
+    window.addEventListener = jest.fn((event, cb) => {
+      if (event === 'load') {
+        loadCallback = cb;
+      }
+    });
+
+    registerServiceWorker();
+    loadCallback();
+
+    // Wait for the rejected promise
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(consoleLogSpy).toHaveBeenCalledWith('Service Worker registration failed:', mockError);
+
+    consoleLogSpy.mockRestore();
+  });
 });
 
 // ============================================
@@ -638,6 +663,65 @@ describe('TiltEffectManager', () => {
     manager.activateTilt(card);
 
     expect(card.style.transition).toBe('none');
+  });
+});
+
+// ============================================
+// recordRecentPlay Tests (common.js)
+// ============================================
+describe('recordRecentPlay', () => {
+  let recordRecentPlay;
+
+  beforeEach(() => {
+    const common = require('./common.js');
+    recordRecentPlay = common.recordRecentPlay;
+  });
+
+  test('should add game to empty recent list', () => {
+    recordRecentPlay('2048');
+
+    const recent = JSON.parse(localStorageMock._getStore()['recent-games']);
+    expect(recent).toEqual(['2048']);
+  });
+
+  test('should add game to front of list', () => {
+    localStorageMock.setItem('recent-games', JSON.stringify(['snake', 'tetris']));
+
+    recordRecentPlay('2048');
+
+    const recent = JSON.parse(localStorageMock._getStore()['recent-games']);
+    expect(recent[0]).toBe('2048');
+    expect(recent[1]).toBe('snake');
+    expect(recent[2]).toBe('tetris');
+  });
+
+  test('should not duplicate game in list', () => {
+    localStorageMock.setItem('recent-games', JSON.stringify(['snake', '2048', 'tetris']));
+
+    recordRecentPlay('2048');
+
+    const recent = JSON.parse(localStorageMock._getStore()['recent-games']);
+    expect(recent).toEqual(['2048', 'snake', 'tetris']);
+  });
+
+  test('should limit to 5 games', () => {
+    localStorageMock.setItem('recent-games', JSON.stringify(['a', 'b', 'c', 'd', 'e']));
+
+    recordRecentPlay('f');
+
+    const recent = JSON.parse(localStorageMock._getStore()['recent-games']);
+    expect(recent.length).toBe(5);
+    expect(recent[0]).toBe('f');
+    expect(recent).not.toContain('e');
+  });
+
+  test('should move existing game to front', () => {
+    localStorageMock.setItem('recent-games', JSON.stringify(['a', 'b', 'c']));
+
+    recordRecentPlay('c');
+
+    const recent = JSON.parse(localStorageMock._getStore()['recent-games']);
+    expect(recent).toEqual(['c', 'a', 'b']);
   });
 });
 
