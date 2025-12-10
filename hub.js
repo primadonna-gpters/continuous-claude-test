@@ -182,3 +182,14 @@ document.addEventListener('DOMContentLoaded', () => {
     new RecentGamesManager();
     registerServiceWorker();
 });
+
+// Export for testing (CommonJS compatible)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        HubThemeManager,
+        ScrollAnimationManager,
+        StatsManager,
+        RecentGamesManager,
+        registerServiceWorker
+    };
+}
