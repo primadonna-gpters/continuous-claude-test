@@ -160,6 +160,42 @@ class RecentGamesManager {
     }
 }
 
+// Parallax Effect Manager for header
+class ParallaxManager {
+    constructor() {
+        this.header = document.querySelector('.hub-header');
+        this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (this.prefersReducedMotion || !this.header) {
+            return;
+        }
+
+        this.bindEvents();
+    }
+
+    bindEvents() {
+        let ticking = false;
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    this.handleScroll();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+    }
+
+    handleScroll() {
+        const scrollY = window.scrollY;
+        const translateY = scrollY * 0.3;
+        const opacity = Math.max(0, 1 - scrollY / 300);
+
+        this.header.style.transform = `translateY(${translateY}px)`;
+        this.header.style.opacity = opacity;
+    }
+}
+
 // 3D Tilt Effect Manager for game cards
 class TiltEffectManager {
     constructor() {
@@ -228,6 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
     new StatsManager();
     new RecentGamesManager();
     new TiltEffectManager();
+    new ParallaxManager();
     registerServiceWorker();
 });
 
@@ -239,6 +276,7 @@ if (typeof module !== 'undefined' && module.exports) {
         StatsManager,
         RecentGamesManager,
         TiltEffectManager,
+        ParallaxManager,
         registerServiceWorker
     };
 }
