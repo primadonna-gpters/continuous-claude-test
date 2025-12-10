@@ -43,6 +43,10 @@
                     <span class="theme-icon light-icon">☀️</span>
                     <span class="theme-icon dark-icon">🌙</span>
                 </button>
+                <button id="achievement-btn" aria-label="Achievements">
+                    🏆
+                    <span class="badge"></span>
+                </button>
             </div>
         </div>
 
@@ -90,6 +94,23 @@
                     <div id="joystick-stick"></div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Achievement Modal -->
+    <div id="achievement-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">ACHIEVEMENTS</h2>
+                <button class="modal-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="achievement-progress">
+                <span class="progress-text"><span id="ach-unlocked">0</span> / <span id="ach-total">0</span> Unlocked</span>
+                <div class="progress-bar-outer">
+                    <div class="progress-bar-inner" id="ach-progress-bar"></div>
+                </div>
+            </div>
+            <div id="achievement-categories"></div>
         </div>
     </div>
 

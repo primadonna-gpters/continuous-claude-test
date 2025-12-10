@@ -940,6 +940,575 @@ if (savedTheme === 'dark') {
     document.body.classList.add('dark-mode');
 }
 
+// Achievement System
+const ACHIEVEMENTS = {
+    // Combat achievements
+    firstBlood: {
+        id: 'firstBlood',
+        name: 'First Blood',
+        desc: 'Kill your first enemy',
+        icon: '🩸',
+        category: 'combat',
+        rarity: 'common',
+        condition: { type: 'kills', value: 1 }
+    },
+    slayer: {
+        id: 'slayer',
+        name: 'Slayer',
+        desc: 'Kill 100 enemies in a single run',
+        icon: '⚔️',
+        category: 'combat',
+        rarity: 'common',
+        condition: { type: 'kills', value: 100 }
+    },
+    massExtinction: {
+        id: 'massExtinction',
+        name: 'Mass Extinction',
+        desc: 'Kill 500 enemies in a single run',
+        icon: '💀',
+        category: 'combat',
+        rarity: 'uncommon',
+        condition: { type: 'kills', value: 500 }
+    },
+    apocalypse: {
+        id: 'apocalypse',
+        name: 'Apocalypse',
+        desc: 'Kill 1000 enemies in a single run',
+        icon: '☠️',
+        category: 'combat',
+        rarity: 'rare',
+        condition: { type: 'kills', value: 1000 }
+    },
+    annihilator: {
+        id: 'annihilator',
+        name: 'Annihilator',
+        desc: 'Kill 3000 enemies in a single run',
+        icon: '🌋',
+        category: 'combat',
+        rarity: 'legendary',
+        condition: { type: 'kills', value: 3000 }
+    },
+
+    // Survival achievements
+    survivor5: {
+        id: 'survivor5',
+        name: 'Getting Started',
+        desc: 'Survive for 5 minutes',
+        icon: '⏱️',
+        category: 'survival',
+        rarity: 'common',
+        condition: { type: 'time', value: 300 }
+    },
+    survivor10: {
+        id: 'survivor10',
+        name: 'Holding On',
+        desc: 'Survive for 10 minutes',
+        icon: '⏰',
+        category: 'survival',
+        rarity: 'uncommon',
+        condition: { type: 'time', value: 600 }
+    },
+    survivor20: {
+        id: 'survivor20',
+        name: 'Endurance',
+        desc: 'Survive for 20 minutes',
+        icon: '🕐',
+        category: 'survival',
+        rarity: 'rare',
+        condition: { type: 'time', value: 1200 }
+    },
+    survivor30: {
+        id: 'survivor30',
+        name: 'Ultimate Survivor',
+        desc: 'Survive the full 30 minutes',
+        icon: '🏆',
+        category: 'survival',
+        rarity: 'legendary',
+        condition: { type: 'time', value: 1800 }
+    },
+
+    // Evolution achievements
+    firstEvolution: {
+        id: 'firstEvolution',
+        name: 'Power Up!',
+        desc: 'Evolve your first weapon',
+        icon: '✨',
+        category: 'evolution',
+        rarity: 'uncommon',
+        condition: { type: 'evolutions', value: 1 }
+    },
+    evolutionMaster: {
+        id: 'evolutionMaster',
+        name: 'Evolution Master',
+        desc: 'Evolve 3 weapons in a single run',
+        icon: '🌟',
+        category: 'evolution',
+        rarity: 'rare',
+        condition: { type: 'evolutions', value: 3 }
+    },
+    fullEvolution: {
+        id: 'fullEvolution',
+        name: 'Maximum Power',
+        desc: 'Evolve 6 weapons in a single run',
+        icon: '💫',
+        category: 'evolution',
+        rarity: 'legendary',
+        condition: { type: 'evolutions', value: 6 }
+    },
+    unionCreator: {
+        id: 'unionCreator',
+        name: 'Union Creator',
+        desc: 'Create your first Union weapon',
+        icon: '🔮',
+        category: 'evolution',
+        rarity: 'legendary',
+        condition: { type: 'unions', value: 1 }
+    },
+
+    // Level achievements
+    level10: {
+        id: 'level10',
+        name: 'Apprentice',
+        desc: 'Reach level 10',
+        icon: '📈',
+        category: 'leveling',
+        rarity: 'common',
+        condition: { type: 'level', value: 10 }
+    },
+    level25: {
+        id: 'level25',
+        name: 'Veteran',
+        desc: 'Reach level 25',
+        icon: '📊',
+        category: 'leveling',
+        rarity: 'uncommon',
+        condition: { type: 'level', value: 25 }
+    },
+    level50: {
+        id: 'level50',
+        name: 'Master',
+        desc: 'Reach level 50',
+        icon: '📉',
+        category: 'leveling',
+        rarity: 'rare',
+        condition: { type: 'level', value: 50 }
+    },
+    level100: {
+        id: 'level100',
+        name: 'Legend',
+        desc: 'Reach level 100',
+        icon: '👑',
+        category: 'leveling',
+        rarity: 'legendary',
+        condition: { type: 'level', value: 100 }
+    },
+
+    // Collection achievements
+    weaponCollector: {
+        id: 'weaponCollector',
+        name: 'Weapon Collector',
+        desc: 'Have 6 weapons equipped at once',
+        icon: '🗃️',
+        category: 'collection',
+        rarity: 'uncommon',
+        condition: { type: 'weapons', value: 6 }
+    },
+    passiveCollector: {
+        id: 'passiveCollector',
+        name: 'Passive Collector',
+        desc: 'Have 6 passive items equipped at once',
+        icon: '📦',
+        category: 'collection',
+        rarity: 'uncommon',
+        condition: { type: 'passives', value: 6 }
+    },
+    chestHunter: {
+        id: 'chestHunter',
+        name: 'Chest Hunter',
+        desc: 'Open 10 chests in a single run',
+        icon: '📿',
+        category: 'collection',
+        rarity: 'uncommon',
+        condition: { type: 'chests', value: 10 }
+    },
+    treasureMaster: {
+        id: 'treasureMaster',
+        name: 'Treasure Master',
+        desc: 'Open 25 chests in a single run',
+        icon: '💎',
+        category: 'collection',
+        rarity: 'rare',
+        condition: { type: 'chests', value: 25 }
+    },
+
+    // Stage achievements
+    madForestClear: {
+        id: 'madForestClear',
+        name: 'Forest Explorer',
+        desc: 'Complete Mad Forest',
+        icon: '🌲',
+        category: 'stages',
+        rarity: 'uncommon',
+        condition: { type: 'stageVictory', value: 'madForest' }
+    },
+    inlaidLibraryClear: {
+        id: 'inlaidLibraryClear',
+        name: 'Scholar',
+        desc: 'Complete Inlaid Library',
+        icon: '📚',
+        category: 'stages',
+        rarity: 'rare',
+        condition: { type: 'stageVictory', value: 'inlaidLibrary' }
+    },
+    dairyPlantClear: {
+        id: 'dairyPlantClear',
+        name: 'Factory Worker',
+        desc: 'Complete Dairy Plant',
+        icon: '🏭',
+        category: 'stages',
+        rarity: 'rare',
+        condition: { type: 'stageVictory', value: 'dairyPlant' }
+    },
+    galloTowerClear: {
+        id: 'galloTowerClear',
+        name: 'Tower Climber',
+        desc: 'Complete Gallo Tower',
+        icon: '🗼',
+        category: 'stages',
+        rarity: 'rare',
+        condition: { type: 'stageVictory', value: 'galloTower' }
+    },
+    cappellaMagnaClear: {
+        id: 'cappellaMagnaClear',
+        name: 'Divine Conqueror',
+        desc: 'Complete Cappella Magna',
+        icon: '⛪',
+        category: 'stages',
+        rarity: 'legendary',
+        condition: { type: 'stageVictory', value: 'cappellaMagna' }
+    },
+
+    // Special achievements
+    closeCall: {
+        id: 'closeCall',
+        name: 'Close Call',
+        desc: 'Survive with less than 10% HP',
+        icon: '💔',
+        category: 'special',
+        rarity: 'uncommon',
+        condition: { type: 'lowHealth', value: 0.1 }
+    },
+    goldHoarder: {
+        id: 'goldHoarder',
+        name: 'Gold Hoarder',
+        desc: 'Collect 500 coins in a single run',
+        icon: '💰',
+        category: 'special',
+        rarity: 'uncommon',
+        condition: { type: 'coins', value: 500 }
+    },
+    richBeyondMeasure: {
+        id: 'richBeyondMeasure',
+        name: 'Rich Beyond Measure',
+        desc: 'Collect 2000 coins in a single run',
+        icon: '🤑',
+        category: 'special',
+        rarity: 'rare',
+        condition: { type: 'coins', value: 2000 }
+    },
+    arcanaUser: {
+        id: 'arcanaUser',
+        name: 'Arcana User',
+        desc: 'Start a game with an Arcana',
+        icon: '🃏',
+        category: 'special',
+        rarity: 'common',
+        condition: { type: 'arcana', value: 1 }
+    }
+};
+
+const ACHIEVEMENT_CATEGORIES = {
+    combat: { name: 'Combat', order: 1 },
+    survival: { name: 'Survival', order: 2 },
+    evolution: { name: 'Evolution', order: 3 },
+    leveling: { name: 'Leveling', order: 4 },
+    collection: { name: 'Collection', order: 5 },
+    stages: { name: 'Stages', order: 6 },
+    special: { name: 'Special', order: 7 }
+};
+
+// Achievement state
+let achievementData = JSON.parse(localStorage.getItem('survivor-achievements')) || {
+    unlocked: {},
+    stats: {
+        totalKills: 0,
+        totalCoinsCollected: 0,
+        totalEvolutions: 0,
+        totalUnions: 0,
+        totalChestsOpened: 0,
+        gamesPlayed: 0
+    },
+    newUnlocks: []
+};
+
+// Current run stats for achievements
+let runStats = {
+    kills: 0,
+    evolutions: 0,
+    unions: 0,
+    chests: 0,
+    coins: 0,
+    lowHealthTriggered: false
+};
+
+// Achievement notification queue
+let achievementQueue = [];
+let isShowingAchievement = false;
+
+function saveAchievements() {
+    localStorage.setItem('survivor-achievements', JSON.stringify(achievementData));
+}
+
+function unlockAchievement(achievementId) {
+    if (achievementData.unlocked[achievementId]) return false;
+
+    const achievement = ACHIEVEMENTS[achievementId];
+    if (!achievement) return false;
+
+    achievementData.unlocked[achievementId] = {
+        unlockedAt: Date.now()
+    };
+    achievementData.newUnlocks.push(achievementId);
+    saveAchievements();
+
+    // Queue notification
+    achievementQueue.push(achievement);
+    showNextAchievement();
+
+    // Update badge
+    updateAchievementBadge();
+
+    // Play achievement sound
+    playSound('achievement');
+
+    return true;
+}
+
+function showNextAchievement() {
+    if (isShowingAchievement || achievementQueue.length === 0) return;
+
+    isShowingAchievement = true;
+    const achievement = achievementQueue.shift();
+
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = 'achievement-toast';
+    toast.innerHTML = `
+        <div class="toast-icon">${achievement.icon}</div>
+        <div class="toast-content">
+            <div class="toast-title">Achievement Unlocked!</div>
+            <div class="toast-name">${achievement.name}</div>
+            <div class="toast-desc">${achievement.desc}</div>
+        </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    // Auto-hide after 4 seconds
+    setTimeout(() => {
+        toast.classList.add('hiding');
+        setTimeout(() => {
+            toast.remove();
+            isShowingAchievement = false;
+            showNextAchievement();
+        }, 300);
+    }, 4000);
+}
+
+function checkAchievements() {
+    // Check kill achievements
+    checkCondition('kills', runStats.kills);
+
+    // Check time achievements
+    checkCondition('time', gameTime);
+
+    // Check level achievements
+    checkCondition('level', player.level);
+
+    // Check evolution achievements
+    checkCondition('evolutions', runStats.evolutions);
+
+    // Check union achievements
+    checkCondition('unions', runStats.unions);
+
+    // Check weapon count
+    checkCondition('weapons', player.weapons.length);
+
+    // Check passive count
+    checkCondition('passives', player.passives.length);
+
+    // Check chest achievements
+    checkCondition('chests', runStats.chests);
+
+    // Check coin achievements
+    checkCondition('coins', runStats.coins);
+
+    // Check low health
+    if (!runStats.lowHealthTriggered && player.health > 0 && player.health / player.maxHealth < 0.1) {
+        runStats.lowHealthTriggered = true;
+        checkCondition('lowHealth', 0.1);
+    }
+}
+
+function checkCondition(type, value) {
+    for (const achId in ACHIEVEMENTS) {
+        const ach = ACHIEVEMENTS[achId];
+        if (ach.condition.type === type && !achievementData.unlocked[achId]) {
+            if (type === 'stageVictory') {
+                if (value === ach.condition.value) {
+                    unlockAchievement(achId);
+                }
+            } else if (type === 'lowHealth') {
+                unlockAchievement(achId);
+            } else if (value >= ach.condition.value) {
+                unlockAchievement(achId);
+            }
+        }
+    }
+}
+
+function checkStageVictoryAchievement(stageId) {
+    checkCondition('stageVictory', stageId);
+}
+
+function checkArcanaAchievement() {
+    if (selectedArcana) {
+        checkCondition('arcana', 1);
+    }
+}
+
+function updateAchievementBadge() {
+    const badge = document.querySelector('#achievement-btn .badge');
+    const newCount = achievementData.newUnlocks.length;
+
+    if (newCount > 0) {
+        badge.textContent = newCount;
+        badge.classList.add('show');
+    } else {
+        badge.classList.remove('show');
+    }
+}
+
+function openAchievementModal() {
+    // Clear new unlocks when opening modal
+    achievementData.newUnlocks = [];
+    saveAchievements();
+    updateAchievementBadge();
+
+    const modal = document.getElementById('achievement-modal');
+    const categoriesContainer = document.getElementById('achievement-categories');
+
+    // Calculate progress
+    const total = Object.keys(ACHIEVEMENTS).length;
+    const unlocked = Object.keys(achievementData.unlocked).length;
+    const percentage = Math.round((unlocked / total) * 100);
+
+    document.getElementById('ach-unlocked').textContent = unlocked;
+    document.getElementById('ach-total').textContent = total;
+    document.getElementById('ach-progress-bar').style.width = `${percentage}%`;
+
+    // Group achievements by category
+    const categories = {};
+    for (const achId in ACHIEVEMENTS) {
+        const ach = ACHIEVEMENTS[achId];
+        if (!categories[ach.category]) {
+            categories[ach.category] = [];
+        }
+        categories[ach.category].push({ ...ach, id: achId });
+    }
+
+    // Render categories
+    categoriesContainer.innerHTML = '';
+    const sortedCategories = Object.keys(categories).sort(
+        (a, b) => ACHIEVEMENT_CATEGORIES[a].order - ACHIEVEMENT_CATEGORIES[b].order
+    );
+
+    for (const catId of sortedCategories) {
+        const catInfo = ACHIEVEMENT_CATEGORIES[catId];
+        const achievements = categories[catId];
+
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'achievement-category';
+        categoryDiv.innerHTML = `<h3>${catInfo.name}</h3>`;
+
+        const listDiv = document.createElement('div');
+        listDiv.className = 'achievement-list';
+
+        for (const ach of achievements) {
+            const isUnlocked = achievementData.unlocked[ach.id];
+            const isNew = achievementData.newUnlocks && achievementData.newUnlocks.includes(ach.id);
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = `achievement-item rarity-${ach.rarity} ${isUnlocked ? 'unlocked' : 'locked'} ${isNew ? 'new-unlock' : ''}`;
+
+            // Progress text for non-unlocked achievements
+            let progressText = '';
+            if (!isUnlocked && ach.condition.type !== 'stageVictory' && ach.condition.type !== 'lowHealth' && ach.condition.type !== 'arcana') {
+                const currentValue = getCurrentValueForCondition(ach.condition.type);
+                progressText = `<div class="ach-progress">${currentValue} / ${ach.condition.value}</div>`;
+            }
+
+            itemDiv.innerHTML = `
+                <div class="ach-icon">${ach.icon}</div>
+                <div class="ach-info">
+                    <div class="ach-name">${ach.name}</div>
+                    <div class="ach-desc">${ach.desc}</div>
+                    ${progressText}
+                </div>
+                <div class="ach-check">${isUnlocked ? '✓' : '○'}</div>
+            `;
+
+            listDiv.appendChild(itemDiv);
+        }
+
+        categoryDiv.appendChild(listDiv);
+        categoriesContainer.appendChild(categoryDiv);
+    }
+
+    modal.classList.add('show');
+}
+
+function getCurrentValueForCondition(type) {
+    switch (type) {
+        case 'kills': return runStats.kills || achievementData.stats.totalKills;
+        case 'time': return Math.floor(gameTime || 0);
+        case 'level': return player ? player.level : 0;
+        case 'evolutions': return runStats.evolutions || 0;
+        case 'unions': return runStats.unions || 0;
+        case 'weapons': return player ? player.weapons.length : 0;
+        case 'passives': return player ? player.passives.length : 0;
+        case 'chests': return runStats.chests || 0;
+        case 'coins': return runStats.coins || 0;
+        default: return 0;
+    }
+}
+
+function closeAchievementModal() {
+    const modal = document.getElementById('achievement-modal');
+    modal.classList.remove('show');
+}
+
+function resetRunStats() {
+    runStats = {
+        kills: 0,
+        evolutions: 0,
+        unions: 0,
+        chests: 0,
+        coins: 0,
+        lowHealthTriggered: false
+    };
+}
+
 // Camera for world-space rendering
 let camera = { x: 0, y: 0 };
 const WORLD_SIZE = 2000;
@@ -957,6 +1526,11 @@ function init() {
     document.getElementById('pause-btn').addEventListener('click', togglePause);
     document.getElementById('sound-toggle-btn').addEventListener('click', toggleSound);
     document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
+    document.getElementById('achievement-btn').addEventListener('click', openAchievementModal);
+    document.querySelector('#achievement-modal .modal-close').addEventListener('click', closeAchievementModal);
+    document.getElementById('achievement-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'achievement-modal') closeAchievementModal();
+    });
 
     setupJoystick();
 
@@ -965,6 +1539,7 @@ function init() {
 
     updateSoundIcon();
     updateBestTimeDisplay();
+    updateAchievementBadge();
 
     showMenu();
     gameLoop = requestAnimationFrame(update);
@@ -1453,6 +2028,12 @@ function startNewGame() {
     gameState = 'playing';
     lastTime = performance.now();
 
+    // Reset run stats for achievements
+    resetRunStats();
+
+    // Check arcana achievement
+    checkArcanaAchievement();
+
     playSound('start');
 }
 
@@ -1828,6 +2409,7 @@ function performUnion(weapon) {
         player.weapons.splice(partnerIndex, 1);
     }
 
+    runStats.unions++;
     playSound('union');
     return true;
 }
@@ -1836,6 +2418,7 @@ function evolveWeapon(weapon) {
     const weaponType = WEAPON_TYPES[weapon.id];
     weapon.evolved = true;
     weapon.evolvedId = weaponType.evolvesTo;
+    runStats.evolutions++;
     playSound('evolution');
 }
 
@@ -1894,6 +2477,9 @@ function update(currentTime) {
     checkCollisions();
     updateCamera();
     updateUI();
+
+    // Check achievements periodically
+    checkAchievements();
 
     render();
 
@@ -3107,10 +3693,13 @@ function handleEnemyDeath(enemy, index) {
     }
 
     // Gold drop
-    coins += Math.floor((enemy.isBoss ? 10 : 1) * player.goldMultiplier);
+    const goldDrop = Math.floor((enemy.isBoss ? 10 : 1) * player.goldMultiplier);
+    coins += goldDrop;
+    runStats.coins += goldDrop;
 
     enemies.splice(index, 1);
     kills++;
+    runStats.kills++;
     playSound('kill');
 }
 
@@ -3142,6 +3731,7 @@ function createExplosion(x, y, radius, damage) {
 }
 
 function openChest(chest) {
+    runStats.chests++;
     playSound('chest');
 
     // First check for Union (two weapons combine into one)
@@ -3172,7 +3762,9 @@ function openChest(chest) {
     } else if (roll < 0.7) {
         player.health = Math.min(player.health + 30, player.maxHealth);
     } else {
-        coins += Math.floor(25 * player.goldMultiplier);
+        const chestGold = Math.floor(25 * player.goldMultiplier);
+        coins += chestGold;
+        runStats.coins += chestGold;
     }
 }
 
@@ -3412,6 +4004,9 @@ function victory() {
 
     // Save stage progress (including completion)
     saveStageProgress();
+
+    // Check stage victory achievement
+    checkStageVictoryAchievement(selectedStage);
 
     // Save total coins
     totalCoins += coins;
@@ -5890,6 +6485,19 @@ function playSound(type) {
                 gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.2);
                 oscillator.start(audioContext.currentTime);
                 oscillator.stop(audioContext.currentTime + 1.2);
+                break;
+            case 'achievement':
+                // Achievement unlock sound - magical chime with sparkle
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioContext.currentTime);         // A5
+                oscillator.frequency.setValueAtTime(1109, audioContext.currentTime + 0.08); // C#6
+                oscillator.frequency.setValueAtTime(1319, audioContext.currentTime + 0.16); // E6
+                oscillator.frequency.setValueAtTime(1760, audioContext.currentTime + 0.24); // A6
+                gainNode.gain.setValueAtTime(0.18, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime + 0.16);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
                 break;
         }
     } catch (e) {
