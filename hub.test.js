@@ -514,6 +514,134 @@ describe('registerServiceWorker', () => {
 });
 
 // ============================================
+// TiltEffectManager Tests
+// ============================================
+describe('TiltEffectManager', () => {
+  let TiltEffectManager;
+
+  beforeEach(() => {
+    const hub = require('./hub.js');
+    TiltEffectManager = hub.TiltEffectManager;
+  });
+
+  test('should not bind events when prefers-reduced-motion', () => {
+    window.matchMedia = jest.fn().mockImplementation(query => ({
+      matches: query === '(prefers-reduced-motion: reduce)',
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }));
+
+    const manager = new TiltEffectManager();
+
+    // Should not have bound any events
+    expect(manager.prefersReducedMotion).toBe(true);
+  });
+
+  test('should not bind events on touch devices', () => {
+    // Simulate touch device
+    const originalOntouchstart = window.ontouchstart;
+    window.ontouchstart = true;
+
+    const manager = new TiltEffectManager();
+
+    expect(manager.isTouchDevice).toBe(true);
+
+    // Cleanup
+    if (originalOntouchstart === undefined) {
+      delete window.ontouchstart;
+    } else {
+      window.ontouchstart = originalOntouchstart;
+    }
+  });
+
+  test('should bind events on desktop without reduced motion', () => {
+    window.matchMedia = mockMatchMedia(false);
+    const originalOntouchstart = window.ontouchstart;
+    delete window.ontouchstart;
+
+    // Override navigator.maxTouchPoints
+    Object.defineProperty(navigator, 'maxTouchPoints', {
+      value: 0,
+      writable: true
+    });
+
+    const addEventListenerSpy = jest.spyOn(HTMLElement.prototype, 'addEventListener');
+
+    const manager = new TiltEffectManager();
+
+    // Each card should have 3 event listeners (mousemove, mouseleave, mouseenter)
+    expect(addEventListenerSpy).toHaveBeenCalled();
+
+    addEventListenerSpy.mockRestore();
+
+    // Cleanup
+    if (originalOntouchstart !== undefined) {
+      window.ontouchstart = originalOntouchstart;
+    }
+  });
+
+  test('handleTilt should calculate correct rotation', () => {
+    window.matchMedia = mockMatchMedia(false);
+    delete window.ontouchstart;
+    Object.defineProperty(navigator, 'maxTouchPoints', { value: 0, writable: true });
+
+    const manager = new TiltEffectManager();
+    const card = document.querySelector('.game-card');
+
+    // Mock getBoundingClientRect
+    card.getBoundingClientRect = jest.fn().mockReturnValue({
+      left: 0,
+      top: 0,
+      width: 300,
+      height: 200
+    });
+
+    // Simulate mouse at center (should result in no rotation)
+    const centerEvent = { clientX: 150, clientY: 100 };
+    manager.handleTilt(centerEvent, card);
+
+    expect(card.style.transform).toContain('perspective(1000px)');
+    expect(card.style.transform).toContain('rotateX(');
+    expect(card.style.transform).toContain('rotateY(');
+    expect(card.style.transform).toContain('scale(1.02)');
+  });
+
+  test('resetTilt should clear transform', () => {
+    window.matchMedia = mockMatchMedia(false);
+    delete window.ontouchstart;
+    Object.defineProperty(navigator, 'maxTouchPoints', { value: 0, writable: true });
+
+    const manager = new TiltEffectManager();
+    const card = document.querySelector('.game-card');
+
+    card.style.transform = 'perspective(1000px) rotateX(5deg) rotateY(5deg)';
+
+    manager.resetTilt(card);
+
+    expect(card.style.transform).toBe('');
+    expect(card.style.transition).toContain('transform');
+  });
+
+  test('activateTilt should disable transition', () => {
+    window.matchMedia = mockMatchMedia(false);
+    delete window.ontouchstart;
+    Object.defineProperty(navigator, 'maxTouchPoints', { value: 0, writable: true });
+
+    const manager = new TiltEffectManager();
+    const card = document.querySelector('.game-card');
+
+    manager.activateTilt(card);
+
+    expect(card.style.transition).toBe('none');
+  });
+});
+
+// ============================================
 // Integration Tests
 // ============================================
 describe('Integration Tests', () => {

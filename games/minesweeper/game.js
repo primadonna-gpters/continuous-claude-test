@@ -167,6 +167,11 @@ class Minesweeper {
 
         this.renderBoard();
         this.updateBestTime();
+
+        // Record this game as recently played
+        if (typeof recordRecentPlay === 'function') {
+            recordRecentPlay('minesweeper');
+        }
     }
 
     placeMines(firstRow, firstCol) {

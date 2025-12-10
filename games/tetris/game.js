@@ -377,6 +377,11 @@ class TetrisGame {
         this.soundManager.playStart();
 
         this.gameLoop = setInterval(() => this.update(), this.gameSpeed);
+
+        // Record this game as recently played
+        if (typeof recordRecentPlay === 'function') {
+            recordRecentPlay('tetris');
+        }
     }
 
     stopGame() {

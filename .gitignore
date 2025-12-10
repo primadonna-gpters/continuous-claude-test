@@ -1,4 +1,5 @@
 .continuous-claude
+coverage
 
 # Python
 .venv/
