@@ -223,35 +223,129 @@ h1 {
 }
 
 .tile-new {
-    animation: appear3d 0.25s ease-out;
+    animation: appear3d 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .tile-merged {
-    animation: pop3d 0.25s ease-out;
+    animation: pop3d 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 10;
 }
 
 @keyframes appear3d {
     0% {
         opacity: 0;
-        transform: scale(0) rotateY(-180deg) translateZ(20px);
+        transform: scale(0) rotateY(-180deg) rotateX(30deg) translateZ(50px);
+        filter: blur(4px);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.1) rotateY(-20deg) rotateX(5deg) translateZ(20px);
+        filter: blur(0);
     }
     100% {
         opacity: 1;
-        transform: scale(1) rotateY(0) translateZ(0);
+        transform: scale(1) rotateY(0) rotateX(0) translateZ(0);
     }
 }
 
 @keyframes pop3d {
     0% {
-        transform: scale(1) translateZ(0);
+        transform: scale(1) translateZ(0) rotateX(0);
+        box-shadow: none;
+    }
+    30% {
+        transform: scale(1.25) translateZ(30px) rotateX(-5deg);
+        box-shadow:
+            0 15px 35px rgba(0, 0, 0, 0.3),
+            0 0 30px rgba(255, 200, 100, 0.4);
     }
     50% {
-        transform: scale(1.15) translateZ(15px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        transform: scale(1.2) translateZ(25px) rotateX(3deg);
+    }
+    70% {
+        transform: scale(1.05) translateZ(10px) rotateX(-2deg);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
     }
     100% {
-        transform: scale(1) translateZ(0);
+        transform: scale(1) translateZ(0) rotateX(0);
+        box-shadow: none;
     }
+}
+
+/* Tile shimmer effect for high value tiles */
+.tile-128, .tile-256, .tile-512, .tile-1024, .tile-2048, .tile-super {
+    position: relative;
+    overflow: hidden;
+}
+
+.tile-128::after, .tile-256::after, .tile-512::after, .tile-1024::after, .tile-2048::after, .tile-super::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent 40%,
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 60%
+    );
+    animation: tileShimmer 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes tileShimmer {
+    0%, 100% {
+        transform: translateX(-100%) rotate(45deg);
+    }
+    50% {
+        transform: translateX(100%) rotate(45deg);
+    }
+}
+
+/* 2048 tile special glow effect */
+.tile-2048 {
+    animation: tile2048Glow 2s ease-in-out infinite;
+}
+
+.tile-2048.tile-merged {
+    animation: pop3d 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), tile2048Glow 2s ease-in-out infinite 0.35s;
+}
+
+@keyframes tile2048Glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(237, 194, 46, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 40px rgba(237, 194, 46, 0.7), 0 0 60px rgba(237, 194, 46, 0.4);
+    }
+}
+
+/* Score floating number animation */
+.score-add {
+    position: absolute;
+    font-weight: bold;
+    color: #776e65;
+    font-size: 20px;
+    pointer-events: none;
+    animation: scoreFloat 0.8s ease-out forwards;
+    z-index: 100;
+}
+
+@keyframes scoreFloat {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-50px) scale(1.5);
+    }
+}
+
+body.dark-mode .score-add {
+    color: #eee4da;
 }
 
 /* Tile colors */
@@ -699,9 +793,17 @@ body.dark-mode .dark-icon {
 @media (prefers-reduced-motion: reduce) {
     .tile-new,
     .tile-merged,
+    .tile-2048,
+    .tile-2048.tile-merged,
     #game-message,
-    #game-message p {
+    #game-message p,
+    .score-add {
         animation: none !important;
+    }
+
+    .tile-128::after, .tile-256::after, .tile-512::after,
+    .tile-1024::after, .tile-2048::after, .tile-super::after {
+        display: none;
     }
 
     #new-game-btn:hover,
