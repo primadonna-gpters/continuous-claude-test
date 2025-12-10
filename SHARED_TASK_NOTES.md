@@ -1,72 +1,89 @@
 # Game Hub - Task Notes
 
 ## Current Status
-멀티 게임 허브 완성. 2048, Snake, Minesweeper, Tetris, Breakout, Memory, Pixel Survivor 7개 게임 플레이 가능.
-**PWA 지원 추가 완료! 오프라인에서도 게임 플레이 가능.**
-**업적 시스템 추가 완료! 30개 업적 달성 가능.**
+멀티 게임 허브 완성. 7개 게임 플레이 가능.
+- **PWA 지원 완료**
+- **업적 시스템 완료 (30개)**
+- **Web UI Phase 1 완료** (글래스모피즘, 애니메이션, 배지)
+- **Web UI Phase 2.2 완료** (통계 섹션)
+- **Web UI Phase 2.3 완료** (최근 플레이 섹션)
 
-## 게임 실행 방법
-```bash
-python -m http.server 8000
-# 브라우저에서 http://localhost:8000 접속
+---
+
+## 완료된 작업
+
+### Phase 2.2: 통계 섹션 (완료)
+- `index.html`: `.stats-section` 추가
+- `style.css`: 통계 카드 스타일 + 다크모드 + 반응형
+- `hub.js`: `StatsManager` 클래스 구현
+  - 게임별 최고 점수 표시 (2048, Snake, Tetris, Breakout)
+  - Memory, Survivor 특수 포맷 (moves, time)
+  - localStorage에서 데이터 읽어 동적 렌더링
+
+### Phase 2.3: 최근 플레이 섹션 (완료)
+- `index.html`: `.recent-section` 추가
+- `style.css`: 최근 플레이 카드 스타일 + 다크모드 + 반응형
+- `hub.js`: `RecentGamesManager` 클래스 구현
+  - `localStorage.getItem('recent-games')` 기반
+  - 최대 3개 게임 표시
+  - 기록 없으면 섹션 숨김
+
+---
+
+## 🎯 다음 작업: Phase 2.3 완성 + Phase 3
+
+### Phase 2.3 추가 작업 (남은 작업)
+각 게임에서 `recordRecentPlay()` 함수 호출 추가 필요:
+
+```javascript
+// 각 게임의 game.js에 추가
+function recordRecentPlay(gameName) {
+    const recent = JSON.parse(localStorage.getItem('recent-games') || '[]');
+    const filtered = recent.filter(g => g !== gameName);
+    filtered.unshift(gameName);
+    localStorage.setItem('recent-games', JSON.stringify(filtered.slice(0, 5)));
+}
 ```
 
-## 최근 개선 사항 (현재 iteration)
+**추가해야 할 게임 파일:**
+- [ ] games/2048/game.js - `recordRecentPlay('2048')`
+- [ ] games/snake/game.js - `recordRecentPlay('snake')`
+- [ ] games/minesweeper/game.js - `recordRecentPlay('minesweeper')`
+- [ ] games/tetris/game.js - `recordRecentPlay('tetris')`
+- [ ] games/breakout/game.js - `recordRecentPlay('breakout')`
+- [ ] games/memory/game.js - `recordRecentPlay('memory')`
+- [ ] games/survivor/game.js - `recordRecentPlay('survivor')`
 
-### Thousand Edge (진화 Knife) 시각 효과 추가
-- **칼날 폭풍 오라**: 파란색 에너지 글로우가 나이프 주변을 감싸는 효과
-- **다중 잔상 블레이드**: 5개의 고스트 블레이드가 페이드되며 따라오는 효과
-- **에너지 슬래시 트레일**: 3개의 파동 슬래시 라인이 칼날 주변에서 물결치는 효과
-- **공전하는 에너지 파티클**: 4개의 흰색 빛이 블레이드 주위를 빠르게 회전
-- **마법 핸들 룬**: 손잡이 부분에 맥동하는 푸른 룬 장식
-- **블루-실버 그라데이션**: 진화 버전만의 차별화된 푸른빛 칼날
+### Phase 3: 인터랙티브 요소
+1. **마우스 효과**: 카드 호버 시 3D 틸트 효과
+2. **사운드**: 버튼 클릭, 게임 시작 등 UI 사운드
+3. **파티클 효과**: 업적 달성, 하이스코어 등
 
-### Death Spiral (진화 Axe) 시각 효과 추가
-- **어둠 에너지 궤도 링**: 플레이어 주변 어두운 에너지 고리
-- **공전하는 어둠 위스프**: 8개의 붉은 기운이 궤도를 따라 회전
-- **모션 트레일**: 4단계 잔상이 도끼 뒤를 따라오는 효과
-- **다크 오라**: 붉은 그라데이션의 어둠 오라가 각 도끼를 감싸는 효과
-- **공전 파티클**: 6개의 불꽃 파티클이 도끼 주변을 빠르게 회전
-- **그라데이션 도끼날**: 밝은 빨강에서 어두운 빨강으로 이어지는 입체감 있는 색상
-- **맥동하는 룬 코어**: 도끼 중앙에 어둠의 심장처럼 맥동하는 효과
-- **가장자리 스파크**: 4개 모서리에서 번쩍이는 불꽃
+### Phase 4: 개별 게임 페이지 스타일 통일
+- 게임별 배경 일관성
+- 공통 헤더/푸터 스타일
+- 다크모드 통일
 
-### Hellfire (진화 Fire Wand) 시각 효과 추가
-- **강렬한 헬파이어 오라**: 다중 레이어의 붉은-검은 방사형 글로우
-- **엠버 트레일 파티클**: 파이어볼 뒤로 떨어지는 6개의 불티 잔해
-- **상승하는 연기/재 파티클**: 위로 피어오르는 검은 연기 효과
-- **다층 불꽃 구조**: 외부(어두운 빨강) → 중간(주황) → 코어(노랑) → 중심(흰색)
-- **3개의 불꽃 촉수**: 물결치며 뻗어나가는 불꽃 혀
-- **회전하는 스파크**: 5개의 황금빛 스파크가 중심 주위를 공전
-- **백열 중심**: 눈부신 흰색 코어와 노란 섀도우 글로우
+---
 
-## 기존 시스템 (유지)
-- 업적 시스템 (30개)
-- 사운드 시스템: evolution, union, chest, victory 전용 사운드
-- 진화 무기 이펙트: Bloody Tear, Holy Wand, La Borra, Unholy Vespers
-- 기본 무기 이펙트: Fire Wand, Magic Wand, Knife, Axe, Whip, Garlic, Holy Water, King Bible
-- 시각 효과: Pentagram, Song of Mana, Cross, Runetracer, Lightning Ring
-- 스테이지별 배경 그래픽 (5종)
-- 아케인 시스템 (12종)
-- 8개 캐릭터, 15개 패시브 아이템
-- 12개 기본 무기 + 12개 진화 무기 + 6개 새 무기 + 3개 Union 무기
-- 5개 스테이지 + Hyper Mode
-- PWA 오프라인 지원
-- 파티클 시스템 + 화면 흔들림 효과
+## localStorage 키 정리 (참조용)
 
-## 다음 iteration 우선순위
+| 게임 | localStorage 키 | 값 형식 |
+|------|----------------|---------|
+| 2048 | `2048-best-score` | 숫자 (점수) |
+| Snake | `snake-best-score` | 숫자 (점수) |
+| Tetris | `tetris-best-score` | 숫자 (점수) |
+| Breakout | `breakout-best-score` | 숫자 (점수) |
+| Memory | `memory-best-easy`, `-medium`, `-hard` | 숫자 (이동 횟수) |
+| Survivor | `survivor-best-time` | 숫자 (초) |
+| Minesweeper | `minesweeper-best-beginner` 등 | 숫자 (초) |
+| Recent Games | `recent-games` | JSON 배열 (게임명) |
 
-1. **추가 콘텐츠**
-   - 새로운 캐릭터 또는 무기 추가
-   - 숨겨진 업적 (Hidden achievements)
-   - 도전 모드 (Challenge Mode)
+---
 
-2. **UX 개선**
-   - 게임 튜토리얼 추가
-   - 통계 화면 (플레이 시간, 총 킬수 등)
-   - 업적 달성 보상 시스템
+## 기술적 고려사항
 
-3. **추가 시각 효과**
-   - 남은 진화 무기들 (Vandalier, Infinite Corridor 등)
-   - 보스 등장 이펙트
-   - 레벨업/진화 시 화려한 연출
+1. **성능**: CSS 애니메이션은 `transform`과 `opacity`만 사용 (GPU 가속)
+2. **접근성**: `prefers-reduced-motion` 지원 필수
+3. **호환성**: 모던 브라우저 대상 (Chrome, Firefox, Safari, Edge)
+4. **PWA**: Service Worker 캐시 무효화 필요시 sw.js 수정
