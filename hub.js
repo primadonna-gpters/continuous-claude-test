@@ -623,7 +623,10 @@ class RecentGamesManager {
             'tetris': { icon: '🧱', url: 'games/tetris/index.html', displayName: 'Tetris' },
             'breakout': { icon: '🏓', url: 'games/breakout/index.html', displayName: 'Breakout' },
             'memory': { icon: '🧠', url: 'games/memory/index.html', displayName: 'Memory' },
-            'survivor': { icon: '🧛', url: 'games/survivor/index.html', displayName: 'Survivor' }
+            'survivor': { icon: '🧛', url: 'games/survivor/index.html', displayName: 'Survivor' },
+            'flappy': { icon: '🐤', url: 'games/flappy/index.html', displayName: 'Flappy Bird' },
+            'pong': { icon: '🎾', url: 'games/pong/index.html', displayName: 'Pong' },
+            'wordle': { icon: '📝', url: 'games/wordle/index.html', displayName: 'Wordle' }
         };
         this.currentIndex = 0;
         this.render();
@@ -922,7 +925,10 @@ class TouchInteractionManager {
             'tetris': { icon: '🧱', name: 'Tetris', description: '떨어지는 블록을 쌓아 줄을 완성하는 게임', controls: '화면 버튼으로 조작' },
             'breakout': { icon: '🏓', name: 'Breakout', description: '패들로 공을 튕겨 벽돌을 깨는 게임', controls: '터치 드래그로 조작' },
             'memory': { icon: '🧠', name: 'Memory', description: '같은 그림의 카드 짝을 찾는 게임', controls: '탭으로 조작' },
-            'survivor': { icon: '🧛', name: 'Pixel Survivor', description: '몰려오는 적을 처치하고 살아남는 게임', controls: '가상 조이스틱으로 조작' }
+            'survivor': { icon: '🧛', name: 'Pixel Survivor', description: '몰려오는 적을 처치하고 살아남는 게임', controls: '가상 조이스틱으로 조작' },
+            'flappy': { icon: '🐤', name: 'Flappy Bird', description: '파이프 사이를 날아서 통과하는 게임', controls: '탭으로 조작' },
+            'pong': { icon: '🎾', name: 'Pong', description: 'AI와 탁구 대결을 펼치는 게임', controls: '터치 드래그로 조작' },
+            'wordle': { icon: '📝', name: 'Wordle', description: '5글자 영어 단어를 맞추는 게임', controls: '가상 키보드로 조작' }
         };
 
         this.createModal();
@@ -1033,7 +1039,7 @@ class FooterStatsManager {
             gamesPlayed: 0
         };
 
-        const games = ['snake', 'tetris', 'memory', 'breakout', '2048', 'flappybird', 'minesweeper', 'pong'];
+        const games = ['snake', 'tetris', 'memory', 'breakout', '2048', 'minesweeper', 'survivor', 'flappy', 'pong', 'wordle'];
 
         games.forEach(game => {
             const plays = parseInt(localStorage.getItem(`${game}_plays`) || '0', 10);
@@ -1071,7 +1077,7 @@ class FooterStatsManager {
             </div>
             <div class="footer-stat-item">
                 <span class="footer-stat-icon">🏆</span>
-                <span class="footer-stat-value">${stats.gamesPlayed}/8</span>
+                <span class="footer-stat-value">${stats.gamesPlayed}/10</span>
                 <span class="footer-stat-label">플레이한 게임</span>
             </div>
         `;

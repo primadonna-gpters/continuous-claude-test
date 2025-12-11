@@ -1,343 +1,235 @@
 # Implementation Plan
 
-> Session: 20251211-133910-39218-123d
-
 ## Overview
+Add 3 new games to the existing Game Hub. The hub currently has 7 games (2048, Snake, Minesweeper, Tetris, Breakout, Memory, Pixel Survivor). This task will add 3 additional classic/casual games to enhance the collection.
 
-Game Hub 메인페이지 UI 개선 계획입니다. 현재 메인페이지는 이미 잘 구성되어 있으며, 다음과 같은 추가 개선 사항을 제안합니다:
+## Recommended New Games
+Based on the existing game types and patterns, the following 3 games are recommended:
+1. **Flappy Bird** - Simple tap-to-fly arcade game (good contrast to existing games)
+2. **Pong** - Classic paddle/ball game (single player vs AI)
+3. **Wordle** - Word guessing puzzle game (adds word-based gameplay variety)
 
-### 현재 상태
-- **기존 구현**: Glassmorphism 게임 카드, 3D Tilt 효과, 파티클 시스템, 다크/라이트 모드
-- **최근 개선**: PR #40 (CSS Variables, 애니메이션), PR #38 (3D 효과, 페이지 전환)
-- **테스트 커버리지**: 95%+
-
-### 제안하는 UI 개선 항목
+## Project Structure Pattern
+Each game must follow this structure:
+```
+games/{game-name}/
+├── index.html    # Game page with standard layout
+├── style.css     # Game-specific styling
+├── game.js       # Game logic class
+└── game.test.js  # Unit tests (optional but recommended)
+```
 
 ## Steps
 
-### 1. [x] 히어로 섹션 개선
-**설명**: 헤더 영역에 더 강렬한 시각적 임팩트 추가
-- Files: `style.css`, `index.html`
-- 구현 내용:
-  - 배경에 그라데이션 메쉬(gradient mesh) 패턴 추가
-  - 타이틀에 호버 시 글리치(glitch) 효과 적용
-  - 서브타이틀 타이핑 효과 완료 후 블링크 커서 유지
-- Criteria:
-  - 헤더 섹션이 더 생동감 있게 표시됨
-  - 3D 효과가 자연스럽게 적용됨
+### 1. [x] Create Flappy Bird Game
+- **Files to create:**
+  - `games/flappy/index.html` - Game page following Memory/Tetris pattern
+  - `games/flappy/style.css` - Game-specific styles
+  - `games/flappy/game.js` - FlappyBird class with canvas-based gameplay
+- **Key features:**
+  - Canvas-based rendering
+  - Touch/click/spacebar controls
+  - Score tracking with best score in localStorage
+  - Sound effects (optional, SoundManager pattern)
+  - Difficulty progression (pipes get closer)
+- **Criteria:** Game loads, bird flaps, pipes scroll, collision detection works, score displays
 
-### 2. [x] 게임 카드 레이아웃 변경 - 특집 카드 강조
-**설명**: Popular/Best 배지가 있는 게임을 더 크게 표시
-- Files: `style.css`
-- 구현 내용:
-  - `.game-card:has(.badge-popular), .game-card:has(.badge-best)` 카드를 2열 너비로 확장
-  - 특집 카드에 애니메이션 보더 효과 추가
-  - grid-column: span 2 적용 (데스크탑)
-- Criteria:
-  - Popular/Best 배지 게임이 다른 카드보다 눈에 띄게 표시됨
-  - 모바일에서는 1열로 자연스럽게 축소
+### 2. [x] Create Pong Game
+- **Files to create:**
+  - `games/pong/index.html` - Game page following existing pattern
+  - `games/pong/style.css` - Game-specific styles
+  - `games/pong/game.js` - Pong class with canvas-based gameplay
+- **Key features:**
+  - Canvas-based rendering
+  - Mouse/touch/keyboard controls for paddle
+  - AI opponent with adjustable difficulty
+  - Score tracking (first to 11 wins)
+  - Sound effects (optional)
+- **Criteria:** Paddles move, ball bounces, AI plays, scoring works
 
-### 3. [x] 통계 카드 시각적 개선
-**설명**: 게임 통계 카드에 더 풍부한 시각적 정보 추가
-- Files: `style.css`, `hub.js`
-- 구현 내용:
-  - 각 통계 카드에 미니 프로그레스 바 추가 (예: 최고점수 vs 가능한 최대)
-  - 아이콘과 함께 통계 유형 표시
-  - 호버 시 상세 정보 툴팁 개선
-- Criteria:
-  - 통계 카드가 더 정보적으로 표시됨
-  - 애니메이션이 부드럽게 작동
+### 3. [x] Create Wordle Game
+- **Files to create:**
+  - `games/wordle/index.html` - Game page following existing pattern
+  - `games/wordle/style.css` - Game-specific styles
+  - `games/wordle/game.js` - Wordle class with grid-based gameplay
+- **Key features:**
+  - 6 attempts to guess 5-letter word
+  - Color feedback (green=correct, yellow=wrong position, gray=not in word)
+  - Virtual keyboard with color hints
+  - Word list for valid guesses and solutions
+  - Statistics tracking (win rate, streak)
+  - Share results feature
+- **Criteria:** Keyboard input works, color feedback displays correctly, win/lose detection works
 
-### 4. [x] 최근 게임 섹션 슬라이더 개선
-**설명**: 최근 플레이 게임 목록을 캐러셀/슬라이더로 개선
-- Files: `style.css`, `hub.js`
-- 구현 내용:
-  - 좌우 스크롤 버튼 추가
-  - 스크롤 스냅(scroll-snap) 적용
-  - 현재 위치 인디케이터(dots) 추가
-- Criteria:
-  - 모바일에서 스와이프 가능
-  - 데스크탑에서 버튼으로 네비게이션 가능
+### 4. [x] Register Games in Hub
+- **Files to modify:**
+  - `hub.js` - Add 3 new entries to `this.games` object in `RecentGamesManager` (~line 619)
+  - `index.html` - Add 3 new game cards to `.games-grid` section
+- **New registry entries:**
+  ```javascript
+  'flappy': { icon: '🐤', url: 'games/flappy/index.html', displayName: 'Flappy Bird' },
+  'pong': { icon: '🏓', url: 'games/pong/index.html', displayName: 'Pong' },
+  'wordle': { icon: '📝', url: 'games/wordle/index.html', displayName: 'Wordle' }
+  ```
+- **Criteria:** All 3 new games appear on hub page, clicking navigates to game, recent games tracking works
 
-### 5. [x] 게임 카드 호버 정보 개선
-**설명**: 게임 카드 호버 시 더 많은 정보 표시
-- Files: `style.css`, `index.html`
-- 구현 내용:
-  - 호버 시 게임 조작 방법 힌트 표시 (키보드/터치 아이콘)
-  - 호버 시 예상 플레이 시간 또는 난이도 표시
-  - 호버 overlay에 간단한 게임 특징 나열
-- Criteria:
-  - 추가 정보가 자연스럽게 표시됨
-  - 3D tilt 효과와 충돌하지 않음
+### 5. [x] Update Meta Description
+- **File to modify:**
+  - `index.html` - Update meta description to include new games
+- **Criteria:** Meta description lists all 10 games
 
-### 6. [x] 스크롤 기반 애니메이션 강화
-**설명**: 스크롤 위치에 따른 요소별 애니메이션 개선
-- Files: `style.css`, `hub.js`
-- 구현 내용:
-  - 게임 카드 순차적 fade-in 개선 (stagger 효과 강화)
-  - 통계 카드 카운트업 애니메이션을 뷰포트 진입 시 시작
-  - 패럴랙스 효과 깊이 조절
-- Criteria:
-  - 스크롤 시 요소들이 자연스럽게 등장
-  - 성능에 영향 없음 (60fps 유지)
+## Technical Requirements
 
-### 7. [x] 접근성 및 모션 옵션 강화
-**설명**: 사용자 설정에 따른 모션 조절 옵션 추가
-- Files: `style.css`, `hub.js`
-- 구현 내용:
-  - 애니메이션 토글 버튼 추가 (테마 토글 옆)
-  - prefers-reduced-motion 대응 강화
-  - 키보드 네비게이션 포커스 인디케이터 개선
-- Criteria:
-  - 모션에 민감한 사용자도 편하게 사용 가능
-  - 모든 기능이 키보드로 접근 가능
+### HTML Template Pattern (from Memory game)
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{Game Name}</title>
+    <link rel="stylesheet" href="../../common.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="animated-bg">
+    <div class="container fade-in">
+        <header>
+            <div class="header-left">
+                <a href="../../index.html" class="back-btn back-btn-enhanced">← Hub</a>
+                <h1>{Icon} {Name}</h1>
+            </div>
+            <div class="score-container">
+                <!-- Score boxes -->
+            </div>
+        </header>
+        <!-- Game content -->
+        <div class="instructions">
+            <p><strong>조작 방법:</strong> ...</p>
+        </div>
+    </div>
+    <script src="../../common.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
+```
 
-### 8. [x] 모바일 터치 인터랙션 개선
-**설명**: 모바일 환경에서의 터치 인터랙션 최적화
-- Files: `style.css`, `hub.js`
-- 구현 내용:
-  - 터치 디바이스에서 롱프레스 시 게임 정보 표시
-  - 스와이프 제스처로 카드 간 이동
-  - 터치 피드백 햅틱 힌트 (진동 API 사용 가능 시)
-- Criteria:
-  - 모바일에서 반응성 있는 UI
-  - 터치 타겟이 충분히 큼 (48px 이상)
+### Game Card Template (from index.html)
+```html
+<a href="games/{name}/index.html" class="game-card" role="listitem" aria-label="{name} 게임 - {description}">
+    <div class="game-card-icon" aria-hidden="true">{emoji}</div>
+    <div class="game-card-content">
+        <h3>{Display Name}</h3>
+        <p>{Korean description}!</p>
+    </div>
+    <div class="game-card-arrow" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+    </div>
+    <div class="game-card-info-overlay" aria-hidden="true">
+        <div class="game-card-controls">
+            <span class="game-card-control-icon">⌨️ {controls}</span>
+            <span class="game-card-control-icon">📱 {mobile-controls}</span>
+        </div>
+        <div class="game-card-meta">
+            <span class="game-card-meta-item">⏱️ {time}</span>
+            <span class="game-card-meta-item">난이도 <span class="game-card-difficulty">...</span></span>
+        </div>
+    </div>
+</a>
+```
 
-### 9. [x] 푸터 정보 확장
-**설명**: 푸터에 더 유용한 정보 추가
-- Files: `style.css`, `index.html`
-- 구현 내용:
-  - 게임 총 플레이 횟수/시간 통계
-  - 소셜 공유 버튼 (옵션)
-  - PWA 설치 프롬프트 버튼
-- Criteria:
-  - 푸터가 정보적이면서 깔끔함
-  - PWA 설치 가이드가 명확함
-
-### 10. [x] 테스트 업데이트
-**설명**: 새로운 UI 기능에 대한 테스트 추가
-- Files: `hub.test.js`
-- 구현 내용:
-  - 새로 추가된 모든 기능에 대한 단위 테스트
-  - 애니메이션 토글 테스트
-  - 모바일 터치 인터랙션 테스트
-- Criteria:
-  - 테스트 커버리지 95% 이상 유지
-  - 모든 테스트 통과
-
----
-
-## Implementation Priority
-
-**높음 (핵심 UX 개선)**:
-1. 게임 카드 레이아웃 변경 - 특집 카드 강조 (Step 2)
-2. 통계 카드 시각적 개선 (Step 3)
-3. 스크롤 기반 애니메이션 강화 (Step 6)
-
-**중간 (부가적 개선)**:
-4. 히어로 섹션 개선 (Step 1)
-5. 최근 게임 섹션 슬라이더 개선 (Step 4)
-6. 게임 카드 호버 정보 개선 (Step 5)
-
-**낮음 (옵션)**:
-7. 접근성 및 모션 옵션 강화 (Step 7)
-8. 모바일 터치 인터랙션 개선 (Step 8)
-9. 푸터 정보 확장 (Step 9)
-
----
-
-## Files to Modify
-
-| 파일 | 변경 유형 | 영향 범위 |
-|------|----------|----------|
-| `style.css` | 수정 | Steps 1-9 모든 스타일 변경 |
-| `index.html` | 수정 | Steps 1, 5, 9 HTML 구조 변경 |
-| `hub.js` | 수정 | Steps 3, 4, 6, 7, 8 JavaScript 로직 |
-| `hub.test.js` | 수정 | Step 10 테스트 추가 |
-
----
+### Common Features Each Game Must Have
+1. **Theme toggle** (dark/light mode) - Use existing pattern
+2. **Sound toggle** - Use existing SoundManager pattern
+3. **Best score persistence** - localStorage
+4. **Recent play tracking** - Call `recordRecentPlay('{gamename}')` from common.js
+5. **Responsive design** - Mobile-friendly controls
+6. **Accessibility** - aria-labels, keyboard navigation
 
 ## Notes for Developer
 
-### 기존 아키텍처 주의사항
-1. **CSS Variables 시스템 유지**: 모든 색상, 크기, 간격은 `:root`의 CSS Custom Properties 사용
-2. **다크모드 호환**: `body.dark-mode` 클래스의 변수 재정의 패턴 따르기
-3. **애니메이션 성능**: GPU 가속 속성(`transform`, `opacity`) 우선 사용
-4. **prefers-reduced-motion**: 모든 애니메이션에 감소 모션 대응 필수
+### Execution Order
+1. Create all 3 game directories and files first
+2. Implement game logic for each
+3. Add to hub registry last (ensures games work before being visible)
 
-### JavaScript Manager 패턴
-- 기존 Manager 클래스 패턴을 따라 새 기능 구현
-- 예: `CarouselManager`, `AnimationToggleManager` 등
-- `DOMContentLoaded` 이벤트에서 초기화
+### Styling Guidelines
+- Use CSS variables from common.css (--color-*, --spacing-*, etc.)
+- Follow existing glassmorphism patterns (.glass, .score-box-glass)
+- Dark mode: Use `body.dark-mode` selectors
+- Animations: Use existing animation classes from common.css
 
-### 테스트 패턴
-- JSDOM 환경 기반 테스트
-- localStorage 모킹 필요
-- CSS 애니메이션은 transition/animation 속성 검증
+### Testing
+- Test keyboard controls
+- Test touch/mobile controls
+- Test dark mode appearance
+- Test localStorage persistence (scores, theme preference)
+- Verify back button returns to hub correctly
 
-### 커밋 컨벤션
-```
-📋 [planner] Add implementation plan for main page UI improvements
-```
+### localStorage Keys Convention
+- `{gamename}-best-score` - Best score
+- `{gamename}-sound` - Sound preference (true/false)
+- `{gamename}-*` - Game-specific settings
 
----
-
-## Notes for Tester
-
-### 새로 추가된 클래스 목록 (테스트 필요)
-
-| 클래스 | 파일 | 테스트 포인트 |
-|-------|------|--------------|
-| `AnimationToggleManager` | `hub.js` | 버튼 토글, localStorage 저장, 애니메이션 비활성화 |
-| `FooterStatsManager` | `hub.js` | 총 플레이 통계 계산, formatTime 메서드, 렌더링 |
-| `PWAInstallManager` | `hub.js` | beforeinstallprompt 이벤트, 설치 상태 표시 |
-| `TouchInteractionManager` | `hub.js` | 롱프레스 감지, 모달 표시/숨김, 햅틱 피드백 |
-
-### 기존 클래스 변경사항
-
-| 클래스 | 변경 내용 |
-|-------|----------|
-| `StatsManager` | `calculateProgress()` 메서드 추가, 프로그레스 바 렌더링 |
-| `RecentGamesManager` | 캐러셀 네비게이션 버튼/dots 추가, `navigateCarousel()`, `updateDots()` |
-| `ScrollAnimationManager` | stagger 애니메이션 강화, stat-card 관찰자 추가 |
-
-### 테스트 시 고려사항
-
-1. **localStorage 모킹**: 통계 데이터 테스트 시 `{game}_plays`, `{game}_time`, `{game}_highScore` 키 사용
-2. **CSS 애니메이션 비활성화**: `body.animations-disabled` 클래스로 모든 애니메이션 제거 확인
-3. **모바일 터치 이벤트**: `touchstart`, `touchend`, `touchmove` 이벤트 시뮬레이션
-4. **PWA 이벤트**: `beforeinstallprompt`, `appinstalled` 이벤트 모킹
-5. **prefers-reduced-motion**: 미디어 쿼리 모킹으로 감소 모션 대응 테스트
-
-### 새로운 CSS 클래스 (시각적 테스트)
-
-- `.footer-total-stats`, `.footer-stat-item`: 푸터 통계 영역
-- `.pwa-install-btn`, `.pwa-install-btn.installed`: PWA 설치 버튼
-- `.game-card:has(.badge-popular)`, `.game-card:has(.badge-best)`: 특집 카드 (grid-column: span 2)
-- `.glitch-effect`: 타이틀 호버 시 글리치 효과
-- `.carousel-nav-btn`, `.carousel-dots`: 캐러셀 네비게이션
-- `.game-card-info-overlay`: 게임 카드 호버 정보
-- `.animation-toggle-btn`: 애니메이션 토글 버튼
-- `.touch-info-modal`, `.touch-info-modal-backdrop`: 터치 정보 모달
+## Session Info
+> Session: 20251211-141404-53670-2340
 
 ---
 
-## Status: Fully Complete
+## Developer Implementation Notes
 
-DEVELOPER_TASK_COMPLETE
+### Completed Steps
+All 5 steps have been completed successfully:
 
----
+1. **Flappy Bird Game** - `games/flappy/`
+   - Canvas-based game with gravity physics
+   - Click/tap/spacebar controls for jumping
+   - Pipes spawn with random gaps
+   - Score increases when passing pipes
+   - Best score saved to localStorage
+   - Sound effects for jump, score, and hit
 
-## Test Results
+2. **Pong Game** - `games/pong/`
+   - Canvas-based game with AI opponent
+   - 3 difficulty levels (Easy/Medium/Hard)
+   - Mouse, touch, and keyboard controls
+   - First to 11 points wins
+   - Game statistics tracked in localStorage
 
-### Summary
-- **Tests written:** 85 new tests (total: 621)
-- **Tests passing:** 621/621 (100%)
-- **hub.js Coverage:** 91.34% lines, 89.69% statements, 84.83% branches, 84.39% functions
+3. **Wordle Game** - `games/wordle/`
+   - DOM-based 6x5 grid with virtual keyboard
+   - ~500 common 5-letter English words
+   - Green/Yellow/Gray color feedback
+   - Win streak and total wins tracking
+   - Tile flip animations
 
-### New Test Suites Added
+4. **Hub Registration** - Updated `hub.js` and `index.html`
+   - Added 3 new game entries to RecentGamesManager
+   - Added 3 new game entries to TouchInteractionManager
+   - Updated FooterStatsManager from /8 to /10 games
+   - Added 3 new game cards with "New" badges
 
-| Test Suite | Tests | Description |
-|------------|-------|-------------|
-| `AnimationToggleManager` | 10 | Animation toggle button, localStorage persistence, prefers-reduced-motion |
-| `FooterStatsManager` | 11 | Total stats calculation, formatTime, rendering |
-| `PWAInstallManager` | 7 | Install button, beforeinstallprompt, standalone mode |
-| `TouchInteractionManager` | 14 | Long press detection, modal, haptic feedback |
-| `StatsManager - calculateProgress` | 8 | Progress bar calculation, inverse progress |
-| `RecentGamesManager - Carousel` | 10 | Navigation buttons, dots, carousel state |
-| `ScrollAnimationManager - Stat Cards` | 2 | Stat card observation, reduced motion |
+5. **Meta Description** - Updated in `index.html`
+   - Now lists all 10 games
 
-### Coverage Details
+### Files Created
+- `games/flappy/index.html`, `style.css`, `game.js`
+- `games/pong/index.html`, `style.css`, `game.js`
+- `games/wordle/index.html`, `style.css`, `game.js`
 
-```
-File      | % Stmts | % Branch | % Funcs | % Lines
-----------|---------|----------|---------|--------
-hub.js    | 89.69%  | 84.83%   | 84.39%  | 91.34%
-common.js | 100%    | 87.87%   | 100%    | 100%
-```
+### Files Modified
+- `hub.js` - Added game registrations
+- `index.html` - Added game cards and updated meta description
 
-### Test Fixes Applied
-- Updated `should limit to 3 recent games` test to `should limit to 5 recent games` (implementation changed display count from 3 to 5)
+### Notes for Tester
+1. **Flappy Bird**: Test click/tap/spacebar controls, check if bird falls with gravity and flaps up on input
+2. **Pong**: Test all 3 difficulty levels, verify AI opponent works correctly
+3. **Wordle**: Test virtual keyboard and physical keyboard input, verify color feedback (green=correct position, yellow=in word but wrong position, gray=not in word)
+4. **All Games**: Verify dark mode toggle, sound toggle, and back button to hub
+5. **Hub Page**: Check that all 3 new games appear with "New" badges, recent games tracking works
 
-### Issues Found
-None - All implementations are working correctly.
+## Status: Implementation Complete
 
-TESTER_TASK_COMPLETE
-
----
-
-## Code Review Summary
-
-### Verdict: APPROVED ✅
-
-### Review Date: 2025-12-11
-
-### Files Reviewed
-- 5 files changed: `hub.js`, `hub.test.js`, `index.html`, `style.css`, `SHARED_TASK_NOTES.md`
-- Total: +2,227 additions, -396 deletions
-
-### Code Quality Assessment
-
-**Strengths:**
-
-1. **New JavaScript Managers (4 new classes)**
-   - `AnimationToggleManager`: Properly respects `prefers-reduced-motion`, persists state to localStorage, updates `aria-pressed` for accessibility
-   - `FooterStatsManager`: Clean statistics aggregation from localStorage, proper time formatting
-   - `PWAInstallManager`: Handles `beforeinstallprompt` event correctly, checks standalone mode
-   - `TouchInteractionManager`: Long-press detection with haptic feedback, proper cleanup on touch end
-
-2. **Enhanced Existing Classes**
-   - `StatsManager`: Added `calculateProgress()` method with inverse mode for "lower is better" stats
-   - `RecentGamesManager`: Carousel navigation with prev/next buttons and dot indicators
-   - `ScrollAnimationManager`: Enhanced to observe stat cards in addition to game cards
-
-3. **Accessibility Excellence**
-   - All new interactive elements have proper `aria-label` attributes
-   - Animation toggle button uses `aria-pressed` state
-   - `prefers-reduced-motion` respected across all animation managers
-   - New overlay elements marked with `aria-hidden="true"`
-   - Keyboard accessible buttons with descriptive titles
-
-4. **Performance Considerations**
-   - Passive scroll event listeners (`{ passive: true }`)
-   - IntersectionObserver for scroll animations
-   - Proper cleanup of touch event timers
-   - GPU-accelerated animations via transform/opacity
-
-5. **Security Review**
-   - No security vulnerabilities identified
-   - localStorage usage is appropriate (game statistics only)
-   - All dynamically generated HTML is from trusted static data (gameInfo object)
-   - No user input handling issues
-
-6. **Testing Coverage**
-   - 621 tests passing (100%)
-   - hub.js coverage: 91.34% lines, 84.83% branches
-   - All new features thoroughly tested
-   - Edge cases covered (missing elements, reduced motion, etc.)
-
-### Acceptance Criteria Met
-- [x] Step 1: Hero section improvements (glitch effect, gradient mesh)
-- [x] Step 2: Featured card layout (grid-column: span 2 for popular/best)
-- [x] Step 3: Stats card progress bars
-- [x] Step 4: Carousel navigation for recent games
-- [x] Step 5: Game card hover info overlay
-- [x] Step 6: Scroll-based stagger animations
-- [x] Step 7: Animation toggle accessibility feature
-- [x] Step 8: Mobile touch interactions (long-press, haptic feedback)
-- [x] Step 9: Footer stats and PWA install button
-- [x] Step 10: Comprehensive test coverage
-
-### What's Good
-- Clean, maintainable code following existing patterns
-- Excellent accessibility support with animation toggle
-- Thorough test coverage for all new features
-- Proper handling of user preferences (dark mode, reduced motion)
-- Mobile-first approach with touch-specific features
-
-### Minor Notes (Non-blocking)
-- Code follows existing codebase patterns consistently
-- All implementations are well-documented through clear class/method names
-- No issues requiring changes
-
-REVIEW_APPROVED
+AGENT_TASK_COMPLETE
