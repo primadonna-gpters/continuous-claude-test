@@ -633,7 +633,7 @@ describe('TiltEffectManager', () => {
     expect(card.style.transform).toContain('perspective(1000px)');
     expect(card.style.transform).toContain('rotateX(');
     expect(card.style.transform).toContain('rotateY(');
-    expect(card.style.transform).toContain('scale(1.02)');
+    expect(card.style.transform).toContain('scale(1.03)');
   });
 
   test('resetTilt should clear transform', () => {
@@ -652,7 +652,7 @@ describe('TiltEffectManager', () => {
     expect(card.style.transition).toContain('transform');
   });
 
-  test('activateTilt should disable transition', () => {
+  test('activateTilt should set box-shadow transition', () => {
     window.matchMedia = mockMatchMedia(false);
     delete window.ontouchstart;
     Object.defineProperty(navigator, 'maxTouchPoints', { value: 0, writable: true });
@@ -662,7 +662,7 @@ describe('TiltEffectManager', () => {
 
     manager.activateTilt(card);
 
-    expect(card.style.transition).toBe('none');
+    expect(card.style.transition).toBe('box-shadow 0.1s ease');
   });
 });
 

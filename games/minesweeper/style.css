@@ -207,7 +207,184 @@ h1 {
 }
 
 #game-container:hover {
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.15),
+        0 0 25px rgba(96, 125, 139, 0.15);
+}
+
+/* Cell reveal animation */
+.cell.revealing {
+    animation: cellReveal 0.25s ease-out forwards;
+}
+
+@keyframes cellReveal {
+    0% {
+        transform: rotateX(0deg) scale(1);
+        background-color: #90a4ae;
+    }
+    40% {
+        transform: rotateX(90deg) scale(0.9);
+    }
+    60% {
+        transform: rotateX(90deg) scale(0.9);
+    }
+    100% {
+        transform: rotateX(0deg) scale(1);
+        background-color: #eceff1;
+    }
+}
+
+/* Flag plant animation */
+.cell.flagging {
+    animation: flagPlant 0.3s ease-out;
+}
+
+@keyframes flagPlant {
+    0% {
+        transform: scale(1) translateY(0);
+    }
+    30% {
+        transform: scale(0.85) translateY(3px);
+    }
+    60% {
+        transform: scale(1.15) translateY(-5px);
+    }
+    100% {
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Mine explosion effect */
+.cell.mine-exploding {
+    animation: mineExplode 0.5s ease-out forwards;
+}
+
+@keyframes mineExplode {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(239, 83, 80, 0);
+    }
+    30% {
+        transform: scale(1.3);
+        box-shadow: 0 0 30px rgba(239, 83, 80, 0.8);
+    }
+    60% {
+        transform: scale(0.9);
+        box-shadow: 0 0 50px rgba(239, 83, 80, 0.5);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(239, 83, 80, 0.3);
+        background-color: #c62828;
+    }
+}
+
+/* Chain reveal ripple */
+.cell.chain-reveal {
+    animation: chainReveal 0.2s ease-out forwards;
+}
+
+@keyframes chainReveal {
+    0% {
+        transform: scale(1) translateZ(0);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(0.95) translateZ(-5px);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1) translateZ(0);
+        opacity: 1;
+    }
+}
+
+/* Win celebration */
+.board-win {
+    animation: boardWin 0.6s ease-out;
+}
+
+@keyframes boardWin {
+    0% {
+        filter: brightness(1);
+    }
+    25% {
+        filter: brightness(1.3) hue-rotate(10deg);
+    }
+    50% {
+        filter: brightness(1.2) hue-rotate(0deg);
+    }
+    75% {
+        filter: brightness(1.1);
+    }
+    100% {
+        filter: brightness(1);
+    }
+}
+
+/* Game over shake */
+.board-shake {
+    animation: boardShake 0.5s ease-out;
+}
+
+@keyframes boardShake {
+    0%, 100% { transform: translateX(0) translateY(0); }
+    10% { transform: translateX(-6px) translateY(-3px); }
+    20% { transform: translateX(6px) translateY(3px); }
+    30% { transform: translateX(-5px) translateY(-2px); }
+    40% { transform: translateX(5px) translateY(2px); }
+    50% { transform: translateX(-4px) translateY(-1px); }
+    60% { transform: translateX(4px) translateY(1px); }
+    70% { transform: translateX(-2px); }
+    80% { transform: translateX(2px); }
+    90% { transform: translateX(-1px); }
+}
+
+/* Cell press 3D effect */
+.cell:not(.revealed):not(.flagged) {
+    box-shadow:
+        2px 2px 4px rgba(0, 0, 0, 0.15),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.3),
+        inset -1px -1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.cell.revealed {
+    box-shadow:
+        inset 1px 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Number reveal glow */
+.cell.revealed[data-number]:not([data-number="0"]) {
+    animation: numberGlow 0.4s ease-out;
+}
+
+@keyframes numberGlow {
+    0% {
+        box-shadow: inset 0 0 0 transparent;
+    }
+    50% {
+        box-shadow:
+            inset 0 0 10px rgba(100, 150, 200, 0.3),
+            0 0 8px rgba(100, 150, 200, 0.2);
+    }
+    100% {
+        box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* Flag wave animation */
+.cell.flagged::after {
+    content: '🚩';
+    animation: flagWave 2s ease-in-out infinite;
+}
+
+@keyframes flagWave {
+    0%, 100% {
+        transform: rotate(-5deg);
+    }
+    50% {
+        transform: rotate(5deg);
+    }
 }
 
 #board {
@@ -574,5 +751,20 @@ body.dark-mode .cell[data-number="8"] { color: #b0bec5; }
     #new-game-btn::before,
     #retry-btn::before {
         display: none;
+    }
+
+    .cell.revealing,
+    .cell.flagging,
+    .cell.mine-exploding,
+    .cell.chain-reveal,
+    .board-win,
+    .board-shake,
+    .cell.revealed[data-number]:not([data-number="0"]),
+    .cell.flagged::after {
+        animation: none !important;
+    }
+
+    .board-shake {
+        transform: none !important;
     }
 }

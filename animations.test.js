@@ -764,9 +764,10 @@ describe('3D Transform Calculations', () => {
     manager.handleTilt(cornerEvent, card);
 
     // Should have positive rotateY (right side) and positive rotateX (top)
-    expect(card.style.transform).toContain('rotateX(8deg)');
-    expect(card.style.transform).toContain('rotateY(8deg)');
-    expect(card.style.transform).toContain('scale(1.02)');
+    // Enhanced 3D effect uses 12 degrees max rotation
+    expect(card.style.transform).toContain('rotateX(12deg)');
+    expect(card.style.transform).toContain('rotateY(12deg)');
+    expect(card.style.transform).toContain('scale(1.03)');
   });
 
   test('handleTilt should apply perspective', () => {
@@ -786,13 +787,13 @@ describe('3D Transform Calculations', () => {
     expect(card.style.transform).toContain('perspective(1000px)');
   });
 
-  test('activateTilt should disable transition', () => {
+  test('activateTilt should set box-shadow transition', () => {
     const manager = new TiltEffectManager();
     const card = document.querySelector('.game-card');
 
     manager.activateTilt(card);
 
-    expect(card.style.transition).toBe('none');
+    expect(card.style.transition).toBe('box-shadow 0.1s ease');
   });
 
   test('resetTilt should enable transition and clear transform', () => {
@@ -805,8 +806,9 @@ describe('3D Transform Calculations', () => {
 
     expect(card.style.transform).toBe('');
     expect(card.style.transition).toContain('transform');
-    expect(card.style.transition).toContain('0.3s');
-    expect(card.style.transition).toContain('ease');
+    // Enhanced 3D effect uses 0.5s elastic timing
+    expect(card.style.transition).toContain('0.5s');
+    expect(card.style.transition).toContain('cubic-bezier');
   });
 });
 
@@ -975,5 +977,682 @@ describe('Recent Games Slide-in Animation', () => {
     expect(card.getAttribute('href')).toBe('games/tetris/index.html');
     expect(card.querySelector('.recent-game-icon').textContent).toBe('🧱');
     expect(card.querySelector('.recent-game-name').textContent).toBe('tetris');
+  });
+});
+
+// ============================================
+// TransitionManager Tests
+// ============================================
+describe('TransitionManager', () => {
+  let TransitionManager, transitionManager;
+
+  beforeEach(() => {
+    const common = require('./common.js');
+    TransitionManager = common.TransitionManager;
+    transitionManager = common.transitionManager;
+  });
+
+  describe('Constructor', () => {
+    test('should detect prefers-reduced-motion when enabled', () => {
+      window.matchMedia = mockMatchMedia(true, false);
+      jest.resetModules();
+      const common = require('./common.js');
+      const manager = new common.TransitionManager();
+      expect(manager.prefersReducedMotion).toBe(true);
+    });
+
+    test('should not have prefers-reduced-motion when disabled', () => {
+      window.matchMedia = mockMatchMedia(false, false);
+      jest.resetModules();
+      const common = require('./common.js');
+      const manager = new common.TransitionManager();
+      expect(manager.prefersReducedMotion).toBe(false);
+    });
+
+    test('should export singleton transitionManager instance', () => {
+      expect(transitionManager).toBeInstanceOf(TransitionManager);
+    });
+  });
+
+  describe('navigateTo', () => {
+    beforeEach(() => {
+      delete window.location;
+      window.location = { href: '' };
+    });
+
+    test('should navigate directly when prefers-reduced-motion is enabled', () => {
+      window.matchMedia = mockMatchMedia(true, false);
+      jest.resetModules();
+      const common = require('./common.js');
+      const manager = new common.TransitionManager();
+
+      manager.navigateTo('/test-page');
+
+      expect(window.location.href).toBe('/test-page');
+    });
+
+    test('should navigate with delay when animations are enabled', (done) => {
+      window.matchMedia = mockMatchMedia(false, false);
+      jest.resetModules();
+      const common = require('./common.js');
+      const manager = new common.TransitionManager();
+
+      manager.navigateTo('/test-page');
+
+      // Should not navigate immediately
+      expect(window.location.href).toBe('');
+
+      // Should navigate after animation delay
+      setTimeout(() => {
+        expect(window.location.href).toBe('/test-page');
+        done();
+      }, 400);
+    });
+  });
+
+  describe('createTransitionOverlay', () => {
+    test('should create overlay for zoom transition with source element', () => {
+      window.matchMedia = mockMatchMedia(false, false);
+      jest.resetModules();
+      const common = require('./common.js');
+      const manager = new common.TransitionManager();
+
+      const sourceElement = document.createElement('div');
+      sourceElement.style.background = 'blue';
+      sourceElement.getBoundingClientRect = jest.fn().mockReturnValue({
+        top: 100,
+        left: 50,
+        width: 200,
+        height: 150
+      });
+      document.body.appendChild(sourceElement);
+
+      manager.createTransitionOverlay('zoom', sourceElement);
+
+      const overlay = document.querySelector('.transition-overlay');
+      expect(overlay).not.toBeNull();
+      expect(overlay.style.top).toBe('100px');
+      expect(overlay.style.left).toBe('50px');
+
+      // Clean up
+      if (manager.transitionContainer) {
+        manager.transitionContainer.remove();
+      }
+    });
+
+    test('should not create overlay for non-zoom transition', () => {
+      const manager = new TransitionManager();
+      const sourceElement = document.createElement('div');
+
+      manager.createTransitionOverlay('default', sourceElement);
+
+      const overlay = document.querySelector('.transition-overlay');
+      expect(overlay).toBeNull();
+    });
+
+    test('should not create overlay without source element', () => {
+      const manager = new TransitionManager();
+
+      manager.createTransitionOverlay('zoom', null);
+
+      const overlay = document.querySelector('.transition-overlay');
+      expect(overlay).toBeNull();
+    });
+  });
+
+  describe('applyEnterAnimation', () => {
+    test('should add page-enter class for default transition', () => {
+      window.matchMedia = mockMatchMedia(false, false);
+      jest.resetModules();
+      const common = require('./common.js');
+      const manager = new common.TransitionManager();
+
+      const element = document.getElementById('game-container');
+      manager.applyEnterAnimation(element, 'default');
+
+      expect(element.classList.contains('page-enter')).toBe(true);
+    });
+
+    test('should add page-zoom-enter class for zoom transition', () => {
+      window.matchMedia = mockMatchMedia(false, false);
+      jest.resetModules();
+      const common = require('./common.js');
+      const manager = new common.TransitionManager();
+
+      const element = document.getElementById('game-container');
+      manager.applyEnterAnimation(element, 'zoom');
+
+      expect(element.classList.contains('page-zoom-enter')).toBe(true);
+    });
+
+    test('should not add class when element is null', () => {
+      const manager = new TransitionManager();
+      expect(() => manager.applyEnterAnimation(null, 'default')).not.toThrow();
+    });
+
+    test('should not add class when prefers-reduced-motion is enabled', () => {
+      window.matchMedia = mockMatchMedia(true, false);
+      jest.resetModules();
+      const common = require('./common.js');
+      const manager = new common.TransitionManager();
+
+      const element = document.getElementById('game-container');
+      manager.applyEnterAnimation(element, 'default');
+
+      expect(element.classList.contains('page-enter')).toBe(false);
+    });
+
+    test('should remove enter class on animationend', () => {
+      window.matchMedia = mockMatchMedia(false, false);
+      jest.resetModules();
+      const common = require('./common.js');
+      const manager = new common.TransitionManager();
+
+      const element = document.getElementById('game-container');
+      manager.applyEnterAnimation(element, 'default');
+      element.dispatchEvent(new Event('animationend'));
+
+      expect(element.classList.contains('page-enter')).toBe(false);
+    });
+  });
+
+  describe('initPageEnter', () => {
+    test('should not apply animation when prefers-reduced-motion', () => {
+      window.matchMedia = mockMatchMedia(true, false);
+      jest.resetModules();
+      const common = require('./common.js');
+      const manager = new common.TransitionManager();
+
+      manager.initPageEnter();
+
+      const container = document.querySelector('.game-container');
+      if (container) {
+        expect(container.classList.contains('page-enter')).toBe(false);
+      }
+    });
+  });
+});
+
+// ============================================
+// ParticleSystem Tests
+// ============================================
+describe('ParticleSystem', () => {
+  let ParticleSystem;
+
+  beforeEach(() => {
+    const hub = require('./hub.js');
+    ParticleSystem = hub.ParticleSystem;
+  });
+
+  test('should not initialize when prefers-reduced-motion is enabled', () => {
+    window.matchMedia = mockMatchMedia(true, false);
+    jest.resetModules();
+    const hub = require('./hub.js');
+
+    const system = new hub.ParticleSystem();
+    expect(system.container).toBeUndefined();
+  });
+
+  test('should create particles container when animations enabled', () => {
+    window.matchMedia = mockMatchMedia(false, false);
+    jest.resetModules();
+    const hub = require('./hub.js');
+
+    const system = new hub.ParticleSystem();
+    expect(system.container).not.toBeNull();
+    expect(system.container.className).toBe('particles-container');
+
+    // Clean up
+    system.destroy();
+  });
+
+  test('should create particles array', () => {
+    window.matchMedia = mockMatchMedia(false, false);
+    jest.resetModules();
+    const hub = require('./hub.js');
+
+    const system = new hub.ParticleSystem();
+    expect(system.particles.length).toBeGreaterThan(0);
+
+    // Clean up
+    system.destroy();
+  });
+
+  test('should track mouse position', () => {
+    window.matchMedia = mockMatchMedia(false, false);
+    jest.resetModules();
+    const hub = require('./hub.js');
+
+    const system = new hub.ParticleSystem();
+
+    // Initial mouse position should be center of window
+    expect(system.mouseX).toBe(window.innerWidth / 2);
+    expect(system.mouseY).toBe(window.innerHeight / 2);
+
+    // Clean up
+    system.destroy();
+  });
+
+  test('destroy should clean up resources', () => {
+    window.matchMedia = mockMatchMedia(false, false);
+    jest.resetModules();
+    const hub = require('./hub.js');
+
+    const system = new hub.ParticleSystem();
+    const container = system.container;
+
+    system.destroy();
+
+    expect(document.body.contains(container)).toBe(false);
+  });
+});
+
+// ============================================
+// PageTransitionHandler Tests
+// ============================================
+describe('PageTransitionHandler', () => {
+  let PageTransitionHandler;
+
+  beforeEach(() => {
+    const hub = require('./hub.js');
+    PageTransitionHandler = hub.PageTransitionHandler;
+
+    document.body.innerHTML = `
+      <div class="hub-container">
+        <header class="hub-header">
+          <h1>Game Hub</h1>
+          <button id="theme-toggle-btn"></button>
+        </header>
+        <div class="games-grid">
+          <a href="games/2048/index.html" class="game-card">2048</a>
+          <a href="games/snake/index.html" class="game-card">Snake</a>
+        </div>
+      </div>
+    `;
+  });
+
+  test('should not bind events when prefers-reduced-motion is enabled', () => {
+    window.matchMedia = mockMatchMedia(true, false);
+    jest.resetModules();
+    const hub = require('./hub.js');
+
+    const handler = new hub.PageTransitionHandler();
+    expect(handler.prefersReducedMotion).toBe(true);
+  });
+
+  test('should bind click events to game cards', () => {
+    window.matchMedia = mockMatchMedia(false, false);
+    jest.resetModules();
+    const hub = require('./hub.js');
+
+    const cards = document.querySelectorAll('.game-card');
+    const addEventListenerSpy = jest.spyOn(cards[0], 'addEventListener');
+
+    new hub.PageTransitionHandler();
+
+    expect(addEventListenerSpy).toHaveBeenCalledWith('click', expect.any(Function));
+    addEventListenerSpy.mockRestore();
+  });
+
+  test('handleCardClick should set sessionStorage flag', () => {
+    window.matchMedia = mockMatchMedia(false, false);
+    jest.resetModules();
+    const hub = require('./hub.js');
+
+    const handler = new hub.PageTransitionHandler();
+    const card = document.querySelector('.game-card');
+    card.getBoundingClientRect = jest.fn().mockReturnValue({
+      top: 100,
+      left: 50,
+      width: 200,
+      height: 150
+    });
+
+    const mockEvent = {
+      preventDefault: jest.fn()
+    };
+
+    handler.handleCardClick(mockEvent, card);
+
+    expect(sessionStorage.getItem('from-hub')).toBe('true');
+    expect(mockEvent.preventDefault).toHaveBeenCalled();
+  });
+
+  test('handleCardClick should create transition overlay', () => {
+    window.matchMedia = mockMatchMedia(false, false);
+    jest.resetModules();
+    const hub = require('./hub.js');
+
+    const handler = new hub.PageTransitionHandler();
+    const card = document.querySelector('.game-card');
+    card.getBoundingClientRect = jest.fn().mockReturnValue({
+      top: 100,
+      left: 50,
+      width: 200,
+      height: 150
+    });
+
+    const mockEvent = {
+      preventDefault: jest.fn()
+    };
+
+    handler.handleCardClick(mockEvent, card);
+
+    const overlay = document.querySelector('.card-transition-overlay');
+    expect(overlay).not.toBeNull();
+  });
+});
+
+// ============================================
+// CSS Animation Integration Tests
+// ============================================
+describe('CSS Animation Class Integration', () => {
+  test('3D button classes should be applicable', () => {
+    const button = document.createElement('button');
+    button.classList.add('btn-3d');
+    button.classList.add('btn-press-3d');
+    button.classList.add('btn-elastic');
+    button.classList.add('btn-ripple');
+
+    expect(button.classList.contains('btn-3d')).toBe(true);
+    expect(button.classList.contains('btn-press-3d')).toBe(true);
+    expect(button.classList.contains('btn-elastic')).toBe(true);
+    expect(button.classList.contains('btn-ripple')).toBe(true);
+  });
+
+  test('page transition classes should be applicable', () => {
+    const container = document.createElement('div');
+    container.classList.add('page-enter');
+    expect(container.classList.contains('page-enter')).toBe(true);
+
+    container.classList.remove('page-enter');
+    container.classList.add('page-exit');
+    expect(container.classList.contains('page-exit')).toBe(true);
+
+    container.classList.remove('page-exit');
+    container.classList.add('page-zoom-enter');
+    expect(container.classList.contains('page-zoom-enter')).toBe(true);
+
+    container.classList.remove('page-zoom-enter');
+    container.classList.add('page-zoom-exit');
+    expect(container.classList.contains('page-zoom-exit')).toBe(true);
+  });
+
+  test('performance utility classes should be applicable', () => {
+    const element = document.createElement('div');
+    element.classList.add('gpu-accelerate');
+    element.classList.add('contain-layout');
+    element.classList.add('contain-paint');
+
+    expect(element.classList.contains('gpu-accelerate')).toBe(true);
+    expect(element.classList.contains('contain-layout')).toBe(true);
+    expect(element.classList.contains('contain-paint')).toBe(true);
+  });
+
+  test('accessibility utility classes should be applicable', () => {
+    const element = document.createElement('div');
+    element.classList.add('sr-only');
+    element.classList.add('focus-visible-enhanced');
+    element.classList.add('tap-target-large');
+
+    expect(element.classList.contains('sr-only')).toBe(true);
+    expect(element.classList.contains('focus-visible-enhanced')).toBe(true);
+    expect(element.classList.contains('tap-target-large')).toBe(true);
+  });
+
+  test('game effect classes should be applicable', () => {
+    const element = document.createElement('div');
+
+    // Win/Lose effects
+    element.classList.add('win-effect');
+    expect(element.classList.contains('win-effect')).toBe(true);
+
+    element.classList.remove('win-effect');
+    element.classList.add('lose-effect');
+    expect(element.classList.contains('lose-effect')).toBe(true);
+
+    element.classList.remove('lose-effect');
+    element.classList.add('flash-effect');
+    expect(element.classList.contains('flash-effect')).toBe(true);
+
+    element.classList.remove('flash-effect');
+    element.classList.add('glow-effect');
+    expect(element.classList.contains('glow-effect')).toBe(true);
+  });
+
+  test('theme utility classes should be applicable', () => {
+    const element = document.createElement('div');
+    element.classList.add('bg-theme-primary');
+    element.classList.add('text-theme-primary');
+    element.classList.add('shadow-theme');
+    element.classList.add('glow-theme');
+
+    expect(element.classList.contains('bg-theme-primary')).toBe(true);
+    expect(element.classList.contains('text-theme-primary')).toBe(true);
+    expect(element.classList.contains('shadow-theme')).toBe(true);
+    expect(element.classList.contains('glow-theme')).toBe(true);
+  });
+});
+
+// ============================================
+// Game-Specific Animation Tests (2048)
+// ============================================
+describe('2048 Game Animations', () => {
+  test('tile-new class should be applicable', () => {
+    const tile = document.createElement('div');
+    tile.classList.add('tile');
+    tile.classList.add('tile-new');
+
+    expect(tile.classList.contains('tile-new')).toBe(true);
+  });
+
+  test('tile-merged class should be applicable', () => {
+    const tile = document.createElement('div');
+    tile.classList.add('tile');
+    tile.classList.add('tile-merged');
+
+    expect(tile.classList.contains('tile-merged')).toBe(true);
+  });
+
+  test('high value tile classes should be applicable', () => {
+    const tile = document.createElement('div');
+    tile.classList.add('tile');
+    tile.classList.add('tile-2048');
+
+    expect(tile.classList.contains('tile-2048')).toBe(true);
+  });
+});
+
+// ============================================
+// Tetris Game Animation Tests
+// ============================================
+describe('Tetris Game Animations', () => {
+  test('line-clear-flash class should be applicable', () => {
+    const overlay = document.createElement('div');
+    overlay.classList.add('line-clear-overlay');
+    overlay.classList.add('line-clear-flash');
+
+    expect(overlay.classList.contains('line-clear-flash')).toBe(true);
+  });
+
+  test('tetris-effect class should be applicable', () => {
+    const container = document.createElement('div');
+    container.classList.add('tetris-effect');
+
+    expect(container.classList.contains('tetris-effect')).toBe(true);
+  });
+
+  test('game-over-shake class should be applicable', () => {
+    const container = document.createElement('div');
+    container.classList.add('game-over-shake');
+
+    expect(container.classList.contains('game-over-shake')).toBe(true);
+  });
+});
+
+// ============================================
+// Memory Game Animation Tests
+// ============================================
+describe('Memory Game Animations', () => {
+  test('card flip classes should be applicable', () => {
+    const card = document.createElement('div');
+    card.classList.add('card');
+    card.classList.add('flipped');
+
+    expect(card.classList.contains('flipped')).toBe(true);
+  });
+
+  test('card matched class should be applicable', () => {
+    const card = document.createElement('div');
+    card.classList.add('card');
+    card.classList.add('matched');
+
+    expect(card.classList.contains('matched')).toBe(true);
+  });
+
+  test('card disappearing class should be applicable', () => {
+    const card = document.createElement('div');
+    card.classList.add('card');
+    card.classList.add('matched');
+    card.classList.add('disappearing');
+
+    expect(card.classList.contains('disappearing')).toBe(true);
+  });
+});
+
+// ============================================
+// Additional Branch Coverage Tests
+// ============================================
+describe('TransitionManager Additional Branch Coverage', () => {
+  beforeEach(() => {
+    jest.resetModules();
+  });
+
+  test('createTransitionOverlay should add keyframes style if not present', () => {
+    window.matchMedia = mockMatchMedia(false, false);
+    jest.resetModules();
+    const common = require('./common.js');
+    const manager = new common.TransitionManager();
+
+    // Remove any existing keyframes
+    const existingStyle = document.getElementById('transition-keyframes');
+    if (existingStyle) existingStyle.remove();
+
+    const sourceEl = document.createElement('div');
+    sourceEl.style.background = 'blue';
+    sourceEl.style.borderRadius = '8px';
+    sourceEl.getBoundingClientRect = () => ({ top: 100, left: 50, width: 200, height: 150 });
+    document.body.appendChild(sourceEl);
+
+    manager.createTransitionOverlay('zoom', sourceEl);
+
+    const keyframesStyle = document.getElementById('transition-keyframes');
+    expect(keyframesStyle).not.toBeNull();
+
+    // Clean up
+    sourceEl.remove();
+    if (manager.transitionContainer) manager.transitionContainer.remove();
+    if (keyframesStyle) keyframesStyle.remove();
+  });
+
+  test('createTransitionOverlay should not add duplicate keyframes style', () => {
+    window.matchMedia = mockMatchMedia(false, false);
+    jest.resetModules();
+    const common = require('./common.js');
+    const manager = new common.TransitionManager();
+
+    // Create keyframes style first
+    const existingStyle = document.createElement('style');
+    existingStyle.id = 'transition-keyframes';
+    document.head.appendChild(existingStyle);
+
+    const sourceEl = document.createElement('div');
+    sourceEl.getBoundingClientRect = () => ({ top: 100, left: 50, width: 200, height: 150 });
+    document.body.appendChild(sourceEl);
+
+    manager.createTransitionOverlay('zoom', sourceEl);
+
+    // Should still be just one style element
+    const keyframesStyles = document.querySelectorAll('#transition-keyframes');
+    expect(keyframesStyles.length).toBe(1);
+
+    // Clean up
+    sourceEl.remove();
+    existingStyle.remove();
+    if (manager.transitionContainer) manager.transitionContainer.remove();
+  });
+});
+
+describe('ParticleSystem Additional Branch Coverage', () => {
+  beforeEach(() => {
+    jest.resetModules();
+  });
+
+  test('mousemove event should update mouse position', () => {
+    window.matchMedia = mockMatchMedia(false, false);
+    jest.resetModules();
+    const hub = require('./hub.js');
+
+    const system = new hub.ParticleSystem();
+
+    const mouseMoveEvent = new MouseEvent('mousemove', {
+      clientX: 500,
+      clientY: 300
+    });
+    window.dispatchEvent(mouseMoveEvent);
+
+    expect(system.mouseX).toBe(500);
+    expect(system.mouseY).toBe(300);
+
+    system.destroy();
+  });
+
+  test('updateParticleColors should be callable with dark mode', () => {
+    window.matchMedia = mockMatchMedia(false, false);
+    jest.resetModules();
+    const hub = require('./hub.js');
+
+    const system = new hub.ParticleSystem();
+
+    // Just verify the method is callable and doesn't throw
+    document.body.classList.add('dark-mode');
+    expect(() => system.updateParticleColors()).not.toThrow();
+
+    document.body.classList.remove('dark-mode');
+    expect(() => system.updateParticleColors()).not.toThrow();
+
+    system.destroy();
+  });
+});
+
+describe('PageTransitionHandler Additional Branch Coverage', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    document.body.innerHTML = `
+      <div class="hub-container">
+        <div class="games-grid">
+          <a href="games/2048/index.html" class="game-card">2048</a>
+          <a class="game-card">No href</a>
+        </div>
+      </div>
+    `;
+  });
+
+  test('handleCardClick should return early if no href attribute', () => {
+    window.matchMedia = mockMatchMedia(false, false);
+    jest.resetModules();
+    const hub = require('./hub.js');
+
+    const handler = new hub.PageTransitionHandler();
+    const cardWithoutHref = document.querySelectorAll('.game-card')[1];
+
+    const mockEvent = {
+      preventDefault: jest.fn()
+    };
+
+    handler.handleCardClick(mockEvent, cardWithoutHref);
+
+    // Should still call preventDefault but not create overlay
+    expect(mockEvent.preventDefault).toHaveBeenCalled();
   });
 });
