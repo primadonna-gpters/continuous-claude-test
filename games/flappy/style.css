@@ -1,0 +1,394 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #faf8ef;
+    color: #776e65;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Animated background override - Flappy yellow/sky theme */
+body.animated-bg {
+    background: linear-gradient(-45deg, #87CEEB, #98D8C8, #7EC8E3, #87CEEB);
+    background-size: 400% 400%;
+}
+
+.container {
+    max-width: 450px;
+    padding: 20px;
+    width: 100%;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.back-btn {
+    background-color: #f4a460;
+    color: #fff;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.back-btn:hover {
+    background-color: #e59450;
+}
+
+h1 {
+    font-size: 36px;
+    font-weight: bold;
+    color: #776e65;
+}
+
+.score-container {
+    display: flex;
+    gap: 10px;
+}
+
+.score-box {
+    background: linear-gradient(135deg, rgba(244, 164, 96, 0.95) 0%, rgba(244, 164, 96, 0.8) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 10px 25px;
+    border-radius: 6px;
+    text-align: center;
+    min-width: 80px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.score-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.score-label {
+    font-size: 13px;
+    font-weight: bold;
+    color: #fff8e8;
+}
+
+.score-box > div:last-child {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.game-info p {
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+.game-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+#start-btn {
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+#start-btn:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+#game-container {
+    position: relative;
+    width: 100%;
+    background: linear-gradient(135deg, rgba(135, 206, 235, 0.95) 0%, rgba(135, 206, 235, 0.85) 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#game-canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.game-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 12px;
+    z-index: 10;
+}
+
+.game-overlay.hidden {
+    display: none;
+}
+
+.overlay-content {
+    text-align: center;
+    color: white;
+}
+
+.overlay-content p {
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.play-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.play-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+}
+
+/* Theme toggle button */
+#theme-toggle-btn,
+#sound-toggle-btn {
+    background-color: #f4a460;
+    color: #fff;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+}
+
+#theme-toggle-btn:hover,
+#sound-toggle-btn:hover {
+    background-color: #e59450;
+}
+
+.theme-icon {
+    display: none;
+}
+
+.light-icon {
+    display: inline;
+}
+
+.sound-off-icon {
+    display: none;
+}
+
+.instructions {
+    margin-top: 20px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #776e65;
+}
+
+/* Dark mode styles */
+body.dark-mode {
+    background-color: #1a1a2e;
+}
+
+body.dark-mode.animated-bg {
+    background: linear-gradient(-45deg, #1a1a2e, #2a1a3e, #1a2a3e, #1a1a2e);
+    background-size: 400% 400%;
+}
+
+body.dark-mode .container {
+    color: #eee4da;
+}
+
+body.dark-mode h1 {
+    color: #eee4da;
+}
+
+body.dark-mode .back-btn {
+    background-color: #4a4a6a;
+}
+
+body.dark-mode .back-btn:hover {
+    background-color: #5a5a7a;
+}
+
+body.dark-mode .score-box {
+    background: linear-gradient(135deg, rgba(180, 120, 60, 0.95) 0%, rgba(180, 120, 60, 0.8) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .game-info p {
+    color: #b8b8d1;
+}
+
+body.dark-mode #start-btn {
+    background-color: #2d8a4e;
+}
+
+body.dark-mode #start-btn:hover {
+    background-color: #238b3a;
+}
+
+body.dark-mode #theme-toggle-btn,
+body.dark-mode #sound-toggle-btn {
+    background-color: #6a4a3a;
+}
+
+body.dark-mode #theme-toggle-btn:hover,
+body.dark-mode #sound-toggle-btn:hover {
+    background-color: #7a5a4a;
+}
+
+body.dark-mode #game-container {
+    background: linear-gradient(135deg, rgba(30, 40, 60, 0.95) 0%, rgba(30, 40, 60, 0.85) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .instructions {
+    color: #b8b8d1;
+}
+
+/* Dark mode theme icon toggle */
+body.dark-mode .light-icon {
+    display: none;
+}
+
+body.dark-mode .dark-icon {
+    display: inline;
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 10px;
+    }
+
+    header {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .header-left {
+        gap: 10px;
+    }
+
+    .back-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    .score-box {
+        padding: 8px 15px;
+        min-width: 60px;
+    }
+
+    .score-label {
+        font-size: 11px;
+    }
+
+    .score-box > div:last-child {
+        font-size: 18px;
+    }
+
+    .game-info {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .game-buttons {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    #theme-toggle-btn,
+    #sound-toggle-btn {
+        width: 40px;
+        height: 40px;
+        padding: 8px;
+        font-size: 16px;
+    }
+
+    #game-canvas {
+        width: 100%;
+        height: auto;
+    }
+
+    .overlay-content p {
+        font-size: 18px;
+    }
+
+    .play-btn {
+        padding: 12px 30px;
+        font-size: 16px;
+    }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .play-btn:hover {
+        transform: none;
+    }
+
+    #start-btn:hover {
+        transform: none;
+    }
+}

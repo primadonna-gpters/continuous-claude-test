@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong</title>
+    <link rel="stylesheet" href="../../common.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="animated-bg">
+    <div class="container fade-in">
+        <header>
+            <div class="header-left">
+                <a href="../../index.html" class="back-btn back-btn-enhanced" aria-label="Back to Game Hub">← Hub</a>
+                <h1>🏓 Pong</h1>
+            </div>
+            <div class="score-container">
+                <div class="score-box player-score">
+                    <div class="score-label">YOU</div>
+                    <div id="player-score">0</div>
+                </div>
+                <div class="score-box ai-score">
+                    <div class="score-label">AI</div>
+                    <div id="ai-score">0</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-info">
+            <p>AI를 상대로 11점 먼저 획득하세요!</p>
+            <div class="game-buttons">
+                <button id="start-btn">Start Game</button>
+                <select id="difficulty-select">
+                    <option value="easy">Easy</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+                <button id="sound-toggle-btn" aria-label="Toggle sound">
+                    <span class="sound-on-icon">🔊</span>
+                    <span class="sound-off-icon">🔇</span>
+                </button>
+                <button id="theme-toggle-btn" aria-label="Toggle dark mode">
+                    <span class="theme-icon light-icon">🌙</span>
+                    <span class="theme-icon dark-icon">☀️</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="game-container">
+            <canvas id="game-canvas" width="600" height="400"></canvas>
+            <div id="game-overlay" class="game-overlay">
+                <div class="overlay-content">
+                    <p id="overlay-text">Click or Press Space to Start</p>
+                    <button id="play-btn" class="play-btn">▶ Play</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <p><strong>조작 방법:</strong> 마우스 이동, 터치 드래그, 또는 ↑/↓ 방향키로 패들을 움직이세요.</p>
+            <p>공을 놓치면 상대방이 점수를 얻습니다!</p>
+        </div>
+    </div>
+
+    <script src="../../common.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
