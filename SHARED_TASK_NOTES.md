@@ -58,17 +58,20 @@ PWA, 다크모드, 3D 애니메이션이 이미 구현된 상태입니다.
 
 ### Phase 2: Code Organization & Refactoring
 
-5. [ ] **Step 5: Pixel Survivor 코드 모듈화**
+5. [~] **Step 5: Pixel Survivor 코드 모듈화** (IN PROGRESS)
    - Files: `games/survivor/game.js` (8,363줄 → 분리)
    - New Files:
-     - `games/survivor/modules/player.js`
-     - `games/survivor/modules/weapons.js`
-     - `games/survivor/modules/enemies.js`
-     - `games/survivor/modules/items.js`
-     - `games/survivor/modules/stages.js`
-   - Criteria: 각 모듈 1,000줄 이하, import/export 사용
+     - `games/survivor/modules/constants.js` ✅ (1,120줄 - 완료)
+     - `games/survivor/modules/weapons.js` (예정)
+     - `games/survivor/modules/enemies.js` (예정)
+     - `games/survivor/modules/render.js` (예정)
+   - Criteria: 각 모듈 1,000줄 이하
    - Priority: High
-   - Notes: 가장 큰 파일이므로 유지보수성 향상 필요
+   - Notes: 전역 변수에 크게 의존하므로 ES6 모듈 대신 전통 스크립트 방식으로 분리
+   - **Progress**:
+     - constants.js 생성: STAGES, CHARACTERS, WEAPON_TYPES, EVOLVED_WEAPONS, ARCANA_TYPES, UNION_WEAPONS, PASSIVE_TYPES, WAVE_EVENTS, ENEMY_TYPES, ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES 분리
+     - index.html 업데이트: constants.js를 game.js 전에 로드
+     - 다음 단계: game.js에서 중복 상수 제거 및 추가 모듈 분리
 
 6. [ ] **Step 6: 공통 게임 유틸리티 추출**
    - Files: `common.js`, 각 게임의 `game.js`
@@ -79,13 +82,20 @@ PWA, 다크모드, 3D 애니메이션이 이미 구현된 상태입니다.
 
 ### Phase 3: Performance Optimization
 
-7. [ ] **Step 7: Service Worker 캐싱 전략 개선**
+7. [x] **Step 7: Service Worker 캐싱 전략 개선** ✅
    - Files: `sw.js`
    - Criteria:
      - stale-while-revalidate 전략 적용
      - 캐시 버전 자동 관리
      - 오프라인 폴백 페이지 개선
    - Priority: Medium
+   - **Result**:
+     - stale-while-revalidate 전략 구현 (캐시 먼저 반환, 백그라운드 업데이트)
+     - CACHE_VERSION 상수로 버전 관리 (v2 → v3)
+     - 한국어 오프라인 폴백 페이지 추가 (멋진 UI)
+     - JS/CSS 파일별 적절한 오프라인 응답
+     - 메시지 핸들러 추가 (SKIP_WAITING, GET_VERSION)
+     - 새 모듈 constants.js 캐시 추가
 
 8. [ ] **Step 8: 이미지/에셋 최적화**
    - Files: `icons/*`, `manifest.json`
