@@ -1,3 +1,77 @@
+// Page Loader Manager
+class PageLoaderManager {
+    constructor() {
+        this.loader = document.getElementById('page-loader');
+        if (this.loader) {
+            this.hideLoader();
+        }
+    }
+
+    hideLoader() {
+        // Small delay to ensure content is ready
+        setTimeout(() => {
+            this.loader.classList.add('loaded');
+        }, 500);
+    }
+}
+
+// Scroll Progress Manager
+class ScrollProgressManager {
+    constructor() {
+        this.progressBar = document.getElementById('scroll-progress');
+        this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (this.progressBar && !this.prefersReducedMotion) {
+            this.bindEvents();
+        }
+    }
+
+    bindEvents() {
+        window.addEventListener('scroll', () => this.updateProgress(), { passive: true });
+    }
+
+    updateProgress() {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        this.progressBar.style.width = `${progress}%`;
+    }
+}
+
+// Ripple Effect Manager
+class RippleEffectManager {
+    constructor() {
+        this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (this.prefersReducedMotion) return;
+
+        this.bindEvents();
+    }
+
+    bindEvents() {
+        document.querySelectorAll('.game-card, #theme-toggle-btn').forEach(element => {
+            element.addEventListener('click', (e) => this.createRipple(e, element));
+        });
+    }
+
+    createRipple(e, element) {
+        const rect = element.getBoundingClientRect();
+        const ripple = document.createElement('span');
+        const size = Math.max(rect.width, rect.height);
+
+        ripple.className = 'ripple';
+        ripple.style.width = ripple.style.height = `${size}px`;
+        ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+        ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+
+        element.appendChild(ripple);
+
+        ripple.addEventListener('animationend', () => {
+            ripple.remove();
+        });
+    }
+}
+
 // Particle System for background effects
 class ParticleSystem {
     constructor() {
@@ -323,23 +397,27 @@ class ScrollAnimationManager {
     }
 }
 
-// Stats Manager
+// Stats Manager with count-up animation
 class StatsManager {
     constructor() {
         this.statsGrid = document.getElementById('stats-grid');
+        this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (this.statsGrid) {
             this.render();
+            if (!this.prefersReducedMotion) {
+                this.initCountUpAnimation();
+            }
         }
     }
 
     getGameStats() {
         return [
-            { icon: '🔢', label: '2048 Best', key: '2048-best-score', format: 'number' },
-            { icon: '🐍', label: 'Snake Best', key: 'snake-best-score', format: 'number' },
-            { icon: '🧱', label: 'Tetris Best', key: 'tetris-best-score', format: 'number' },
-            { icon: '🏓', label: 'Breakout Best', key: 'breakout-best-score', format: 'number' },
-            { icon: '🧠', label: 'Memory (Easy)', key: 'memory-best-easy', format: 'moves' },
-            { icon: '🧛', label: 'Survivor Best', key: 'survivor-best-time', format: 'time' }
+            { icon: '🔢', label: '2048 Best', key: '2048-best-score', format: 'number', tooltip: '2048 게임 최고 점수' },
+            { icon: '🐍', label: 'Snake Best', key: 'snake-best-score', format: 'number', tooltip: 'Snake 게임 최고 점수' },
+            { icon: '🧱', label: 'Tetris Best', key: 'tetris-best-score', format: 'number', tooltip: 'Tetris 게임 최고 점수' },
+            { icon: '🏓', label: 'Breakout Best', key: 'breakout-best-score', format: 'number', tooltip: 'Breakout 게임 최고 점수' },
+            { icon: '🧠', label: 'Memory (Easy)', key: 'memory-best-easy', format: 'moves', tooltip: 'Memory 게임 최소 이동 수' },
+            { icon: '🧛', label: 'Survivor Best', key: 'survivor-best-time', format: 'time', tooltip: 'Survivor 게임 최장 생존 시간' }
         ];
     }
 
@@ -365,9 +443,10 @@ class StatsManager {
             const displayValue = this.formatValue(value, stat.format);
 
             return `
-                <div class="stat-card">
+                <div class="stat-card" data-value="${value}" data-format="${stat.format}">
+                    <div class="stat-card-tooltip">${stat.tooltip}</div>
                     <div class="stat-card-icon">${stat.icon}</div>
-                    <div class="stat-card-value">${displayValue}</div>
+                    <div class="stat-card-value" data-target="${value}">${displayValue}</div>
                     <div class="stat-card-label">${stat.label}</div>
                 </div>
             `;
@@ -375,26 +454,95 @@ class StatsManager {
 
         this.statsGrid.innerHTML = html;
     }
+
+    initCountUpAnimation() {
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.3
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    this.animateCountUp(entry.target);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.stat-card').forEach(card => {
+            observer.observe(card);
+        });
+    }
+
+    animateCountUp(card) {
+        const valueEl = card.querySelector('.stat-card-value');
+        const target = parseInt(valueEl.dataset.target) || 0;
+        const format = card.dataset.format;
+
+        if (target === 0 || format === 'time') return;
+
+        const duration = 1500;
+        const startTime = performance.now();
+
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+            const current = Math.floor(target * easeOutQuart);
+
+            valueEl.textContent = this.formatValue(current, format);
+            valueEl.classList.add('counting');
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                valueEl.classList.remove('counting');
+                valueEl.textContent = this.formatValue(target, format);
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }
 }
 
-// Recent Games Manager
+// Recent Games Manager with play time tracking
 class RecentGamesManager {
     constructor() {
         this.section = document.getElementById('recent-section');
         this.games = {
-            '2048': { icon: '🔢', url: 'games/2048/index.html' },
-            'snake': { icon: '🐍', url: 'games/snake/index.html' },
-            'minesweeper': { icon: '💣', url: 'games/minesweeper/index.html' },
-            'tetris': { icon: '🧱', url: 'games/tetris/index.html' },
-            'breakout': { icon: '🏓', url: 'games/breakout/index.html' },
-            'memory': { icon: '🧠', url: 'games/memory/index.html' },
-            'survivor': { icon: '🧛', url: 'games/survivor/index.html' }
+            '2048': { icon: '🔢', url: 'games/2048/index.html', displayName: '2048' },
+            'snake': { icon: '🐍', url: 'games/snake/index.html', displayName: 'Snake' },
+            'minesweeper': { icon: '💣', url: 'games/minesweeper/index.html', displayName: 'Minesweeper' },
+            'tetris': { icon: '🧱', url: 'games/tetris/index.html', displayName: 'Tetris' },
+            'breakout': { icon: '🏓', url: 'games/breakout/index.html', displayName: 'Breakout' },
+            'memory': { icon: '🧠', url: 'games/memory/index.html', displayName: 'Memory' },
+            'survivor': { icon: '🧛', url: 'games/survivor/index.html', displayName: 'Survivor' }
         };
         this.render();
     }
 
+    getRelativeTime(timestamp) {
+        if (!timestamp) return '';
+        const now = Date.now();
+        const diff = now - timestamp;
+
+        const minutes = Math.floor(diff / 60000);
+        const hours = Math.floor(diff / 3600000);
+        const days = Math.floor(diff / 86400000);
+
+        if (minutes < 1) return '방금 전';
+        if (minutes < 60) return `${minutes}분 전`;
+        if (hours < 24) return `${hours}시간 전`;
+        if (days < 7) return `${days}일 전`;
+        return '';
+    }
+
     render() {
         const recent = JSON.parse(localStorage.getItem('recent-games') || '[]');
+        const timestamps = JSON.parse(localStorage.getItem('recent-games-timestamps') || '{}');
+
         if (recent.length === 0) {
             this.section.style.display = 'none';
             return;
@@ -403,10 +551,15 @@ class RecentGamesManager {
         const recentGames = recent.slice(0, 3).map(name => {
             const game = this.games[name];
             if (!game) return '';
+            const relativeTime = this.getRelativeTime(timestamps[name]);
+
             return `
                 <a href="${game.url}" class="recent-game-card">
                     <span class="recent-game-icon">${game.icon}</span>
-                    <span class="recent-game-name">${name}</span>
+                    <span class="recent-game-info">
+                        <span class="recent-game-name">${game.displayName}</span>
+                        ${relativeTime ? `<span class="recent-game-time">${relativeTime}</span>` : ''}
+                    </span>
                 </a>
             `;
         }).join('');
@@ -543,7 +696,29 @@ function registerServiceWorker() {
     }
 }
 
+// Typing Effect Manager for subtitle
+class TypingEffectManager {
+    constructor() {
+        this.subtitle = document.querySelector('.hub-subtitle');
+        if (this.subtitle) {
+            this.init();
+        }
+    }
+
+    init() {
+        // Remove cursor after typing animation completes (2.5s typing + 3s blink = 5.5s total)
+        setTimeout(() => {
+            if (this.subtitle) {
+                this.subtitle.classList.add('typing-done');
+            }
+        }, 5500);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    new PageLoaderManager();
+    new ScrollProgressManager();
+    new RippleEffectManager();
     new ParticleSystem();
     new HubThemeManager();
     new ScrollAnimationManager();
@@ -552,12 +727,16 @@ document.addEventListener('DOMContentLoaded', () => {
     new TiltEffectManager();
     new ParallaxManager();
     new PageTransitionHandler();
+    new TypingEffectManager();
     registerServiceWorker();
 });
 
 // Export for testing (CommonJS compatible)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        PageLoaderManager,
+        ScrollProgressManager,
+        RippleEffectManager,
         ParticleSystem,
         HubThemeManager,
         ScrollAnimationManager,
@@ -566,6 +745,7 @@ if (typeof module !== 'undefined' && module.exports) {
         TiltEffectManager,
         ParallaxManager,
         PageTransitionHandler,
+        TypingEffectManager,
         registerServiceWorker
     };
 }

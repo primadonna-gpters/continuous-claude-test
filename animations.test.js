@@ -976,7 +976,7 @@ describe('Recent Games Slide-in Animation', () => {
 
     expect(card.getAttribute('href')).toBe('games/tetris/index.html');
     expect(card.querySelector('.recent-game-icon').textContent).toBe('🧱');
-    expect(card.querySelector('.recent-game-name').textContent).toBe('tetris');
+    expect(card.querySelector('.recent-game-name').textContent).toBe('Tetris');
   });
 });
 
