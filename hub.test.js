@@ -240,13 +240,13 @@ describe('RecentGamesManager', () => {
     expect(section.querySelectorAll('.recent-game-card').length).toBe(2);
   });
 
-  test('should limit to 3 recent games', () => {
-    localStorageMock.setItem('recent-games', JSON.stringify(['2048', 'snake', 'tetris', 'breakout', 'memory']));
+  test('should limit to 5 recent games', () => {
+    localStorageMock.setItem('recent-games', JSON.stringify(['2048', 'snake', 'tetris', 'breakout', 'memory', 'minesweeper', 'survivor']));
 
     const manager = new RecentGamesManager();
     const section = document.getElementById('recent-section');
 
-    expect(section.querySelectorAll('.recent-game-card').length).toBe(3);
+    expect(section.querySelectorAll('.recent-game-card').length).toBe(5);
   });
 
   test('should display correct game icons', () => {
@@ -1659,5 +1659,800 @@ describe('Integration Tests', () => {
     expect(hub.ParallaxManager).toBeDefined();
     expect(hub.PageTransitionHandler).toBeDefined();
     expect(hub.ParticleSystem).toBeDefined();
+    expect(hub.AnimationToggleManager).toBeDefined();
+    expect(hub.FooterStatsManager).toBeDefined();
+    expect(hub.PWAInstallManager).toBeDefined();
+    expect(hub.TouchInteractionManager).toBeDefined();
+  });
+});
+
+// ============================================
+// AnimationToggleManager Tests
+// ============================================
+describe('AnimationToggleManager', () => {
+  let AnimationToggleManager;
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div class="hub-container">
+        <button id="animation-toggle-btn" aria-pressed="false"></button>
+        <button id="theme-toggle-btn"></button>
+        <section class="recent-section" id="recent-section"></section>
+        <section class="stats-section">
+          <div class="stats-grid" id="stats-grid"></div>
+        </section>
+        <div class="games-grid">
+          <div class="game-card"></div>
+        </div>
+      </div>
+    `;
+    window.matchMedia = mockMatchMedia(false);
+    const hub = require('./hub.js');
+    AnimationToggleManager = hub.AnimationToggleManager;
+  });
+
+  test('should find animation toggle button', () => {
+    const manager = new AnimationToggleManager();
+    expect(manager.animationToggleBtn).toBeDefined();
+    expect(manager.animationToggleBtn.id).toBe('animation-toggle-btn');
+  });
+
+  test('should load disabled state from localStorage', () => {
+    localStorageMock.setItem('game-hub-animations', 'disabled');
+
+    const manager = new AnimationToggleManager();
+
+    expect(document.body.classList.contains('animations-disabled')).toBe(true);
+  });
+
+  test('should load enabled state from localStorage', () => {
+    localStorageMock.setItem('game-hub-animations', 'enabled');
+    document.body.classList.remove('animations-disabled');
+
+    const manager = new AnimationToggleManager();
+
+    expect(document.body.classList.contains('animations-disabled')).toBe(false);
+  });
+
+  test('should disable animations when prefers-reduced-motion is set', () => {
+    window.matchMedia = jest.fn().mockImplementation(query => ({
+      matches: query === '(prefers-reduced-motion: reduce)',
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }));
+
+    const manager = new AnimationToggleManager();
+
+    expect(document.body.classList.contains('animations-disabled')).toBe(true);
+  });
+
+  test('should toggle animations on button click', () => {
+    document.body.classList.remove('animations-disabled');
+    localStorageMock.clear();
+
+    const manager = new AnimationToggleManager();
+    const btn = document.getElementById('animation-toggle-btn');
+
+    // Start with animations enabled
+    expect(document.body.classList.contains('animations-disabled')).toBe(false);
+
+    btn.click();
+
+    expect(document.body.classList.contains('animations-disabled')).toBe(true);
+    expect(localStorageMock.setItem).toHaveBeenCalledWith('game-hub-animations', 'disabled');
+  });
+
+  test('should toggle animations back on when already disabled', () => {
+    document.body.classList.add('animations-disabled');
+    localStorageMock.setItem('game-hub-animations', 'disabled');
+
+    const manager = new AnimationToggleManager();
+    const btn = document.getElementById('animation-toggle-btn');
+
+    btn.click();
+
+    expect(document.body.classList.contains('animations-disabled')).toBe(false);
+    expect(localStorageMock.setItem).toHaveBeenCalledWith('game-hub-animations', 'enabled');
+  });
+
+  test('should update aria-pressed when animations are disabled', () => {
+    const manager = new AnimationToggleManager();
+    const btn = document.getElementById('animation-toggle-btn');
+
+    manager.disableAnimations();
+
+    expect(btn.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  test('should update aria-pressed when animations are enabled', () => {
+    const manager = new AnimationToggleManager();
+    const btn = document.getElementById('animation-toggle-btn');
+
+    manager.enableAnimations();
+
+    expect(btn.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  test('should handle missing animation toggle button', () => {
+    document.getElementById('animation-toggle-btn').remove();
+
+    expect(() => new AnimationToggleManager()).not.toThrow();
+  });
+
+  test('should respond to prefers-reduced-motion change event', () => {
+    let changeHandler;
+    window.matchMedia = jest.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn((event, handler) => {
+        if (event === 'change') {
+          changeHandler = handler;
+        }
+      }),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }));
+
+    const manager = new AnimationToggleManager();
+
+    // Simulate prefers-reduced-motion change to true
+    if (changeHandler) {
+      changeHandler({ matches: true });
+    }
+
+    expect(document.body.classList.contains('animations-disabled')).toBe(true);
+  });
+});
+
+// ============================================
+// FooterStatsManager Tests
+// ============================================
+describe('FooterStatsManager', () => {
+  let FooterStatsManager;
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div class="hub-container">
+        <button id="theme-toggle-btn"></button>
+        <section class="recent-section" id="recent-section"></section>
+        <section class="stats-section">
+          <div class="stats-grid" id="stats-grid"></div>
+        </section>
+        <div class="games-grid">
+          <div class="game-card"></div>
+        </div>
+        <footer>
+          <div id="footer-total-stats"></div>
+        </footer>
+      </div>
+    `;
+    const hub = require('./hub.js');
+    FooterStatsManager = hub.FooterStatsManager;
+  });
+
+  test('should find footer stats container', () => {
+    const manager = new FooterStatsManager();
+    expect(manager.container).toBeDefined();
+    expect(manager.container.id).toBe('footer-total-stats');
+  });
+
+  test('should render footer stats with correct structure', () => {
+    const manager = new FooterStatsManager();
+    const container = document.getElementById('footer-total-stats');
+
+    expect(container.querySelectorAll('.footer-stat-item').length).toBe(3);
+  });
+
+  test('should calculate total plays from localStorage', () => {
+    localStorageMock.setItem('snake_plays', '10');
+    localStorageMock.setItem('tetris_plays', '20');
+    localStorageMock.setItem('2048_plays', '5');
+
+    const manager = new FooterStatsManager();
+    const stats = manager.getTotalStats();
+
+    expect(stats.totalPlays).toBe(35);
+  });
+
+  test('should calculate total time from localStorage', () => {
+    localStorageMock.setItem('snake_time', '100');
+    localStorageMock.setItem('tetris_time', '200');
+    localStorageMock.setItem('memory_time', '50');
+
+    const manager = new FooterStatsManager();
+    const stats = manager.getTotalStats();
+
+    expect(stats.totalTime).toBe(350);
+  });
+
+  test('should count games played correctly', () => {
+    localStorageMock.setItem('snake_plays', '10');
+    localStorageMock.setItem('tetris_plays', '5');
+    localStorageMock.setItem('memory_plays', '0'); // Not played
+
+    const manager = new FooterStatsManager();
+    const stats = manager.getTotalStats();
+
+    expect(stats.gamesPlayed).toBe(2);
+  });
+
+  test('formatTime should return seconds for small values', () => {
+    const manager = new FooterStatsManager();
+    expect(manager.formatTime(30)).toBe('30초');
+  });
+
+  test('formatTime should return minutes for medium values', () => {
+    const manager = new FooterStatsManager();
+    expect(manager.formatTime(120)).toBe('2분');
+  });
+
+  test('formatTime should return hours for large values', () => {
+    const manager = new FooterStatsManager();
+    expect(manager.formatTime(7200)).toBe('2시간');
+  });
+
+  test('should handle missing footer stats container', () => {
+    document.getElementById('footer-total-stats').remove();
+
+    expect(() => new FooterStatsManager()).not.toThrow();
+  });
+
+  test('should display correct icons in footer stats', () => {
+    const manager = new FooterStatsManager();
+    const container = document.getElementById('footer-total-stats');
+    const icons = container.querySelectorAll('.footer-stat-icon');
+
+    expect(icons[0].textContent).toBe('🎮');
+    expect(icons[1].textContent).toBe('⏱️');
+    expect(icons[2].textContent).toBe('🏆');
+  });
+
+  test('should display games played with correct format', () => {
+    localStorageMock.setItem('snake_plays', '1');
+    localStorageMock.setItem('tetris_plays', '1');
+    localStorageMock.setItem('memory_plays', '1');
+
+    const manager = new FooterStatsManager();
+    const container = document.getElementById('footer-total-stats');
+    const values = container.querySelectorAll('.footer-stat-value');
+
+    expect(values[2].textContent).toBe('3/8');
+  });
+});
+
+// ============================================
+// PWAInstallManager Tests
+// ============================================
+describe('PWAInstallManager', () => {
+  let PWAInstallManager;
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div class="hub-container">
+        <button id="theme-toggle-btn"></button>
+        <button id="pwa-install-btn" style="display: none;">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19 9h-4V3H9v6H5l7 7 7-7z"/>
+            <path d="M5 18v2h14v-2H5z"/>
+          </svg>
+          <span>앱 설치</span>
+        </button>
+        <section class="recent-section" id="recent-section"></section>
+        <section class="stats-section">
+          <div class="stats-grid" id="stats-grid"></div>
+        </section>
+        <div class="games-grid">
+          <div class="game-card"></div>
+        </div>
+      </div>
+    `;
+    window.matchMedia = mockMatchMedia(false);
+    const hub = require('./hub.js');
+    PWAInstallManager = hub.PWAInstallManager;
+  });
+
+  test('should find install button', () => {
+    const manager = new PWAInstallManager();
+    expect(manager.installBtn).toBeDefined();
+    expect(manager.installBtn.id).toBe('pwa-install-btn');
+  });
+
+  test('should show install button on beforeinstallprompt event', () => {
+    const manager = new PWAInstallManager();
+    const btn = document.getElementById('pwa-install-btn');
+
+    const mockEvent = {
+      preventDefault: jest.fn(),
+    };
+
+    window.dispatchEvent(new CustomEvent('beforeinstallprompt'));
+    manager.showInstallButton();
+
+    expect(btn.style.display).toBe('inline-flex');
+  });
+
+  test('should hide install button', () => {
+    const manager = new PWAInstallManager();
+    const btn = document.getElementById('pwa-install-btn');
+
+    btn.style.display = 'inline-flex';
+    manager.hideInstallButton();
+
+    expect(btn.style.display).toBe('none');
+  });
+
+  test('should show installed state', () => {
+    const manager = new PWAInstallManager();
+    const btn = document.getElementById('pwa-install-btn');
+
+    manager.showInstalledState();
+
+    expect(btn.style.display).toBe('inline-flex');
+    expect(btn.classList.contains('installed')).toBe(true);
+    expect(btn.innerHTML).toContain('설치됨');
+  });
+
+  test('should handle missing install button', () => {
+    document.getElementById('pwa-install-btn').remove();
+
+    expect(() => new PWAInstallManager()).not.toThrow();
+  });
+
+  test('should not trigger install when deferredPrompt is null', async () => {
+    const manager = new PWAInstallManager();
+
+    // deferredPrompt is null by default
+    await manager.handleInstallClick();
+
+    // Should return early without error
+    expect(manager.deferredPrompt).toBe(null);
+  });
+
+  test('should show installed state when in standalone mode', () => {
+    window.matchMedia = jest.fn().mockImplementation(query => ({
+      matches: query === '(display-mode: standalone)',
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }));
+
+    const manager = new PWAInstallManager();
+    const btn = document.getElementById('pwa-install-btn');
+
+    expect(btn.classList.contains('installed')).toBe(true);
+  });
+});
+
+// ============================================
+// TouchInteractionManager Tests
+// ============================================
+describe('TouchInteractionManager', () => {
+  let TouchInteractionManager;
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div class="hub-container">
+        <button id="theme-toggle-btn"></button>
+        <section class="recent-section" id="recent-section"></section>
+        <section class="stats-section">
+          <div class="stats-grid" id="stats-grid"></div>
+        </section>
+        <div class="games-grid">
+          <a href="games/2048/index.html" class="game-card">
+            <div class="game-card-content">
+              <h3>2048</h3>
+            </div>
+          </a>
+          <a href="games/snake/index.html" class="game-card">
+            <div class="game-card-content">
+              <h3>Snake</h3>
+            </div>
+          </a>
+        </div>
+      </div>
+    `;
+    // Simulate touch device
+    window.ontouchstart = true;
+    const hub = require('./hub.js');
+    TouchInteractionManager = hub.TouchInteractionManager;
+  });
+
+  afterEach(() => {
+    delete window.ontouchstart;
+  });
+
+  test('should detect touch device', () => {
+    const manager = new TouchInteractionManager();
+    expect(manager.isTouchDevice).toBe(true);
+  });
+
+  test('should not initialize on non-touch devices', () => {
+    delete window.ontouchstart;
+    Object.defineProperty(navigator, 'maxTouchPoints', { value: 0, writable: true });
+
+    const manager = new TouchInteractionManager();
+    expect(manager.isTouchDevice).toBe(false);
+    expect(manager.modal).toBeUndefined();
+  });
+
+  test('should create modal and backdrop elements', () => {
+    const manager = new TouchInteractionManager();
+
+    expect(manager.modal).toBeDefined();
+    expect(manager.backdrop).toBeDefined();
+    expect(manager.modal.classList.contains('touch-info-modal')).toBe(true);
+    expect(manager.backdrop.classList.contains('touch-info-modal-backdrop')).toBe(true);
+  });
+
+  test('should have gameInfo for all games', () => {
+    const manager = new TouchInteractionManager();
+
+    expect(manager.gameInfo['2048']).toBeDefined();
+    expect(manager.gameInfo['snake']).toBeDefined();
+    expect(manager.gameInfo['minesweeper']).toBeDefined();
+    expect(manager.gameInfo['tetris']).toBeDefined();
+    expect(manager.gameInfo['breakout']).toBeDefined();
+    expect(manager.gameInfo['memory']).toBeDefined();
+    expect(manager.gameInfo['survivor']).toBeDefined();
+  });
+
+  test('getGameKeyFromHref should extract game key from href', () => {
+    const manager = new TouchInteractionManager();
+
+    expect(manager.getGameKeyFromHref('games/2048/index.html')).toBe('2048');
+    expect(manager.getGameKeyFromHref('games/snake/index.html')).toBe('snake');
+    expect(manager.getGameKeyFromHref(null)).toBe(null);
+    expect(manager.getGameKeyFromHref('')).toBe(null);
+  });
+
+  test('showModal should display modal with correct game info', () => {
+    const manager = new TouchInteractionManager();
+
+    manager.showModal('2048', 'games/2048/index.html');
+
+    expect(manager.modal.classList.contains('active')).toBe(true);
+    expect(manager.backdrop.classList.contains('active')).toBe(true);
+    expect(manager.modal.querySelector('.touch-info-modal-icon').textContent).toBe('🔢');
+    expect(manager.modal.querySelector('.touch-info-modal-title').textContent).toBe('2048');
+  });
+
+  test('closeModal should hide modal and backdrop', () => {
+    const manager = new TouchInteractionManager();
+
+    manager.showModal('2048', 'games/2048/index.html');
+    expect(manager.modal.classList.contains('active')).toBe(true);
+
+    manager.closeModal();
+
+    expect(manager.modal.classList.contains('active')).toBe(false);
+    expect(manager.backdrop.classList.contains('active')).toBe(false);
+  });
+
+  test('should close modal when backdrop is clicked', () => {
+    const manager = new TouchInteractionManager();
+
+    manager.showModal('2048', 'games/2048/index.html');
+    manager.backdrop.click();
+
+    expect(manager.modal.classList.contains('active')).toBe(false);
+  });
+
+  test('should close modal when close button is clicked', () => {
+    const manager = new TouchInteractionManager();
+
+    manager.showModal('2048', 'games/2048/index.html');
+    manager.modal.querySelector('.touch-info-modal-close').click();
+
+    expect(manager.modal.classList.contains('active')).toBe(false);
+  });
+
+  test('triggerHapticFeedback should call navigator.vibrate if available', () => {
+    navigator.vibrate = jest.fn();
+    const manager = new TouchInteractionManager();
+
+    manager.triggerHapticFeedback();
+
+    expect(navigator.vibrate).toHaveBeenCalledWith(50);
+  });
+
+  test('triggerHapticFeedback should not throw when vibrate is unavailable', () => {
+    delete navigator.vibrate;
+    const manager = new TouchInteractionManager();
+
+    expect(() => manager.triggerHapticFeedback()).not.toThrow();
+  });
+
+  test('handleTouchEnd should clear longPressTimer', () => {
+    jest.useFakeTimers();
+    const manager = new TouchInteractionManager();
+
+    manager.longPressTimer = setTimeout(() => {}, 1000);
+    expect(manager.longPressTimer).not.toBe(null);
+
+    manager.handleTouchEnd();
+
+    expect(manager.longPressTimer).toBe(null);
+    jest.useRealTimers();
+  });
+
+  test('showModal should not throw for unknown game', () => {
+    const manager = new TouchInteractionManager();
+
+    expect(() => manager.showModal('unknown', 'games/unknown/index.html')).not.toThrow();
+  });
+});
+
+// ============================================
+// StatsManager - calculateProgress Tests
+// ============================================
+describe('StatsManager - calculateProgress', () => {
+  let StatsManager;
+
+  beforeEach(() => {
+    const hub = require('./hub.js');
+    StatsManager = hub.StatsManager;
+  });
+
+  test('should return 0 for null value', () => {
+    const manager = new StatsManager();
+    expect(manager.calculateProgress(null, 100)).toBe(0);
+  });
+
+  test('should return 0 for zero value', () => {
+    const manager = new StatsManager();
+    expect(manager.calculateProgress(0, 100)).toBe(0);
+  });
+
+  test('should calculate correct progress percentage', () => {
+    const manager = new StatsManager();
+    expect(manager.calculateProgress(50, 100)).toBe(50);
+    expect(manager.calculateProgress(25, 100)).toBe(25);
+  });
+
+  test('should cap progress at 100', () => {
+    const manager = new StatsManager();
+    expect(manager.calculateProgress(150, 100)).toBe(100);
+  });
+
+  test('should calculate inverse progress correctly', () => {
+    const manager = new StatsManager();
+    // For inverse, lower is better (like moves in memory game)
+    // If maxValue is 50 and value is 10, progress should be (50-10)/50 * 100 = 80%
+    expect(manager.calculateProgress(10, 50, true)).toBe(80);
+  });
+
+  test('should handle inverse progress with maxValue', () => {
+    const manager = new StatsManager();
+    // If value equals maxValue in inverse mode, progress should be 0
+    expect(manager.calculateProgress(50, 50, true)).toBe(0);
+  });
+
+  test('should render progress bars in stat cards', () => {
+    localStorageMock.setItem('2048-best-score', '50000');
+
+    const manager = new StatsManager();
+    const progressBar = document.querySelector('.stat-card-progress-bar');
+
+    expect(progressBar).toBeDefined();
+    expect(progressBar.dataset.progress).toBeDefined();
+  });
+
+  test('should render type icons in stat cards', () => {
+    const manager = new StatsManager();
+    const typeIcons = document.querySelectorAll('.stat-card-type-icon');
+
+    expect(typeIcons.length).toBe(6);
+    expect(typeIcons[0].textContent).toBe('🏆');
+  });
+});
+
+// ============================================
+// RecentGamesManager - Carousel Tests
+// ============================================
+describe('RecentGamesManager - Carousel', () => {
+  let RecentGamesManager;
+
+  beforeEach(() => {
+    const hub = require('./hub.js');
+    RecentGamesManager = hub.RecentGamesManager;
+  });
+
+  test('should render carousel navigation buttons', () => {
+    localStorageMock.setItem('recent-games', JSON.stringify(['2048', 'snake', 'tetris']));
+
+    const manager = new RecentGamesManager();
+    const section = document.getElementById('recent-section');
+
+    expect(section.querySelector('.carousel-prev')).toBeDefined();
+    expect(section.querySelector('.carousel-next')).toBeDefined();
+  });
+
+  test('should render carousel dots for multiple games', () => {
+    localStorageMock.setItem('recent-games', JSON.stringify(['2048', 'snake', 'tetris']));
+
+    const manager = new RecentGamesManager();
+    const section = document.getElementById('recent-section');
+    const dots = section.querySelectorAll('.carousel-dot');
+
+    expect(dots.length).toBe(3);
+    expect(dots[0].classList.contains('active')).toBe(true);
+  });
+
+  test('should not render dots for single game', () => {
+    localStorageMock.setItem('recent-games', JSON.stringify(['2048']));
+
+    const manager = new RecentGamesManager();
+    const section = document.getElementById('recent-section');
+    const dotsContainer = section.querySelector('.carousel-dots');
+
+    expect(dotsContainer).toBe(null);
+  });
+
+  test('should disable prev button at start', () => {
+    localStorageMock.setItem('recent-games', JSON.stringify(['2048', 'snake', 'tetris']));
+
+    const manager = new RecentGamesManager();
+    const section = document.getElementById('recent-section');
+    const prevBtn = section.querySelector('.carousel-prev');
+
+    expect(prevBtn.disabled).toBe(true);
+  });
+
+  test('should not disable next button when there are more games', () => {
+    localStorageMock.setItem('recent-games', JSON.stringify(['2048', 'snake', 'tetris']));
+
+    const manager = new RecentGamesManager();
+    const section = document.getElementById('recent-section');
+    const nextBtn = section.querySelector('.carousel-next');
+
+    expect(nextBtn.disabled).toBe(false);
+  });
+
+  test('should disable next button when only one game', () => {
+    localStorageMock.setItem('recent-games', JSON.stringify(['2048']));
+
+    const manager = new RecentGamesManager();
+    const section = document.getElementById('recent-section');
+    const nextBtn = section.querySelector('.carousel-next');
+
+    expect(nextBtn.disabled).toBe(true);
+  });
+
+  test('updateCarouselState should update button states correctly', () => {
+    localStorageMock.setItem('recent-games', JSON.stringify(['2048', 'snake', 'tetris']));
+
+    const manager = new RecentGamesManager();
+    const section = document.getElementById('recent-section');
+    const prevBtn = section.querySelector('.carousel-prev');
+    const nextBtn = section.querySelector('.carousel-next');
+    const dots = section.querySelectorAll('.carousel-dot');
+
+    // Simulate moving to middle
+    manager.updateCarouselState(1, 3, prevBtn, nextBtn, dots);
+
+    expect(prevBtn.disabled).toBe(false);
+    expect(nextBtn.disabled).toBe(false);
+    expect(dots[1].classList.contains('active')).toBe(true);
+    expect(dots[0].classList.contains('active')).toBe(false);
+  });
+
+  test('updateCarouselState should disable next at end', () => {
+    localStorageMock.setItem('recent-games', JSON.stringify(['2048', 'snake', 'tetris']));
+
+    const manager = new RecentGamesManager();
+    const section = document.getElementById('recent-section');
+    const prevBtn = section.querySelector('.carousel-prev');
+    const nextBtn = section.querySelector('.carousel-next');
+    const dots = section.querySelectorAll('.carousel-dot');
+
+    // Simulate moving to end
+    manager.updateCarouselState(2, 3, prevBtn, nextBtn, dots);
+
+    expect(prevBtn.disabled).toBe(false);
+    expect(nextBtn.disabled).toBe(true);
+    expect(dots[2].classList.contains('active')).toBe(true);
+  });
+
+  test('should limit displayed games to 5', () => {
+    localStorageMock.setItem('recent-games', JSON.stringify([
+      '2048', 'snake', 'tetris', 'breakout', 'memory', 'minesweeper', 'survivor'
+    ]));
+
+    const manager = new RecentGamesManager();
+    const section = document.getElementById('recent-section');
+    const cards = section.querySelectorAll('.recent-game-card');
+
+    expect(cards.length).toBe(5);
+  });
+
+  test('should have correct currentIndex initial value', () => {
+    localStorageMock.setItem('recent-games', JSON.stringify(['2048', 'snake']));
+
+    const manager = new RecentGamesManager();
+
+    expect(manager.currentIndex).toBe(0);
+  });
+});
+
+// ============================================
+// ScrollAnimationManager - Stat Cards Tests
+// ============================================
+describe('ScrollAnimationManager - Stat Cards', () => {
+  let ScrollAnimationManager;
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div class="hub-container">
+        <button id="theme-toggle-btn"></button>
+        <section class="recent-section" id="recent-section"></section>
+        <section class="stats-section">
+          <div class="stats-grid" id="stats-grid">
+            <div class="stat-card"></div>
+            <div class="stat-card"></div>
+          </div>
+        </section>
+        <div class="games-grid">
+          <div class="game-card"></div>
+        </div>
+      </div>
+    `;
+    window.matchMedia = mockMatchMedia(false);
+    jest.useFakeTimers();
+    const hub = require('./hub.js');
+    ScrollAnimationManager = hub.ScrollAnimationManager;
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  test('should observe stat cards after delay', () => {
+    const observeMock = jest.fn();
+    global.IntersectionObserver = jest.fn().mockImplementation(() => ({
+      observe: observeMock,
+      unobserve: jest.fn(),
+      disconnect: jest.fn(),
+    }));
+
+    const manager = new ScrollAnimationManager();
+
+    // Stat cards are observed after 100ms delay
+    jest.advanceTimersByTime(100);
+
+    const statCards = document.querySelectorAll('.stat-card');
+    // Should observe game cards + stat cards
+    expect(observeMock).toHaveBeenCalledTimes(3); // 1 game card + 2 stat cards
+  });
+
+  test('should add animate-in class to stat cards when prefers-reduced-motion', () => {
+    window.matchMedia = jest.fn().mockImplementation(query => ({
+      matches: query === '(prefers-reduced-motion: reduce)',
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }));
+
+    const manager = new ScrollAnimationManager();
+    const statCards = document.querySelectorAll('.stat-card');
+
+    statCards.forEach(card => {
+      expect(card.classList.contains('animate-in')).toBe(true);
+    });
   });
 });
