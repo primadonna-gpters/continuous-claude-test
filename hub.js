@@ -18,6 +18,9 @@ class HubThemeManager {
 
         if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
             document.body.classList.add('dark-mode');
+            this.updateAriaPressed(true);
+        } else {
+            this.updateAriaPressed(false);
         }
     }
 
@@ -25,6 +28,13 @@ class HubThemeManager {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
         localStorage.setItem('game-hub-theme', isDark ? 'dark' : 'light');
+        this.updateAriaPressed(isDark);
+    }
+
+    updateAriaPressed(isDark) {
+        if (this.themeToggleBtn) {
+            this.themeToggleBtn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+        }
     }
 }
 

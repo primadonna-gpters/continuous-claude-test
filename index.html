@@ -16,13 +16,14 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="hub-container">
-        <header class="hub-header">
+    <a href="#games-section" class="skip-link">게임 목록으로 건너뛰기</a>
+    <div class="hub-container" role="main">
+        <header class="hub-header" role="banner">
             <h1>🎮 Game Hub</h1>
-            <p class="hub-subtitle">혼자서 즐기는 온라인 게임 컬렉션</p>
-            <button id="theme-toggle-btn" aria-label="Toggle dark mode">
-                <span class="theme-icon light-icon">🌙</span>
-                <span class="theme-icon dark-icon">☀️</span>
+            <p class="hub-subtitle" aria-label="혼자서 즐기는 온라인 게임 컬렉션">혼자서 즐기는 온라인 게임 컬렉션</p>
+            <button id="theme-toggle-btn" aria-label="다크 모드 전환" aria-pressed="false">
+                <span class="theme-icon light-icon" aria-hidden="true">🌙</span>
+                <span class="theme-icon dark-icon" aria-hidden="true">☀️</span>
             </button>
         </header>
 
@@ -30,83 +31,85 @@
             <!-- JS로 동적 생성 -->
         </section>
 
-        <section class="stats-section">
-            <div class="stats-grid" id="stats-grid">
+        <section class="stats-section" aria-label="게임 통계">
+            <div class="stats-grid" id="stats-grid" role="list">
                 <!-- JS로 동적 생성 -->
             </div>
         </section>
 
-        <div class="games-grid">
-            <a href="games/2048/index.html" class="game-card">
-                <span class="game-badge badge-popular">Popular</span>
-                <div class="game-card-icon">🔢</div>
-                <div class="game-card-content">
-                    <h2>2048</h2>
-                    <p>숫자 타일을 합쳐서 2048을 만들어보세요!</p>
-                </div>
-                <div class="game-card-arrow">→</div>
-            </a>
+        <section id="games-section" class="games-section" aria-label="게임 목록">
+            <h2 class="sr-only">게임 목록</h2>
+            <div class="games-grid" role="list">
+                <a href="games/2048/index.html" class="game-card" role="listitem" aria-label="2048 게임 - 숫자 타일을 합쳐서 2048을 만들어보세요">
+                    <span class="game-badge badge-popular" aria-hidden="true">Popular</span>
+                    <div class="game-card-icon" aria-hidden="true">🔢</div>
+                    <div class="game-card-content">
+                        <h3>2048</h3>
+                        <p>숫자 타일을 합쳐서 2048을 만들어보세요!</p>
+                    </div>
+                    <div class="game-card-arrow" aria-hidden="true">→</div>
+                </a>
 
-            <a href="games/snake/index.html" class="game-card">
-                <div class="game-card-icon">🐍</div>
-                <div class="game-card-content">
-                    <h2>Snake</h2>
-                    <p>뱀을 조종해 먹이를 먹고 길게 자라보세요!</p>
-                </div>
-                <div class="game-card-arrow">→</div>
-            </a>
+                <a href="games/snake/index.html" class="game-card" role="listitem" aria-label="Snake 게임 - 뱀을 조종해 먹이를 먹고 길게 자라보세요">
+                    <div class="game-card-icon" aria-hidden="true">🐍</div>
+                    <div class="game-card-content">
+                        <h3>Snake</h3>
+                        <p>뱀을 조종해 먹이를 먹고 길게 자라보세요!</p>
+                    </div>
+                    <div class="game-card-arrow" aria-hidden="true">→</div>
+                </a>
 
-            <a href="games/minesweeper/index.html" class="game-card">
-                <div class="game-card-icon">💣</div>
-                <div class="game-card-content">
-                    <h2>Minesweeper</h2>
-                    <p>지뢰를 피해 모든 칸을 열어보세요!</p>
-                </div>
-                <div class="game-card-arrow">→</div>
-            </a>
+                <a href="games/minesweeper/index.html" class="game-card" role="listitem" aria-label="Minesweeper 게임 - 지뢰를 피해 모든 칸을 열어보세요">
+                    <div class="game-card-icon" aria-hidden="true">💣</div>
+                    <div class="game-card-content">
+                        <h3>Minesweeper</h3>
+                        <p>지뢰를 피해 모든 칸을 열어보세요!</p>
+                    </div>
+                    <div class="game-card-arrow" aria-hidden="true">→</div>
+                </a>
 
-            <a href="games/tetris/index.html" class="game-card">
-                <span class="game-badge badge-featured">Classic</span>
-                <div class="game-card-icon">🧱</div>
-                <div class="game-card-content">
-                    <h2>Tetris</h2>
-                    <p>떨어지는 블록을 쌓아 줄을 완성하세요!</p>
-                </div>
-                <div class="game-card-arrow">→</div>
-            </a>
+                <a href="games/tetris/index.html" class="game-card" role="listitem" aria-label="Tetris 게임 - 떨어지는 블록을 쌓아 줄을 완성하세요">
+                    <span class="game-badge badge-featured" aria-hidden="true">Classic</span>
+                    <div class="game-card-icon" aria-hidden="true">🧱</div>
+                    <div class="game-card-content">
+                        <h3>Tetris</h3>
+                        <p>떨어지는 블록을 쌓아 줄을 완성하세요!</p>
+                    </div>
+                    <div class="game-card-arrow" aria-hidden="true">→</div>
+                </a>
 
-            <a href="games/breakout/index.html" class="game-card">
-                <div class="game-card-icon">🏓</div>
-                <div class="game-card-content">
-                    <h2>Breakout</h2>
-                    <p>패들로 공을 튕겨 벽돌을 깨보세요!</p>
-                </div>
-                <div class="game-card-arrow">→</div>
-            </a>
+                <a href="games/breakout/index.html" class="game-card" role="listitem" aria-label="Breakout 게임 - 패들로 공을 튕겨 벽돌을 깨보세요">
+                    <div class="game-card-icon" aria-hidden="true">🏓</div>
+                    <div class="game-card-content">
+                        <h3>Breakout</h3>
+                        <p>패들로 공을 튕겨 벽돌을 깨보세요!</p>
+                    </div>
+                    <div class="game-card-arrow" aria-hidden="true">→</div>
+                </a>
 
-            <a href="games/memory/index.html" class="game-card">
-                <span class="game-badge badge-new">New</span>
-                <div class="game-card-icon">🧠</div>
-                <div class="game-card-content">
-                    <h2>Memory</h2>
-                    <p>같은 그림의 카드 짝을 찾아보세요!</p>
-                </div>
-                <div class="game-card-arrow">→</div>
-            </a>
+                <a href="games/memory/index.html" class="game-card" role="listitem" aria-label="Memory 게임 - 같은 그림의 카드 짝을 찾아보세요">
+                    <span class="game-badge badge-new" aria-hidden="true">New</span>
+                    <div class="game-card-icon" aria-hidden="true">🧠</div>
+                    <div class="game-card-content">
+                        <h3>Memory</h3>
+                        <p>같은 그림의 카드 짝을 찾아보세요!</p>
+                    </div>
+                    <div class="game-card-arrow" aria-hidden="true">→</div>
+                </a>
 
-            <a href="games/survivor/index.html" class="game-card">
-                <span class="game-badge badge-best">Best</span>
-                <div class="game-card-icon">🧛</div>
-                <div class="game-card-content">
-                    <h2>Pixel Survivor</h2>
-                    <p>몰려오는 적을 처치하고 살아남으세요!</p>
-                </div>
-                <div class="game-card-arrow">→</div>
-            </a>
+                <a href="games/survivor/index.html" class="game-card" role="listitem" aria-label="Pixel Survivor 게임 - 몰려오는 적을 처치하고 살아남으세요">
+                    <span class="game-badge badge-best" aria-hidden="true">Best</span>
+                    <div class="game-card-icon" aria-hidden="true">🧛</div>
+                    <div class="game-card-content">
+                        <h3>Pixel Survivor</h3>
+                        <p>몰려오는 적을 처치하고 살아남으세요!</p>
+                    </div>
+                    <div class="game-card-arrow" aria-hidden="true">→</div>
+                </a>
+            </div>
+        </section>
 
-        </div>
-
-        <footer class="hub-footer">
+        <footer class="hub-footer" role="contentinfo">
             <p>키보드 또는 터치로 조작하세요</p>
         </footer>
     </div>
