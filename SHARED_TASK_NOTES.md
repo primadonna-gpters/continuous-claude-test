@@ -199,16 +199,36 @@ npm run test:coverage   # 커버리지 리포트
 - **Step 5**: Pixel Survivor 모듈화 - game.js 15% 감소 (8,363 → 7,237줄)
 - **Step 7**: Service Worker 캐싱 전략 개선
 - **Step 9-10**: 접근성 및 키보드 내비게이션 개선
+- **New**: Breakout, Memory, Minesweeper 게임 테스트 추가 - 160 tests
 
 ### Remaining Steps
 - Step 1: common.js/hub.js 테스트 보강 (선택적)
 - Step 6: 공통 게임 유틸리티 추출 (선택적)
 - Step 8: 이미지/에셋 최적화 (Low priority)
 - Step 11-12: 설정 페이지, 다국어 지원 (Low priority)
+- Survivor game tests (Large file - 7,237 lines)
 
 ### Test Results
-- 모든 308개 테스트 통과
-- 주요 개선사항 후에도 기존 기능 정상 동작 확인
+- **Total Tests: 468 passed** (previously 308)
+- **New Tests Added: 160 tests**
+  - Breakout: 65 tests (coverage: 89.52% stmts, 92.97% lines)
+  - Memory: 46 tests (coverage: 90.17% stmts, 90.86% lines)
+  - Minesweeper: 49 tests (coverage: 98.54% stmts, 99.19% lines)
+- All existing tests continue to pass
+- No bugs found in implementation
+
+### Coverage Summary (by file)
+| File | Statements | Branches | Functions | Lines |
+|------|------------|----------|-----------|-------|
+| common.js | 100% | 94.59% | 100% | 100% |
+| hub.js | 97.5% | 96.15% | 92.3% | 100% |
+| 2048/game.js | 90.93% | 84.09% | 84.61% | 92.05% |
+| snake/game.js | 84.81% | 77.68% | 76.27% | 86.73% |
+| tetris/game.js | 89.36% | 71.06% | 85.71% | 91.79% |
+| breakout/game.js | 89.52% | 80.12% | 64% | 92.97% |
+| memory/game.js | 90.17% | 83.92% | 93.54% | 90.86% |
+| minesweeper/game.js | 98.54% | 93.81% | 91.89% | 99.19% |
+| survivor/game.js | 0% | 0% | 0% | 0% |
 
 ---
 

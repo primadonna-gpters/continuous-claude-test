@@ -640,3 +640,8 @@ class BreakoutGame {
 
 // Initialize game
 const game = new BreakoutGame();
+
+// Export for testing (CommonJS)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { BreakoutGame };
+}

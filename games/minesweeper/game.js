@@ -408,3 +408,8 @@ class Minesweeper {
 document.addEventListener('DOMContentLoaded', () => {
     new Minesweeper();
 });
+
+// Export for testing (CommonJS)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { Minesweeper };
+}

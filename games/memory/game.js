@@ -385,3 +385,32 @@ soundToggleBtn.addEventListener('click', toggleSound);
 loadTheme();
 loadSoundSetting();
 initGame();
+
+// Export for testing (CommonJS)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        CARD_SYMBOLS,
+        DIFFICULTY_CONFIG,
+        shuffle,
+        createCards,
+        renderBoard,
+        handleCardClick,
+        checkMatch,
+        handleWin,
+        initGame,
+        startTimer,
+        stopTimer,
+        resetTimer,
+        updateTimerDisplay,
+        loadTheme,
+        toggleTheme,
+        loadSoundSetting,
+        toggleSound,
+        updateSoundButton,
+        getBestScore,
+        saveBestScore,
+        updateBestScoreDisplay,
+        initAudio,
+        playSound
+    };
+}
