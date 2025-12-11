@@ -292,6 +292,66 @@ class HubThemeManager {
     }
 }
 
+// Animation Toggle Manager for accessibility
+class AnimationToggleManager {
+    constructor() {
+        this.animationToggleBtn = document.getElementById('animation-toggle-btn');
+        this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        this.loadState();
+        this.bindEvents();
+    }
+
+    bindEvents() {
+        if (this.animationToggleBtn) {
+            this.animationToggleBtn.addEventListener('click', () => this.toggleAnimations());
+        }
+
+        window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
+            if (e.matches) {
+                this.disableAnimations();
+            }
+        });
+    }
+
+    loadState() {
+        const savedState = localStorage.getItem('game-hub-animations');
+        const shouldDisable = savedState === 'disabled' || this.prefersReducedMotion;
+
+        if (shouldDisable) {
+            this.disableAnimations();
+        } else {
+            this.enableAnimations();
+        }
+    }
+
+    toggleAnimations() {
+        if (document.body.classList.contains('animations-disabled')) {
+            this.enableAnimations();
+            localStorage.setItem('game-hub-animations', 'enabled');
+        } else {
+            this.disableAnimations();
+            localStorage.setItem('game-hub-animations', 'disabled');
+        }
+    }
+
+    disableAnimations() {
+        document.body.classList.add('animations-disabled');
+        this.updateAriaPressed(true);
+    }
+
+    enableAnimations() {
+        document.body.classList.remove('animations-disabled');
+        this.updateAriaPressed(false);
+    }
+
+    updateAriaPressed(isDisabled) {
+        if (this.animationToggleBtn) {
+            this.animationToggleBtn.setAttribute('aria-pressed', isDisabled ? 'true' : 'false');
+        }
+    }
+}
+
 // Page Transition Handler for game cards
 class PageTransitionHandler {
     constructor() {
@@ -363,14 +423,13 @@ class PageTransitionHandler {
 // Scroll-based animation manager
 class ScrollAnimationManager {
     constructor() {
+        this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         this.initIntersectionObserver();
     }
 
     initIntersectionObserver() {
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-        if (prefersReducedMotion) {
-            document.querySelectorAll('.game-card').forEach(card => {
+        if (this.prefersReducedMotion) {
+            document.querySelectorAll('.game-card, .stat-card').forEach(card => {
                 card.classList.add('animate-in');
             });
             return;
@@ -378,7 +437,7 @@ class ScrollAnimationManager {
 
         const observerOptions = {
             root: null,
-            rootMargin: '0px',
+            rootMargin: '0px 0px -50px 0px',
             threshold: 0.1
         };
 
@@ -394,6 +453,16 @@ class ScrollAnimationManager {
         document.querySelectorAll('.game-card').forEach(card => {
             observer.observe(card);
         });
+
+        this.observeStatCards(observer);
+    }
+
+    observeStatCards(observer) {
+        setTimeout(() => {
+            document.querySelectorAll('.stat-card').forEach(card => {
+                observer.observe(card);
+            });
+        }, 100);
     }
 }
 
@@ -412,12 +481,12 @@ class StatsManager {
 
     getGameStats() {
         return [
-            { icon: '🔢', label: '2048 Best', key: '2048-best-score', format: 'number', tooltip: '2048 게임 최고 점수' },
-            { icon: '🐍', label: 'Snake Best', key: 'snake-best-score', format: 'number', tooltip: 'Snake 게임 최고 점수' },
-            { icon: '🧱', label: 'Tetris Best', key: 'tetris-best-score', format: 'number', tooltip: 'Tetris 게임 최고 점수' },
-            { icon: '🏓', label: 'Breakout Best', key: 'breakout-best-score', format: 'number', tooltip: 'Breakout 게임 최고 점수' },
-            { icon: '🧠', label: 'Memory (Easy)', key: 'memory-best-easy', format: 'moves', tooltip: 'Memory 게임 최소 이동 수' },
-            { icon: '🧛', label: 'Survivor Best', key: 'survivor-best-time', format: 'time', tooltip: 'Survivor 게임 최장 생존 시간' }
+            { icon: '🔢', label: '2048 Best', key: '2048-best-score', format: 'number', tooltip: '2048 게임 최고 점수', maxValue: 131072, typeIcon: '🏆' },
+            { icon: '🐍', label: 'Snake Best', key: 'snake-best-score', format: 'number', tooltip: 'Snake 게임 최고 점수', maxValue: 10000, typeIcon: '🏆' },
+            { icon: '🧱', label: 'Tetris Best', key: 'tetris-best-score', format: 'number', tooltip: 'Tetris 게임 최고 점수', maxValue: 100000, typeIcon: '🏆' },
+            { icon: '🏓', label: 'Breakout Best', key: 'breakout-best-score', format: 'number', tooltip: 'Breakout 게임 최고 점수', maxValue: 50000, typeIcon: '🏆' },
+            { icon: '🧠', label: 'Memory (Easy)', key: 'memory-best-easy', format: 'moves', tooltip: 'Memory 게임 최소 이동 수 (낮을수록 좋음)', maxValue: 50, typeIcon: '🎯', inverse: true },
+            { icon: '🧛', label: 'Survivor Best', key: 'survivor-best-time', format: 'time', tooltip: 'Survivor 게임 최장 생존 시간', maxValue: 600, typeIcon: '⏱️' }
         ];
     }
 
@@ -435,24 +504,60 @@ class StatsManager {
         }
     }
 
+    calculateProgress(value, maxValue, inverse = false) {
+        if (value === 0 || value === null) return 0;
+        if (inverse) {
+            return Math.max(0, Math.min(100, ((maxValue - value) / maxValue) * 100));
+        }
+        return Math.max(0, Math.min(100, (value / maxValue) * 100));
+    }
+
     render() {
         const stats = this.getGameStats();
         const html = stats.map(stat => {
             const rawValue = localStorage.getItem(stat.key);
             const value = rawValue ? parseInt(rawValue) : 0;
             const displayValue = this.formatValue(value, stat.format);
+            const progress = this.calculateProgress(value, stat.maxValue, stat.inverse);
 
             return `
                 <div class="stat-card" data-value="${value}" data-format="${stat.format}">
+                    <span class="stat-card-type-icon" aria-hidden="true">${stat.typeIcon}</span>
                     <div class="stat-card-tooltip">${stat.tooltip}</div>
                     <div class="stat-card-icon">${stat.icon}</div>
                     <div class="stat-card-value" data-target="${value}">${displayValue}</div>
                     <div class="stat-card-label">${stat.label}</div>
+                    <div class="stat-card-progress" aria-hidden="true">
+                        <div class="stat-card-progress-bar" style="width: 0%" data-progress="${progress}"></div>
+                    </div>
                 </div>
             `;
         }).join('');
 
         this.statsGrid.innerHTML = html;
+
+        if (!this.prefersReducedMotion) {
+            this.animateProgressBars();
+        } else {
+            this.setProgressBarsInstantly();
+        }
+    }
+
+    animateProgressBars() {
+        setTimeout(() => {
+            document.querySelectorAll('.stat-card-progress-bar').forEach(bar => {
+                const progress = bar.dataset.progress;
+                bar.style.width = `${progress}%`;
+            });
+        }, 100);
+    }
+
+    setProgressBarsInstantly() {
+        document.querySelectorAll('.stat-card-progress-bar').forEach(bar => {
+            const progress = bar.dataset.progress;
+            bar.style.transition = 'none';
+            bar.style.width = `${progress}%`;
+        });
     }
 
     initCountUpAnimation() {
@@ -507,7 +612,7 @@ class StatsManager {
     }
 }
 
-// Recent Games Manager with play time tracking
+// Recent Games Manager with play time tracking and carousel
 class RecentGamesManager {
     constructor() {
         this.section = document.getElementById('recent-section');
@@ -520,6 +625,7 @@ class RecentGamesManager {
             'memory': { icon: '🧠', url: 'games/memory/index.html', displayName: 'Memory' },
             'survivor': { icon: '🧛', url: 'games/survivor/index.html', displayName: 'Survivor' }
         };
+        this.currentIndex = 0;
         this.render();
     }
 
@@ -548,13 +654,14 @@ class RecentGamesManager {
             return;
         }
 
-        const recentGames = recent.slice(0, 3).map(name => {
+        const displayCount = Math.min(recent.length, 5);
+        const recentGames = recent.slice(0, displayCount).map((name, index) => {
             const game = this.games[name];
             if (!game) return '';
             const relativeTime = this.getRelativeTime(timestamps[name]);
 
             return `
-                <a href="${game.url}" class="recent-game-card">
+                <a href="${game.url}" class="recent-game-card" data-index="${index}">
                     <span class="recent-game-icon">${game.icon}</span>
                     <span class="recent-game-info">
                         <span class="recent-game-name">${game.displayName}</span>
@@ -564,10 +671,91 @@ class RecentGamesManager {
             `;
         }).join('');
 
+        const dots = recent.slice(0, displayCount).map((_, index) =>
+            `<button class="carousel-dot${index === 0 ? ' active' : ''}" data-index="${index}" aria-label="게임 ${index + 1}로 이동"></button>`
+        ).join('');
+
         this.section.innerHTML = `
             <p class="recent-title">최근 플레이</p>
-            <div class="recent-games">${recentGames}</div>
+            <div class="recent-carousel-wrapper">
+                <button class="carousel-nav-btn carousel-prev" aria-label="이전 게임" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+                <div class="recent-games">${recentGames}</div>
+                <button class="carousel-nav-btn carousel-next" aria-label="다음 게임"${displayCount <= 1 ? ' disabled' : ''}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </div>
+            ${displayCount > 1 ? `<div class="carousel-dots">${dots}</div>` : ''}
         `;
+
+        this.bindCarouselEvents(displayCount);
+    }
+
+    bindCarouselEvents(totalItems) {
+        const container = this.section.querySelector('.recent-games');
+        const prevBtn = this.section.querySelector('.carousel-prev');
+        const nextBtn = this.section.querySelector('.carousel-next');
+        const dots = this.section.querySelectorAll('.carousel-dot');
+
+        if (!container || totalItems <= 1) return;
+
+        const scrollToIndex = (index) => {
+            const cards = container.querySelectorAll('.recent-game-card');
+            if (cards[index]) {
+                cards[index].scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'start'
+                });
+                this.currentIndex = index;
+                this.updateCarouselState(index, totalItems, prevBtn, nextBtn, dots);
+            }
+        };
+
+        prevBtn.addEventListener('click', () => {
+            if (this.currentIndex > 0) {
+                scrollToIndex(this.currentIndex - 1);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (this.currentIndex < totalItems - 1) {
+                scrollToIndex(this.currentIndex + 1);
+            }
+        });
+
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => scrollToIndex(index));
+        });
+
+        container.addEventListener('scroll', () => {
+            const cards = container.querySelectorAll('.recent-game-card');
+            const containerRect = container.getBoundingClientRect();
+
+            cards.forEach((card, index) => {
+                const cardRect = card.getBoundingClientRect();
+                if (cardRect.left >= containerRect.left && cardRect.left < containerRect.left + containerRect.width / 2) {
+                    if (this.currentIndex !== index) {
+                        this.currentIndex = index;
+                        this.updateCarouselState(index, totalItems, prevBtn, nextBtn, dots);
+                    }
+                }
+            });
+        }, { passive: true });
+    }
+
+    updateCarouselState(index, total, prevBtn, nextBtn, dots) {
+        if (prevBtn) prevBtn.disabled = index === 0;
+        if (nextBtn) nextBtn.disabled = index >= total - 1;
+
+        dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === index);
+        });
     }
 }
 
@@ -715,12 +903,249 @@ class TypingEffectManager {
     }
 }
 
+// Touch Interaction Manager for mobile devices
+class TouchInteractionManager {
+    constructor() {
+        this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        if (!this.isTouchDevice) return;
+
+        this.longPressTimer = null;
+        this.longPressDuration = 500;
+        this.modal = null;
+        this.backdrop = null;
+
+        this.gameInfo = {
+            '2048': { icon: '🔢', name: '2048', description: '숫자 타일을 합쳐서 2048을 만드는 퍼즐 게임', controls: '스와이프로 조작' },
+            'snake': { icon: '🐍', name: 'Snake', description: '뱀을 조종해 먹이를 먹고 길게 자라는 게임', controls: '스와이프로 조작' },
+            'minesweeper': { icon: '💣', name: 'Minesweeper', description: '지뢰를 피해 모든 칸을 여는 퍼즐 게임', controls: '탭/롱프레스로 조작' },
+            'tetris': { icon: '🧱', name: 'Tetris', description: '떨어지는 블록을 쌓아 줄을 완성하는 게임', controls: '화면 버튼으로 조작' },
+            'breakout': { icon: '🏓', name: 'Breakout', description: '패들로 공을 튕겨 벽돌을 깨는 게임', controls: '터치 드래그로 조작' },
+            'memory': { icon: '🧠', name: 'Memory', description: '같은 그림의 카드 짝을 찾는 게임', controls: '탭으로 조작' },
+            'survivor': { icon: '🧛', name: 'Pixel Survivor', description: '몰려오는 적을 처치하고 살아남는 게임', controls: '가상 조이스틱으로 조작' }
+        };
+
+        this.createModal();
+        this.bindEvents();
+    }
+
+    createModal() {
+        this.backdrop = document.createElement('div');
+        this.backdrop.className = 'touch-info-modal-backdrop';
+        document.body.appendChild(this.backdrop);
+
+        this.modal = document.createElement('div');
+        this.modal.className = 'touch-info-modal';
+        this.modal.innerHTML = `
+            <div class="touch-info-modal-header">
+                <span class="touch-info-modal-icon"></span>
+                <span class="touch-info-modal-title"></span>
+            </div>
+            <p class="touch-info-modal-content"></p>
+            <div class="touch-info-modal-controls"></div>
+            <div style="display: flex; gap: 8px;">
+                <button class="touch-info-modal-close">닫기</button>
+                <a class="touch-info-modal-play" href="#">플레이</a>
+            </div>
+        `;
+        document.body.appendChild(this.modal);
+
+        this.modal.querySelector('.touch-info-modal-close').addEventListener('click', () => this.closeModal());
+        this.backdrop.addEventListener('click', () => this.closeModal());
+    }
+
+    bindEvents() {
+        const cards = document.querySelectorAll('.game-card');
+
+        cards.forEach(card => {
+            card.addEventListener('touchstart', (e) => this.handleTouchStart(e, card), { passive: true });
+            card.addEventListener('touchend', () => this.handleTouchEnd());
+            card.addEventListener('touchmove', () => this.handleTouchEnd());
+        });
+    }
+
+    handleTouchStart(e, card) {
+        const href = card.getAttribute('href');
+        const gameKey = this.getGameKeyFromHref(href);
+
+        if (!gameKey || !this.gameInfo[gameKey]) return;
+
+        this.longPressTimer = setTimeout(() => {
+            e.preventDefault();
+            this.triggerHapticFeedback();
+            this.showModal(gameKey, href);
+        }, this.longPressDuration);
+    }
+
+    handleTouchEnd() {
+        if (this.longPressTimer) {
+            clearTimeout(this.longPressTimer);
+            this.longPressTimer = null;
+        }
+    }
+
+    getGameKeyFromHref(href) {
+        if (!href) return null;
+        const match = href.match(/games\/([^/]+)/);
+        return match ? match[1] : null;
+    }
+
+    triggerHapticFeedback() {
+        if ('vibrate' in navigator) {
+            navigator.vibrate(50);
+        }
+    }
+
+    showModal(gameKey, href) {
+        const info = this.gameInfo[gameKey];
+        if (!info) return;
+
+        this.modal.querySelector('.touch-info-modal-icon').textContent = info.icon;
+        this.modal.querySelector('.touch-info-modal-title').textContent = info.name;
+        this.modal.querySelector('.touch-info-modal-content').textContent = info.description;
+        this.modal.querySelector('.touch-info-modal-controls').innerHTML = `
+            <span class="game-card-control-icon">📱 ${info.controls}</span>
+        `;
+        this.modal.querySelector('.touch-info-modal-play').href = href;
+
+        this.backdrop.classList.add('active');
+        this.modal.classList.add('active');
+    }
+
+    closeModal() {
+        this.backdrop.classList.remove('active');
+        this.modal.classList.remove('active');
+    }
+}
+
+class FooterStatsManager {
+    constructor() {
+        this.container = document.getElementById('footer-total-stats');
+        if (this.container) {
+            this.render();
+        }
+    }
+
+    getTotalStats() {
+        const stats = {
+            totalPlays: 0,
+            totalTime: 0,
+            gamesPlayed: 0
+        };
+
+        const games = ['snake', 'tetris', 'memory', 'breakout', '2048', 'flappybird', 'minesweeper', 'pong'];
+
+        games.forEach(game => {
+            const plays = parseInt(localStorage.getItem(`${game}_plays`) || '0', 10);
+            const time = parseInt(localStorage.getItem(`${game}_time`) || '0', 10);
+
+            stats.totalPlays += plays;
+            stats.totalTime += time;
+            if (plays > 0) {
+                stats.gamesPlayed++;
+            }
+        });
+
+        return stats;
+    }
+
+    formatTime(seconds) {
+        if (seconds < 60) return `${seconds}초`;
+        if (seconds < 3600) return `${Math.floor(seconds / 60)}분`;
+        return `${Math.floor(seconds / 3600)}시간`;
+    }
+
+    render() {
+        const stats = this.getTotalStats();
+
+        this.container.innerHTML = `
+            <div class="footer-stat-item">
+                <span class="footer-stat-icon">🎮</span>
+                <span class="footer-stat-value">${stats.totalPlays}</span>
+                <span class="footer-stat-label">총 플레이 횟수</span>
+            </div>
+            <div class="footer-stat-item">
+                <span class="footer-stat-icon">⏱️</span>
+                <span class="footer-stat-value">${this.formatTime(stats.totalTime)}</span>
+                <span class="footer-stat-label">총 플레이 시간</span>
+            </div>
+            <div class="footer-stat-item">
+                <span class="footer-stat-icon">🏆</span>
+                <span class="footer-stat-value">${stats.gamesPlayed}/8</span>
+                <span class="footer-stat-label">플레이한 게임</span>
+            </div>
+        `;
+    }
+}
+
+class PWAInstallManager {
+    constructor() {
+        this.deferredPrompt = null;
+        this.installBtn = document.getElementById('pwa-install-btn');
+
+        if (this.installBtn) {
+            this.init();
+        }
+    }
+
+    init() {
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            this.deferredPrompt = e;
+            this.showInstallButton();
+        });
+
+        window.addEventListener('appinstalled', () => {
+            this.hideInstallButton();
+            this.showInstalledState();
+        });
+
+        this.installBtn.addEventListener('click', () => this.handleInstallClick());
+
+        if (window.matchMedia('(display-mode: standalone)').matches ||
+            window.navigator.standalone === true) {
+            this.showInstalledState();
+        }
+    }
+
+    showInstallButton() {
+        this.installBtn.style.display = 'inline-flex';
+    }
+
+    hideInstallButton() {
+        this.installBtn.style.display = 'none';
+    }
+
+    showInstalledState() {
+        this.installBtn.style.display = 'inline-flex';
+        this.installBtn.classList.add('installed');
+        this.installBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+            </svg>
+            <span>설치됨</span>
+        `;
+    }
+
+    async handleInstallClick() {
+        if (!this.deferredPrompt) return;
+
+        this.deferredPrompt.prompt();
+        const { outcome } = await this.deferredPrompt.userChoice;
+
+        if (outcome === 'accepted') {
+            this.deferredPrompt = null;
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     new PageLoaderManager();
     new ScrollProgressManager();
     new RippleEffectManager();
     new ParticleSystem();
     new HubThemeManager();
+    new AnimationToggleManager();
     new ScrollAnimationManager();
     new StatsManager();
     new RecentGamesManager();
@@ -728,6 +1153,9 @@ document.addEventListener('DOMContentLoaded', () => {
     new ParallaxManager();
     new PageTransitionHandler();
     new TypingEffectManager();
+    new TouchInteractionManager();
+    new FooterStatsManager();
+    new PWAInstallManager();
     registerServiceWorker();
 });
 
@@ -739,6 +1167,7 @@ if (typeof module !== 'undefined' && module.exports) {
         RippleEffectManager,
         ParticleSystem,
         HubThemeManager,
+        AnimationToggleManager,
         ScrollAnimationManager,
         StatsManager,
         RecentGamesManager,
@@ -746,6 +1175,9 @@ if (typeof module !== 'undefined' && module.exports) {
         ParallaxManager,
         PageTransitionHandler,
         TypingEffectManager,
+        TouchInteractionManager,
+        FooterStatsManager,
+        PWAInstallManager,
         registerServiceWorker
     };
 }
