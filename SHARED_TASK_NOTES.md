@@ -14,7 +14,7 @@ PWA, 다크모드, 3D 애니메이션이 이미 구현된 상태입니다.
 - PWA 지원 (Service Worker, manifest.json)
 - 다크/라이트 모드 테마
 - 접근성 고려 (prefers-reduced-motion 지원)
-- 113개 테스트 통과 (hub.js, common.js 테스트)
+- 308개 테스트 통과 (hub.js, common.js, 게임별 테스트 포함)
 - 3D/애니메이션 효과
 - 반응형 디자인
 
@@ -37,21 +37,24 @@ PWA, 다크모드, 3D 애니메이션이 이미 구현된 상태입니다.
    - Priority: High
    - Notes: 현재 테스트가 잘 되어 있으나 edge case 추가 가능
 
-2. [ ] **Step 2: 게임별 기본 테스트 추가 - 2048**
+2. [x] **Step 2: 게임별 기본 테스트 추가 - 2048** ✅
    - Files: `games/2048/game.js`, `games/2048/game.test.js` (new)
    - Criteria: 게임 로직 핵심 함수 테스트, SoundManager 테스트
    - Priority: Medium
    - Notes: 2048은 비교적 간단한 로직으로 시작하기 좋음
+   - **Result**: 66 tests added covering SoundManager, Game2048, ThemeManager
 
-3. [ ] **Step 3: 게임별 기본 테스트 추가 - Snake**
+3. [x] **Step 3: 게임별 기본 테스트 추가 - Snake** ✅
    - Files: `games/snake/game.js`, `games/snake/game.test.js` (new)
    - Criteria: 이동 로직, 충돌 감지, 점수 시스템 테스트
    - Priority: Medium
+   - **Result**: 58 tests added covering movement, collision, food spawning, pause, input
 
-4. [ ] **Step 4: 게임별 기본 테스트 추가 - Tetris**
+4. [x] **Step 4: 게임별 기본 테스트 추가 - Tetris** ✅
    - Files: `games/tetris/game.js`, `games/tetris/game.test.js` (new)
    - Criteria: 블록 회전, 라인 클리어, 게임오버 로직 테스트
    - Priority: Medium
+   - **Result**: 71 tests added covering rotation, collision, line clearing, hold piece, game over
 
 ### Phase 2: Code Organization & Refactoring
 

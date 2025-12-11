@@ -1,19 +1,15 @@
 // Pixel Survivor Game
 // Vampire Survivors style game with pixel art graphics
+//
+// Constants are loaded from modules/constants.js:
+// - PIXEL_SIZE, PLAYER_SIZE, ENEMY_SIZE, PROJECTILE_SIZE, EXP_GEM_SIZE, CHEST_SIZE
+// - MAX_WEAPONS, MAX_PASSIVES, VICTORY_TIME, WORLD_SIZE
+// - STAGES, CHARACTERS, WEAPON_TYPES, EVOLVED_WEAPONS, ARCANA_TYPES
+// - UNION_WEAPONS, PASSIVE_TYPES, WAVE_EVENTS, ENEMY_TYPES
+// - ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES
 
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
-
-// Game constants
-const PIXEL_SIZE = 4;
-const PLAYER_SIZE = 16;
-const ENEMY_SIZE = 12;
-const PROJECTILE_SIZE = 6;
-const EXP_GEM_SIZE = 8;
-const CHEST_SIZE = 16;
-const MAX_WEAPONS = 6;
-const MAX_PASSIVES = 6;
-const VICTORY_TIME = 1800; // 30 minutes in seconds
 
 // Game state
 let gameState = 'menu'; // menu, stageSelect, characterSelect, arcanaSelect, playing, paused, levelup, gameover, victory
