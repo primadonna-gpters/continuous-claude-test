@@ -16,6 +16,17 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Page Loader -->
+    <div class="page-loader" id="page-loader" aria-hidden="true">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <p class="loader-text">Loading Games...</p>
+        </div>
+    </div>
+
+    <!-- Scroll Progress Indicator -->
+    <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+
     <a href="#games-section" class="skip-link">게임 목록으로 건너뛰기</a>
     <div class="hub-container" role="main">
         <header class="hub-header" role="banner">
@@ -47,7 +58,12 @@
                         <h3>2048</h3>
                         <p>숫자 타일을 합쳐서 2048을 만들어보세요!</p>
                     </div>
-                    <div class="game-card-arrow" aria-hidden="true">→</div>
+                    <div class="game-card-arrow" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </div>
                 </a>
 
                 <a href="games/snake/index.html" class="game-card" role="listitem" aria-label="Snake 게임 - 뱀을 조종해 먹이를 먹고 길게 자라보세요">
@@ -56,7 +72,12 @@
                         <h3>Snake</h3>
                         <p>뱀을 조종해 먹이를 먹고 길게 자라보세요!</p>
                     </div>
-                    <div class="game-card-arrow" aria-hidden="true">→</div>
+                    <div class="game-card-arrow" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </div>
                 </a>
 
                 <a href="games/minesweeper/index.html" class="game-card" role="listitem" aria-label="Minesweeper 게임 - 지뢰를 피해 모든 칸을 열어보세요">
@@ -65,7 +86,12 @@
                         <h3>Minesweeper</h3>
                         <p>지뢰를 피해 모든 칸을 열어보세요!</p>
                     </div>
-                    <div class="game-card-arrow" aria-hidden="true">→</div>
+                    <div class="game-card-arrow" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </div>
                 </a>
 
                 <a href="games/tetris/index.html" class="game-card" role="listitem" aria-label="Tetris 게임 - 떨어지는 블록을 쌓아 줄을 완성하세요">
@@ -75,7 +101,12 @@
                         <h3>Tetris</h3>
                         <p>떨어지는 블록을 쌓아 줄을 완성하세요!</p>
                     </div>
-                    <div class="game-card-arrow" aria-hidden="true">→</div>
+                    <div class="game-card-arrow" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </div>
                 </a>
 
                 <a href="games/breakout/index.html" class="game-card" role="listitem" aria-label="Breakout 게임 - 패들로 공을 튕겨 벽돌을 깨보세요">
@@ -84,7 +115,12 @@
                         <h3>Breakout</h3>
                         <p>패들로 공을 튕겨 벽돌을 깨보세요!</p>
                     </div>
-                    <div class="game-card-arrow" aria-hidden="true">→</div>
+                    <div class="game-card-arrow" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </div>
                 </a>
 
                 <a href="games/memory/index.html" class="game-card" role="listitem" aria-label="Memory 게임 - 같은 그림의 카드 짝을 찾아보세요">
@@ -94,7 +130,12 @@
                         <h3>Memory</h3>
                         <p>같은 그림의 카드 짝을 찾아보세요!</p>
                     </div>
-                    <div class="game-card-arrow" aria-hidden="true">→</div>
+                    <div class="game-card-arrow" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </div>
                 </a>
 
                 <a href="games/survivor/index.html" class="game-card" role="listitem" aria-label="Pixel Survivor 게임 - 몰려오는 적을 처치하고 살아남으세요">
@@ -104,13 +145,55 @@
                         <h3>Pixel Survivor</h3>
                         <p>몰려오는 적을 처치하고 살아남으세요!</p>
                     </div>
-                    <div class="game-card-arrow" aria-hidden="true">→</div>
+                    <div class="game-card-arrow" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </div>
                 </a>
             </div>
         </section>
 
         <footer class="hub-footer" role="contentinfo">
-            <p>키보드 또는 터치로 조작하세요</p>
+            <div class="footer-wave" aria-hidden="true">
+                <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+                    <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"></path>
+                </svg>
+            </div>
+            <div class="footer-content">
+                <div class="footer-icons" aria-label="조작 방법">
+                    <span class="footer-icon" title="키보드">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                            <path d="M6 8h.01"></path>
+                            <path d="M10 8h.01"></path>
+                            <path d="M14 8h.01"></path>
+                            <path d="M18 8h.01"></path>
+                            <path d="M8 12h.01"></path>
+                            <path d="M12 12h.01"></path>
+                            <path d="M16 12h.01"></path>
+                            <path d="M7 16h10"></path>
+                        </svg>
+                    </span>
+                    <span class="footer-icon" title="터치">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"></path>
+                            <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"></path>
+                            <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"></path>
+                            <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path>
+                        </svg>
+                    </span>
+                    <span class="footer-icon" title="마우스">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="6" y="3" width="12" height="18" rx="6"></rect>
+                            <line x1="12" y1="7" x2="12" y2="11"></line>
+                        </svg>
+                    </span>
+                </div>
+                <p class="footer-text">키보드, 터치 또는 마우스로 조작하세요</p>
+                <p class="footer-copyright">Made with ❤️ for Gaming</p>
+            </div>
         </footer>
     </div>
 
