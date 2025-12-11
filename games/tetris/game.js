@@ -891,3 +891,15 @@ function updateSoundButtonIcon(button, enabled) {
         offIcon.style.display = 'inline';
     }
 }
+
+// Export for testing (CommonJS)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        SoundManager,
+        TetrisGame,
+        ThemeManager,
+        updateSoundButtonIcon,
+        TETROMINOES,
+        TETROMINO_NAMES
+    };
+}

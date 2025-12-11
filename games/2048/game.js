@@ -748,3 +748,13 @@ window.addEventListener('resize', () => {
         game2048Instance.render();
     }
 });
+
+// Export for testing (CommonJS)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        SoundManager,
+        Game2048,
+        ThemeManager,
+        updateSoundButtonIcon
+    };
+}
