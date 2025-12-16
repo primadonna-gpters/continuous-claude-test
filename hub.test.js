@@ -1924,7 +1924,7 @@ describe('FooterStatsManager', () => {
     const container = document.getElementById('footer-total-stats');
     const values = container.querySelectorAll('.footer-stat-value');
 
-    expect(values[2].textContent).toBe('3/8');
+    expect(values[2].textContent).toBe('3/10');
   });
 });
 
